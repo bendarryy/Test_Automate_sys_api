@@ -13,8 +13,7 @@ interface MenuItem {
 export const useGetMenu = (systemId: number, category?: string) => {
   const { callApi, data, loading, error } = useApi<MenuItem[]>();
 
-  const getMenu = async (category: string) => {
-    // بناء الـ URL بناءً على وجود فلتر category أم لا
+  const getMenu = async (category?: string) => {
     let url = `/restaurant/${systemId}/menu-items/`;
     if (category) {
       url += `?category=${category}`;
@@ -22,5 +21,40 @@ export const useGetMenu = (systemId: number, category?: string) => {
     return await callApi('get', url);
   };
 
-  return { getMenu, data, loading, error };
+  const createMenuItem = async (menuItem: MenuItem) => {
+    const url = `/restaurant/${systemId}/menu-items/`;
+    return await callApi('post', url, menuItem);
+  };
+
+  const getMenuItemById = async (id: number) => {
+    const url = `/restaurant/${systemId}/menu-items/${id}/`;
+    return await callApi('get', url);
+  };
+
+  const updateMenuItem = async (id: number, menuItem: Partial<MenuItem>) => {
+    const url = `/restaurant/${systemId}/menu-items/${id}/`;
+    return await callApi('put', url, menuItem);
+  };
+
+  const patchMenuItem = async (id: number, menuItem: Partial<MenuItem>) => {
+    const url = `/restaurant/${systemId}/menu-items/${id}/`;
+    return await callApi('patch', url, menuItem);
+  };
+
+  const deleteMenuItem = async (id: number) => {
+    const url = `/restaurant/${systemId}/menu-items/${id}/`;
+    return await callApi('delete', url);
+  };
+
+  return { 
+    getMenu, 
+    createMenuItem, 
+    getMenuItemById, 
+    updateMenuItem, 
+    patchMenuItem, 
+    deleteMenuItem, 
+    data, 
+    loading, 
+    error 
+  };
 };

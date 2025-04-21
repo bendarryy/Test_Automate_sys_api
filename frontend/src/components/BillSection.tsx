@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../store";
-import { removeItem, clearBill } from "../store/billSlice";
+import { removeItem, clearBill, addItem } from "../store/billSlice";
 import {
   Box,
   Typography,
@@ -14,6 +14,7 @@ import {
 } from "@mui/material";
 import styles from "../styles/BillSection.module.css";
 import { IoMdAddCircleOutline } from "react-icons/io";
+import { useSendOrders } from "../hooks/useSendOrders";
 
 const BillSection = () => {
   const billItems = useSelector((state: RootState) => state.bill.items);
@@ -22,6 +23,7 @@ const BillSection = () => {
 
   const [discount, setDiscount] = useState<number>(0);
   const [isSending, setIsSending] = useState<boolean>(false);
+  const { createOrder, addItemToOrder, loading: apiLoading } = useSendOrders(5); // Replace '1' with the actual systemId
 
   const total = billItems.reduce((total, item) => total + item.price, 0);
   const discountedTotal = total - (total * discount) / 100;
@@ -29,29 +31,29 @@ const BillSection = () => {
   const handleSendBill = async () => {
     setIsSending(true);
     try {
-      const billData = {
-        table: selectedTable || "External Order",
-        items: billItems,
-        total: total.toFixed(2),
-        discountedTotal: discountedTotal.toFixed(2),
-        discount: discount,
+      const orderData = {
+        customer_name: "John Doe",
+        table_number: "5", // Change to string to match the expected type
+        waiter: null, // Provide a default waiter ID
       };
 
-      const response = await fetch("http://localhost:5173/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(billData),
-      });
+      // Create a new order
+      const orderResponse = await createOrder(orderData);
 
-      if (!response.ok) {
-        throw new Error("Failed to send the bill.");
+      // Add items to the created order
+      const orderId = orderResponse.id;
+      for (const item of billItems) {
+        const payload = {
+          menu_item: Number(item.id), // Ensure item.id is converted to a number
+          quantity: item.quantity,
+        };
+        await addItemToOrder(orderId, payload); // Send each item individually
       }
 
       alert("Bill sent successfully!");
       dispatch(clearBill());
-    } catch {
+    } catch (err) {
+      console.error(err);
       alert("Failed to send the bill. Please try again.");
     } finally {
       setIsSending(false);
@@ -86,6 +88,25 @@ const BillSection = () => {
                   primary={item.name}
                   secondary={`Price: $${item.price.toFixed(2)}`}
                   className={styles.listItemText}
+                />
+                <TextField
+                  type="number"
+                  value={item.quantity} // عرض الكمية الحالية
+                  InputProps={{ inputProps: { min: 1 } }}
+                  className={styles.quantityInput}
+                  size="small"
+                  style={{ width: "80px", marginRight: "10px" }}
+                  onChange={(e) => {
+                    const newQuantity = Number(e.target.value);
+                    if (newQuantity > 0) {
+                      dispatch(
+                        addItem({
+                          ...item,
+                          quantity: newQuantity - item.quantity, // تحديث الكمية بناءً على الفرق
+                        })
+                      );
+                    }
+                  }}
                 />
                 <Button
                   variant="outlined"
@@ -134,10 +155,10 @@ const BillSection = () => {
           <Button
             variant="contained"
             onClick={handleSendBill}
-            disabled={isSending}
+            disabled={isSending || apiLoading}
             className={`${styles.button} ${styles.sendButton}`}
           >
-            {isSending ? "Sending..." : "Send Bill"}
+            {isSending || apiLoading ? "Sending..." : "Send Bill"}
           </Button>
           <Button
             variant="contained"

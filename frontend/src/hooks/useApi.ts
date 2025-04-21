@@ -18,7 +18,12 @@ export const useApi = <T = any>() => {
   const callApi = async (method: 'get' | 'post' | 'put' | 'patch' | 'delete', url: string, payload?: any) => {
     setState({ data: null, loading: true, error: null });
     try {
-      const response = await apiClient[method](url, payload);
+      const response = await apiClient[method](url, {
+        ...payload,
+        headers: {
+          'X-CSRFToken': "gpPejT7onkPSewykjLJNNl4YLhPyTy7b",
+        },
+      });
       setState({ data: response.data, loading: false, error: null });
       return response.data;
     } catch (err: any) {

@@ -4,6 +4,10 @@ import Layout from "../Layout";
 import HomePage from "../pages/HomePage";
 import RegisterPage from "../pages/RegisterPage";
 import LoginPage from "../pages/LoginPage";
+import OrdersPage from "../pages/OrderPage";
+import OrderDetailsPage from "../pages/OrderDetailsPage";
+import EditOrderPage from "../pages/EditOrderPage";
+import MenuPage from "../pages/MenuPage";
 
 // Example components for routes
 const About = () => <h1>About Page</h1>;
@@ -33,6 +37,23 @@ const router = createBrowserRouter([
         path: "/login",
         element: <LoginPage />,
       },
+      {
+        path: "orders",
+        element: <OrdersPage />,
+      },
+      {
+        path: "orders/:orderId", // Dynamic route for order details
+        element: <OrderDetailsPage />,
+      },
+      {
+        path: "orders/:orderId/edit", // Route for editing an order
+        element: <EditOrderPage />,
+      },
+      // Manage the menu items pages
+      {
+        path: "/menu",
+        element: <MenuPage />,
+      }
     ],
   },
 ]);

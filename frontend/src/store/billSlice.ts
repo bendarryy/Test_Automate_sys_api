@@ -4,11 +4,12 @@ interface Product {
   id: string;
   name: string;
   price: number;
+  quantity: number; // إضافة خاصية الكمية
 }
 
 interface BillState {
   items: Product[];
-  selectedTable: string | null; // إضافة حالة الطاولة المحددة
+  selectedTable: number | null; // إضافة حالة الطاولة المحددة
 }
 
 const initialState: BillState = {
@@ -21,7 +22,12 @@ const billSlice = createSlice({
   initialState,
   reducers: {
     addItem: (state, action: PayloadAction<Product>) => {
-      state.items.push(action.payload);
+      const existingItem = state.items.find((item) => item.id === action.payload.id);
+      if (existingItem) {
+        existingItem.quantity += action.payload.quantity; // Increment quantity
+      } else {
+        state.items.push({ ...action.payload, quantity: action.payload.quantity });
+      }
     },
     removeItem: (state, action: PayloadAction<string>) => {
       state.items = state.items.filter((item) => item.id !== action.payload);
@@ -30,7 +36,7 @@ const billSlice = createSlice({
       state.items = [];
     },
     setSelectedTable: (state, action: PayloadAction<string | null>) => {
-      state.selectedTable = action.payload; // تحديث الطاولة المحددة
+      state.selectedTable = action.payload !== null ? Number(action.payload) : null; // Ensure type compatibility
     },
   },
 });
