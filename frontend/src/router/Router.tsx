@@ -8,6 +8,7 @@ import OrdersPage from "../pages/OrderPage";
 import OrderDetailsPage from "../pages/OrderDetailsPage";
 import EditOrderPage from "../pages/EditOrderPage";
 import MenuPage from "../pages/MenuPage";
+import MenuManagement from "../components/MenuManagement";
 
 // Example components for routes
 const About = () => <h1>About Page</h1>;
@@ -53,7 +54,13 @@ const router = createBrowserRouter([
       {
         path: "/menu",
         element: <MenuPage />,
+      },
+      // menu management route
+      {
+        path: "/menu-management",
+        element: <MenuManagement />,
       }
+
     ],
   },
 ]);

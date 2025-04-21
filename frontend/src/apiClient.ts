@@ -13,7 +13,7 @@ const apiClient = axios.create({
 });
 
 apiClient.interceptors.request.use((config) => {
-  const csrfToken = "vaV3gARDoP0uCkn1FVqHBQPVIjIfzuts";
+  const csrfToken = "LZMd0PLPs0CbfnsSSi2MinR06igcXh50";
   if (csrfToken) {
     config.headers['X-CSRFToken'] = csrfToken;
   }

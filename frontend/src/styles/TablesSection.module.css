@@ -23,7 +23,7 @@
     gap: 20px;
     min-width: min(800px, 100%);
     overflow-x: auto;
-    padding: 1rem;
+    padding:2px 1rem;
 }
 
 input[type="checkbox"][name="table"]:checked + label .table{
