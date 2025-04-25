@@ -22,7 +22,7 @@ export default defineConfig({
         secure: false, // Add this if HTTPS issues occur
         configure: (proxy) => {
           proxy.on('proxyReq', (proxyReq) => {
-            proxyReq.setHeader('Origin', 'http://localhost:5173'); // Ensure correct origin header
+            proxyReq.setHeader('Origin', 'https://localhost:5173'); // Ensure correct origin header
           });
           proxy.on('proxyRes', (proxyRes, req, res) => {
             const cookies = proxyRes.headers['set-cookie'];
