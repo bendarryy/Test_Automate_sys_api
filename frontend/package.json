@@ -4,6 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "start": "set HTTPS=true&&set SSL_CRT_FILE=cert.pem&&set SSL_KEY_FILE=key.pem&&react-scripts start",
     "dev:frontend": "vite",
     "dev:backend": "cd ../backend/Automated_Sys_tmp/automation_system/ && python manage.py runserver",
     "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",

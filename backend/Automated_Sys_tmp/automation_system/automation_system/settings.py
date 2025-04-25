@@ -72,19 +72,22 @@ REST_FRAMEWORK = {
         'rest_framework.renderers.BrowsableAPIRenderer',  # This enables the browsable API
     ],
 }
-CORS_ALLOW_CREDENTIALS = True  # Allow cookies to be sent with requests
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",  # Allow requests from your frontend
+    "https://localhost:5173",  # Allow requests from your frontend
 ]
+
+CORS_ALLOW_CREDENTIALS = True  # Allow cookies to be sent with requests
+
 
 CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:5173",  # Trust frontend for CSRF
+    "https://localhost:5173",  # Trust frontend for CSRF
 ]
+# Ensure cookie settings are correct (already set based on your headers)
+SESSION_COOKIE_SAMESITE = 'None'
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SAMESITE = 'None'
+CSRF_COOKIE_SECURE = True
 
-SESSION_COOKIE_SAMESITE = 'None'  # Allow cross-site cookies
-SESSION_COOKIE_SECURE = True  # Use secure cookies (set to False for development if not using HTTPS)
-CSRF_COOKIE_SAMESITE = 'None'  # Allow cross-site CSRF cookies
-CSRF_COOKIE_SECURE = True  # Use secure cookies (set to False for development if not using HTTPS)
 
 # Optional: Allow all origins (use only for development)
 # CORS_ALLOW_ALL_ORIGINS = True
