@@ -21,8 +21,11 @@ from django.urls import path, include
 urlpatterns = [
     path("admin/", admin.site.urls),  # Admin panel URL
     path("api/accounts/", include("django.contrib.auth.urls")),  # Authentication URLs
-    path("api/core/", include("core.urls")),  # URLs for the core app (e.g., user management)
+    path(
+        "api/core/", include("core.urls")
+    ),  # URLs for the core app (e.g., user management)
     path("api/restaurant/", include("restaurant.urls")),  # URLs for the restaurant app
+    path("api/inventory/", include("inventory.urls")),
     # path("api/cafe/", include("cafe.urls")),  # URLs for the cafe app
     # path("api/supermarket/", include("supermarket.urls")),  # URLs for the supermarket app
     # path("api/workshop/", include("workshop.urls")),  # URLs for the workshop app

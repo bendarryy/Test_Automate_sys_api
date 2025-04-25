@@ -10,10 +10,7 @@ const __dirname = path.dirname(new URL(import.meta.url).pathname)
 export default defineConfig({
   plugins: [react()],
   server: {
-    https: {
-      key: fs.readFileSync(path.resolve(__dirname, 'key.pem')),
-      cert: fs.readFileSync(path.resolve(__dirname, 'cert.pem')),
-    },
+    host: '127.0.0.1',
     proxy: {
       '/api': {
         target: 'http://127.0.0.1:8000',
@@ -22,7 +19,7 @@ export default defineConfig({
         secure: false, // Add this if HTTPS issues occur
         configure: (proxy) => {
           proxy.on('proxyReq', (proxyReq) => {
-            proxyReq.setHeader('Origin', 'https://localhost:5173'); // Ensure correct origin header
+            proxyReq.setHeader('Origin', 'http://127.0.0.1:5173'); // Ensure correct origin header
           });
           proxy.on('proxyRes', (proxyRes, req, res) => {
             const cookies = proxyRes.headers['set-cookie'];

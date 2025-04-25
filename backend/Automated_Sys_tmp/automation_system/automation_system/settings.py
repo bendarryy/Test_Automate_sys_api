@@ -37,7 +37,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    'rest_framework',
+     'rest_framework',
     # Core app (handles admin and shared models)
     'core',
 
@@ -46,8 +46,30 @@ INSTALLED_APPS = [
     'cafe',
     'supermarket',
     'workshop',
-    'corsheaders',  # Add this to installed apps
+    'inventory',
+    'corsheaders',
 ]
+
+CORS_ALLOWED_ORIGINS = [
+    "http://127.0.0.1:5173",  # Allow requests from your frontend
+]
+
+CORS_ALLOW_CREDENTIALS = True  # Allow cookies to be sent with requests
+
+
+CSRF_TRUSTED_ORIGINS = [
+    "http://127.0.0.1:5173",  # Trust frontend for CSRF
+]
+# Ensure cookie settings are correct (already set based on your headers)
+SESSION_COOKIE_SAMESITE = 'None'
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SAMESITE = 'None'
+CSRF_COOKIE_SECURE = True
+
+
+# Optional: Allow all origins (use only for development)
+# CORS_ALLOW_ALL_ORIGINS = True
+
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -72,25 +94,6 @@ REST_FRAMEWORK = {
         'rest_framework.renderers.BrowsableAPIRenderer',  # This enables the browsable API
     ],
 }
-CORS_ALLOWED_ORIGINS = [
-    "https://localhost:5173",  # Allow requests from your frontend
-]
-
-CORS_ALLOW_CREDENTIALS = True  # Allow cookies to be sent with requests
-
-
-CSRF_TRUSTED_ORIGINS = [
-    "https://localhost:5173",  # Trust frontend for CSRF
-]
-# Ensure cookie settings are correct (already set based on your headers)
-SESSION_COOKIE_SAMESITE = 'None'
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SAMESITE = 'None'
-CSRF_COOKIE_SECURE = True
-
-
-# Optional: Allow all origins (use only for development)
-# CORS_ALLOW_ALL_ORIGINS = True
 
 TEMPLATES = [
     {
