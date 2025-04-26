@@ -8,6 +8,7 @@ from .models import MenuItem
 from .serializers import MenuItemSerializer , OrderSerializer , OrderItemSerializer
 from rest_framework.exceptions import PermissionDenied ,MethodNotAllowed
 from rest_framework import permissions
+from .serializers import InventoryItemSerializer
 
 class MenuItemViewSet(viewsets.ModelViewSet):
     serializer_class = MenuItemSerializer
@@ -146,4 +147,44 @@ class KitchenOrderViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.exceptions import PermissionDenied
+class InventoryItemViewSet(viewsets.ModelViewSet):
+    serializer_class = InventoryItemSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        system_id = self.kwargs.get('system_id')
+        user = self.request.user
+
+        # Make sure the system belongs to the authenticated user
+        try:
+            system = System.objects.get(id=system_id, owner=user)
+        except System.DoesNotExist:
+            raise PermissionDenied("You do not have permission to access this system's inventory.")
+
+        return InventoryItem.objects.filter(system=system)
+
+    def perform_create(self, serializer):
+        system_id = self.kwargs.get('system_id')
+        user = self.request.user
+
+        try:
+            system = System.objects.get(id=system_id, owner=user)
+        except System.DoesNotExist:
+            raise PermissionDenied("You do not have permission to add inventory to this system.")
+
+        serializer.save(system=system)
+
+    def perform_update(self, serializer):
+        system = serializer.instance.system
+        if system.user != self.request.user:
+            raise PermissionDenied("You do not have permission to update inventory in this system.")
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        system = instance.system
+        if system.user != self.request.user:
+            raise PermissionDenied("You do not have permission to delete inventory from this system.")
+        instance.delete()
 #bola hy3ml push

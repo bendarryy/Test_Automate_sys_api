@@ -12,4 +12,15 @@ router.register(r"(?P<system_id>\d+)/orders/(?P<order_id>\d+)/items", OrderItemV
 router.register(r'kitchen/orders', KitchenOrderViewSet, basename='kitchen-orders')
 urlpatterns = [
     path('', include(router.urls)),
+    path('<int:system_id>/inventory/', InventoryItemViewSet.as_view({
+        'get': 'list',
+        'post': 'create',
+    }), name='inventory-list-create'),
+    
+    path('<int:system_id>/inventory/<int:pk>/', InventoryItemViewSet.as_view({
+        'get': 'retrieve',
+        'put': 'update',
+        'patch': 'partial_update',
+        'delete': 'destroy',
+    }), name='inventory-detail'),
 ]

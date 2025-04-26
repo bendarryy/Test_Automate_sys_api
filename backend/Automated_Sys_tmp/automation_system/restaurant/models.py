@@ -90,6 +90,20 @@ class Payment(BaseMultiTenantModel):
         return f"Payment for Order {self.order.id} - {self.amount_paid} {self.payment_method} - {self.system.name}"
 
 
+
+
+class InventoryItem(models.Model):
+    system = models.ForeignKey(System, on_delete=models.CASCADE, related_name='inventory_items')
+    name = models.CharField(max_length=255)
+    quantity = models.PositiveIntegerField(default=0)
+    unit = models.CharField(max_length=50, blank=True, null=True)  # <-- optional
+    min_threshold = models.PositiveIntegerField(blank=True, null=True)  # <-- optional
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.name} - {self.system.name}"
+
 # class Staff(BaseMultiTenantModel):
 #     """Each system (restaurant) has its own staff"""
 #     system = models.ForeignKey(System, on_delete=models.CASCADE)

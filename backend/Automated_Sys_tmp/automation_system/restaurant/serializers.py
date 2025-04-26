@@ -3,11 +3,7 @@ from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 from .models import MenuItem
 from .models import Order, OrderItem
-
-
-
-
-
+from .models import InventoryItem
 
 class MenuItemSerializer(serializers.ModelSerializer):
     VALID_CATEGORIES = ['food' , 'soups' , 'drink', 'dessert']  # Define valid categories
@@ -90,3 +86,14 @@ class OrderSerializer(serializers.ModelSerializer):
         if value and value.role != "waiter":
             raise serializers.ValidationError("Selected user is not a waiter.")
         return value
+
+
+
+class InventoryItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InventoryItem
+        fields = ['id', 'name', 'quantity', 'unit', 'min_threshold']
+        extra_kwargs = {
+            'unit': {'required': False, 'allow_null': True},
+            'min_threshold': {'required': False, 'allow_null': True},
+        }
