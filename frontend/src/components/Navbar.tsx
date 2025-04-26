@@ -16,11 +16,6 @@ const Navbar = ({ title }: NavbarProps) => {
   const [isShowNotification, setIsShowNotification] = useState(false);
   return (
     <nav className={Navstyle.navbar}>
-      <div className={Navstyle.logo}>
-        <RestaurantIcon />
-        <div className={Navstyle.title}>{title}</div>
-      </div>
-
       <div className={Navstyle.action}>
         {numOfNotification == 0 && (
           <div className={Navstyle.notification}>

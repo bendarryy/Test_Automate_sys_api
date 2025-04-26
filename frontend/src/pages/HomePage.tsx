@@ -8,7 +8,7 @@ import { Box } from "@mui/material";
 const HomePage = () => {
   return (
     <main>
-      <Box display="flex" height="calc(100vh - 64px)" width="100vw">
+      <Box display="flex" height="calc(100vh - 64px)">
         {/* العمود الأول: مكدس TablesSection وProductsSection */}
         <Box flex={2} display="flex" flexDirection="column" gap={2} sx={{ width : "70%" }}>
           <TablesSection />
