@@ -15,6 +15,9 @@ interface UseInventoryReturn {
   error: string | null;
   fetchInventory: (systemId: string) => Promise<InventoryItem[]>;
   addInventoryItem: (systemId: string, item: Omit<InventoryItem, 'id'>) => Promise<InventoryItem>;
+  getInventoryItem: (systemId: string, itemId: string | number) => Promise<InventoryItem>;
+  updateInventoryItem: (systemId: string, itemId: string | number, item: Partial<InventoryItem>) => Promise<InventoryItem>;
+  deleteInventoryItem: (systemId: string, itemId: string | number) => Promise<void>;
 }
 
 export const useInventory = (): UseInventoryReturn => {
@@ -26,8 +29,22 @@ export const useInventory = (): UseInventoryReturn => {
   }, [callApi]);
 
   const addInventoryItem = useCallback(async (systemId: string, item: Omit<InventoryItem, 'id'>) => {
-    const result = await callApi('post', `/restaurant/${systemId}/inventory/`, { data: item });
+    const result = await callApi('post', `/restaurant/${systemId}/inventory/`, item);
     return result as InventoryItem;
+  }, [callApi]);
+
+  const getInventoryItem = useCallback(async (systemId: string, itemId: string | number) => {
+    const result = await callApi('get', `/restaurant/${systemId}/inventory/${itemId}/`);
+    return result as InventoryItem;
+  }, [callApi]);
+
+  const updateInventoryItem = useCallback(async (systemId: string, itemId: string | number, item: Partial<InventoryItem>) => {
+    const result = await callApi('patch', `/restaurant/${systemId}/inventory/${itemId}/`, item);
+    return result as InventoryItem;
+  }, [callApi]);
+
+  const deleteInventoryItem = useCallback(async (systemId: string, itemId: string | number) => {
+    await callApi('delete', `/restaurant/${systemId}/inventory/${itemId}/`);
   }, [callApi]);
 
   return {
@@ -36,5 +53,8 @@ export const useInventory = (): UseInventoryReturn => {
     error,
     fetchInventory,
     addInventoryItem,
+    getInventoryItem,
+    updateInventoryItem,
+    deleteInventoryItem,
   };
 };

@@ -70,6 +70,7 @@ const InventoryManagementPage: React.FC = () => {
             <th>Unit</th>
             <th>Status</th>
             <th>Availability</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -95,11 +96,21 @@ const InventoryManagementPage: React.FC = () => {
                     label={`${availability}%`}
                   />
                 </td>
+                <td>
+                  <Button
+                    variant="info"
+                    size="sm"
+                    className="rounded-pill"
+                    href={`/restaurant/${SYSTEM_ID}/inventory/${item.id}`}
+                  >
+                    View
+                  </Button>
+                </td>
               </tr>
             );
           })}
           {loading && (
-            <tr><td colSpan={5} className="text-center">Loading...</td></tr>
+            <tr><td colSpan={6} className="text-center">Loading...</td></tr>
           )}
         </tbody>
       </Table>

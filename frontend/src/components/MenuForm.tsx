@@ -6,25 +6,39 @@ const MenuForm = ({ onSubmit }) => {
     price: '',
     specialOffer: false,
     discount: '',
+    image: null,
   });
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : name === 'price' || name === 'discount' ? parseFloat(value) : value,
-    }));
+    const { name, value, type, checked, files } = e.target;
+    if (type === 'file') {
+      setFormData((prev) => ({ ...prev, [name]: files[0] }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: type === 'checkbox' ? checked : name === 'price' || name === 'discount' ? parseFloat(value) : value,
+      }));
+    }
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (formData.name && formData.price > 0) {
-      onSubmit(formData);
+      const submitData = new FormData();
+      submitData.append('name', formData.name);
+      submitData.append('price', String(formData.price));
+      submitData.append('specialOffer', formData.specialOffer ? 'true' : 'false');
+      submitData.append('discount', String(formData.discount));
+      if (formData.image) {
+        submitData.append('image', formData.image);
+      }
+      onSubmit(submitData);
       setFormData({
         name: '',
         price: '',
         specialOffer: false,
         discount: '',
+        image: null,
       });
     } else {
       alert('Please fill all fields correctly');
@@ -77,7 +91,17 @@ const MenuForm = ({ onSubmit }) => {
           </button>
         </div>
       </div>
-
+      <div className="row">
+        <div className="col-md-4 mb-2">
+          <input
+            type="file"
+            className="form-control"
+            name="image"
+            accept="image/*"
+            onChange={handleChange}
+          />
+        </div>
+      </div>
       {formData.specialOffer && (
         <div className="row">
           <div className="col-md-4 mb-2">

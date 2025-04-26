@@ -10,8 +10,8 @@ import EditOrderPage from "../pages/EditOrderPage";
 import MenuPage from "../pages/MenuPage";
 import MenuManagement from "../components/MenuManagement";
 import InventoryManagementPage from "../pages/InventoryManagementPage";
+import InventoryItemViewPage from "../pages/InventoryItemViewPage";
 import ProtectLogin from "../security/protectLogin";
-
 
 // Example components for routes
 const About = () => <h1>About Page</h1>;
@@ -62,12 +62,16 @@ const router = createBrowserRouter([
       {
         path: "/menu-management",
         element: <ProtectLogin><MenuManagement /></ProtectLogin>, // Protecting the menu management page
-      }
-      ,
+      },
       //  Inventory route
       {
         path: "/Inventory",
         element: <ProtectLogin><InventoryManagementPage /></ProtectLogin>, // Protecting the inventory management page
+      },
+      // Inventory item view route
+      {
+        path: "/restaurant/:systemId/inventory/:itemId",
+        element: <ProtectLogin><InventoryItemViewPage /></ProtectLogin>,
       },
     ],
   },
