@@ -1,56 +1,55 @@
 // InventoryManagementPage.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Table, Form, ProgressBar, Button } from 'react-bootstrap';
 import styles from '../styles/InventoryManagementPage.module.css';
+import { useInventory, InventoryItem } from '../hooks/useInventory';
 
-interface Item {
-  name: string;
-  quantity: string;
-  unit: string;
-  status: 'Sufficient' | 'LOW';
-  availability: number;
+const SYSTEM_ID = '5'; // TODO: replace with dynamic system id as needed
+
+// Helper to calculate status and availability
+function computeStatusAndAvailability(item: InventoryItem) {
+  let status: 'Sufficient' | 'LOW' = 'Sufficient';
+  let availability = 100;
+  if (item.min_threshold !== null && item.quantity !== null) {
+    if (item.quantity <= item.min_threshold) status = 'LOW';
+    availability = item.min_threshold > 0 ? Math.round((item.quantity / item.min_threshold) * 100) : 100;
+    if (availability > 100) availability = 100;
+    if (availability < 0) availability = 0;
+  }
+  return { status, availability };
 }
 
 const InventoryManagementPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [items, setItems] = useState<Item[]>([
-    { 
-      name: 'Tomatoes', 
-      quantity: '10', 
-      unit: 'kg', 
-      status: 'Sufficient',
-      availability: 75
-    },
-    { 
-      name: 'Milk', 
-      quantity: '2', 
-      unit: 'liter', 
-      status: 'LOW',
-      availability: 25
-    },
-  ]);
+  const [newItem, setNewItem] = useState<Omit<InventoryItem, 'id'>>({
+    name: '',
+    quantity: null,
+    unit: '',
+    min_threshold: null,
+  });
+  const { inventory, loading, error, fetchInventory, addInventoryItem } = useInventory();
 
-  // دالة إضافة عنصر جديد
-  const handleAddNewIngredient = () => {
-    const newItem: Item = {
-      name: 'New Item',
-      quantity: '0',
-      unit: 'kg',
-      status: 'Sufficient',
-      availability: 0
-    };
-    setItems([...items, newItem]);
+  useEffect(() => {
+    fetchInventory(SYSTEM_ID);
+    // eslint-disable-next-line
+  }, []);
+
+  const handleAddNewIngredient = async () => {
+    if (!newItem.name || newItem.quantity === null || !newItem.unit) return;
+    await addInventoryItem(SYSTEM_ID, newItem);
+    fetchInventory(SYSTEM_ID);
+    setNewItem({ name: '', quantity: null, unit: '', min_threshold: null });
   };
 
-  // فلترة العناصر حسب البحث
-  const filteredItems = items.filter(item =>
+  // Use backend data, but keep original UI logic
+  const filteredItems = (inventory || []).filter(item =>
     item.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
     <div className={`container py-4 ${styles.customContainer}`}>
       <h1 className="text-center mb-4 text-primary">Stock Management</h1>
-      
+      {error && <div className="alert alert-danger">{error}</div>}
       {/* شريط البحث */}
       <Form.Group className="mb-4">
         <Form.Control
@@ -74,43 +73,80 @@ const InventoryManagementPage: React.FC = () => {
           </tr>
         </thead>
         <tbody>
-          {filteredItems.map((item, index) => (
-            <tr key={index}>
-              <td>{item.name}</td>
-              <td>{item.quantity}</td>
-              <td>{item.unit}</td>
-              <td>
-                <span 
-                  className={`badge ${
-                    item.status === 'LOW' ? 'bg-danger' : 'bg-success'
-                  } rounded-pill`}
-                >
-                  {item.status}
-                </span>
-              </td>
-              <td>
-                <ProgressBar 
-                  now={item.availability} 
-                  className="rounded-pill"
-                  variant={item.status === 'LOW' ? 'danger' : 'success'}
-                  label={`${item.availability}%`}
-                />
-              </td>
-            </tr>
-          ))}
+          {filteredItems.map((item, index) => {
+            const { status, availability } = computeStatusAndAvailability(item);
+            return (
+              <tr key={index}>
+                <td>{item.name}</td>
+                <td>{item.quantity}</td>
+                <td>{item.unit}</td>
+                <td>
+                  <span
+                    className={`badge ${status === 'LOW' ? 'bg-danger' : 'bg-success'} rounded-pill`}
+                  >
+                    {status}
+                  </span>
+                </td>
+                <td>
+                  <ProgressBar
+                    now={availability}
+                    className="rounded-pill"
+                    variant={status === 'LOW' ? 'danger' : 'success'}
+                    label={`${availability}%`}
+                  />
+                </td>
+              </tr>
+            );
+          })}
+          {loading && (
+            <tr><td colSpan={5} className="text-center">Loading...</td></tr>
+          )}
         </tbody>
       </Table>
 
-      {/* زر إضافة عنصر جديد */}
-      <div className="d-flex justify-content-end mt-3">
-        <Button 
-          variant="primary" 
+      {/* إضافة عنصر جديد */}
+      <Form className="mb-3">
+        <Form.Group className="mb-2">
+          <Form.Control
+            type="text"
+            placeholder="Item Name"
+            value={newItem.name}
+            onChange={e => setNewItem({ ...newItem, name: e.target.value })}
+          />
+        </Form.Group>
+        <Form.Group className="mb-2">
+          <Form.Control
+            type="number"
+            placeholder="Quantity"
+            value={newItem.quantity ?? ''}
+            onChange={e => setNewItem({ ...newItem, quantity: e.target.value === '' ? null : Number(e.target.value) })}
+          />
+        </Form.Group>
+        <Form.Group className="mb-2">
+          <Form.Control
+            type="text"
+            placeholder="Unit (e.g. kg, liter)"
+            value={newItem.unit}
+            onChange={e => setNewItem({ ...newItem, unit: e.target.value })}
+          />
+        </Form.Group>
+        <Form.Group className="mb-2">
+          <Form.Control
+            type="number"
+            placeholder="Min Threshold"
+            value={newItem.min_threshold ?? ''}
+            onChange={e => setNewItem({ ...newItem, min_threshold: e.target.value === '' ? null : Number(e.target.value) })}
+          />
+        </Form.Group>
+        <Button
+          variant="primary"
           className="rounded-pill w-100"
-          onClick={handleAddNewIngredient}
+          onClick={e => { e.preventDefault(); handleAddNewIngredient(); }}
+          disabled={loading}
         >
           + Add New Ingredient
         </Button>
-      </div>
+      </Form>
     </div>
   );
 };
