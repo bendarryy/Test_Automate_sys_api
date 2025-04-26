@@ -8,67 +8,67 @@ import PeopleOutlineIcon from "@mui/icons-material/PeopleOutline";
 
 const tables = [
   {
-    id: "1-unique",
+    id: 1,
     status: "available",
     capacity: 4,
     isReserved: false,
   },
   {
-    id: "2-unique",
+    id: 2,
     status: "occupied",
     capacity: 4,
     isReserved: false,
   },
   {
-    id: "3-unique",
+    id: 3,
     status: "booked",
     capacity: 4,
     isReserved: false,
   },
   {
-    id: "4-unique",
+    id:4,
     status: "available",
     capacity: 4,
     isReserved: false,
   },
   {
-    id: "5-unique",
+    id: 5,
     status: "available",
     capacity: 4,
     isReserved: false,
   },
   {
-    id: "6-unique",
+    id: 6,
     status: "available",
     capacity: 4,
     isReserved: false,
   },
   {
-    id: "7-unique",
+    id: 7,
     status: "booked",
     capacity: 4,
     isReserved: false,
   },
   {
-    id: "8-unique",
+    id: 8,
     status: "occupied",
     capacity: 4,
     isReserved: false,
   },
   {
-    id: "9-unique",
+    id: 9,
     status: "available",
     capacity: 4,
     isReserved: false,
   },
   {
-    id: "10-unique",
+    id: 10,
     status: "available",
     capacity: 4,
     isReserved: false,
   },
   {
-    id: "11-unique",
+    id: 11,
     status: "available",
     capacity: 4,
     isReserved: false,
@@ -79,7 +79,7 @@ const TablesSection: React.FC = () => {
   const dispatch = useDispatch();
   const selectedTable = useSelector((state: RootState) => state.bill.selectedTable);
 
-  const handleChange = (id: string) => {
+  const handleChange = (id:  number) => {
     dispatch(setSelectedTable(id === selectedTable ? null : id)); // تحديث الطاولة المحددة
   };
 

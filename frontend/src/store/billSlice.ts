@@ -35,8 +35,8 @@ const billSlice = createSlice({
     clearBill: (state) => {
       state.items = [];
     },
-    setSelectedTable: (state, action: PayloadAction<string | null>) => {
-      state.selectedTable = action.payload !== null ? Number(action.payload) : null; // Ensure type compatibility
+    setSelectedTable: (state, action: PayloadAction<number | null>) => {
+      state.selectedTable = action.payload;
     },
   },
 });
