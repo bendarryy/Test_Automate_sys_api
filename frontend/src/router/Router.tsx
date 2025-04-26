@@ -10,6 +10,7 @@ import EditOrderPage from "../pages/EditOrderPage";
 import MenuPage from "../pages/MenuPage";
 import MenuManagement from "../components/MenuManagement";
 import InventoryManagementPage from "../pages/InventoryManagementPage";
+import ProtectLogin from "../security/protectLogin";
 
 
 // Example components for routes
@@ -23,12 +24,12 @@ const router = createBrowserRouter([
       // home route
       {
         path: "/",
-        element: <HomePage />,
+        element: <ProtectLogin><HomePage /></ProtectLogin>,
       },
       // about route
       {
         path: "/about",
-        element: <About />,
+        element: <ProtectLogin><About /></ProtectLogin>,
       },
       // register route
       {
@@ -42,31 +43,31 @@ const router = createBrowserRouter([
       },
       {
         path: "orders",
-        element: <OrdersPage />,
+        element: <ProtectLogin><OrdersPage /></ProtectLogin>, // Protecting the orders page
       },
       {
         path: "orders/:orderId", // Dynamic route for order details
-        element: <OrderDetailsPage />,
+        element: <ProtectLogin><OrderDetailsPage /></ProtectLogin>, // Protecting the order details page
       },
       {
         path: "orders/:orderId/edit", // Route for editing an order
-        element: <EditOrderPage />,
+        element: <ProtectLogin><EditOrderPage /></ProtectLogin>, // Protecting the edit order page
       },
       // Manage the menu items pages
       {
         path: "/menu",
-        element: <MenuPage />,
+        element: <ProtectLogin><MenuPage /></ProtectLogin>, // Protecting the menu page
       },
       // menu management route
       {
         path: "/menu-management",
-        element: <MenuManagement />,
+        element: <ProtectLogin><MenuManagement /></ProtectLogin>, // Protecting the menu management page
       }
       ,
       //  Inventory route
       {
         path: "/Inventory",
-        element: <InventoryManagementPage />,
+        element: <ProtectLogin><InventoryManagementPage /></ProtectLogin>, // Protecting the inventory management page
       },
     ],
   },
