@@ -178,13 +178,13 @@ class InventoryItemViewSet(viewsets.ModelViewSet):
 
     def perform_update(self, serializer):
         system = serializer.instance.system
-        if system.user != self.request.user:
+        if system.owner != self.request.user:
             raise PermissionDenied("You do not have permission to update inventory in this system.")
         serializer.save()
 
     def perform_destroy(self, instance):
         system = instance.system
-        if system.user != self.request.user:
+        if system.owner != self.request.user:
             raise PermissionDenied("You do not have permission to delete inventory from this system.")
         instance.delete()
 #bola hy3ml push
