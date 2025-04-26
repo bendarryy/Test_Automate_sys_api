@@ -96,57 +96,57 @@ def logout_user(request):
 
 # Employee 
 
-from .serializers import EmployeeSerializer, EmployeeCreateSerializer, EmployeeLoginSerializer
-from rest_framework.permissions import AllowAny
-from rest_framework_simplejwt.tokens import RefreshToken
-# from rest_framework_simplejwt.views import TokenBlacklistView
+# from .serializers import EmployeeSerializer, EmployeeCreateSerializer, EmployeeLoginSerializer
+# from rest_framework.permissions import AllowAny
+# from rest_framework_simplejwt.tokens import RefreshToken
+# # from rest_framework_simplejwt.views import TokenBlacklistView
 
-class EmployeeInviteView(generics.CreateAPIView):
-    """Manager invites an employee to a specific system"""
-    serializer_class = EmployeeCreateSerializer
+# class EmployeeInviteView(generics.CreateAPIView):
+#     """Manager invites an employee to a specific system"""
+#     serializer_class = EmployeeCreateSerializer
 
-    def perform_create(self, serializer):
-        system_id = self.kwargs.get('system_id')
-        system = get_object_or_404(System, id=system_id)
-        serializer.save(system=system)
-
-
-class EmployeeLoginView(APIView):
-    """Employee login endpoint"""
-    permission_classes = [AllowAny]
-
-    def post(self, request, *args, **kwargs):
-        serializer = EmployeeLoginSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        email = serializer.validated_data['email']
-        password = serializer.validated_data['password']
-
-        try:
-            employee = Employee.objects.get(email=email, is_active=True)
-        except Employee.DoesNotExist:
-            return Response({"error": "Invalid login credentials"}, status=status.HTTP_400_BAD_REQUEST)
-
-        if not employee.check_password(password):
-            return Response({"error": "Invalid login credentials"}, status=status.HTTP_400_BAD_REQUEST)
-
-        refresh = RefreshToken.for_user(employee)
-
-        return Response({
-            "refresh": str(refresh),
-            "access": str(refresh.access_token),
-            "employee": EmployeeSerializer(employee).data
-        })
+#     def perform_create(self, serializer):
+#         system_id = self.kwargs.get('system_id')
+#         system = get_object_or_404(System, id=system_id)
+#         serializer.save(system=system)
 
 
-class EmployeeLogoutView(APIView):
-    """Employee logout (invalidate refresh token)"""
-    permission_classes = [AllowAny]
+# class EmployeeLoginView(APIView):
+#     """Employee login endpoint"""
+#     permission_classes = [AllowAny]
 
-    def post(self, request, *args, **kwargs):
-        try:
-            refresh_token = request.data["refresh"]
-            token = RefreshToken(refresh_token)
-            token.blacklist()
-            return Response(status=status.HTTP_205_RESET_CONTENT)
-        except Exception as e:
-            return Response({"error": "Invalid token"}, status=status.HTTP_400_BAD_REQUEST)
+#     def post(self, request, *args, **kwargs):
+#         serializer = EmployeeLoginSerializer(data=request.data)
+#         serializer.is_valid(raise_exception=True)
+#         email = serializer.validated_data['email']
+#         password = serializer.validated_data['password']
+
+#         try:
+#             employee = Employee.objects.get(email=email, is_active=True)
+#         except Employee.DoesNotExist:
+#             return Response({"error": "Invalid login credentials"}, status=status.HTTP_400_BAD_REQUEST)
+
+#         if not employee.check_password(password):
+#             return Response({"error": "Invalid login credentials"}, status=status.HTTP_400_BAD_REQUEST)
+
+#         refresh = RefreshToken.for_user(employee)
+
+#         return Response({
+#             "refresh": str(refresh),
+#             "access": str(refresh.access_token),
+#             "employee": EmployeeSerializer(employee).data
+#         })
+
+
+# class EmployeeLogoutView(APIView):
+#     """Employee logout (invalidate refresh token)"""
+#     permission_classes = [AllowAny]
+
+#     def post(self, request, *args, **kwargs):
+#         try:
+#             refresh_token = request.data["refresh"]
+#             token = RefreshToken(refresh_token)
+#             token.blacklist()
+#             return Response(status=status.HTTP_205_RESET_CONTENT)
+#         except Exception as e:
+#             return Response({"error": "Invalid token"}, status=status.HTTP_400_BAD_REQUEST)
