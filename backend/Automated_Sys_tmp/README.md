@@ -7,7 +7,7 @@
 
 
 ### Account Managment 
-
+#### Owner 
 **POST** `/api/core/register/`
 
 **Request Body:**
@@ -75,6 +75,43 @@ This endpoint provides a custom admin panel for each user to manage their resour
 - **201 Created**: System created successfully.
 - **400 Bad Request**: Missing required fields.
 
+
+---
+---
+
+
+#### Employee 
+
+
+Endpoint | Method | Body | Description
+/api/core/<system_id>/invite/ | POST | {name, role, phone, email, password} | Invite employee under a specific system
+/api/core/employee/login/ | POST | {email, password} | Employee logs in
+/api/core/employee/logout/ | POST | {refresh} | Employee logs out (invalidate token)
+
+Invite an Employee
+`POST /api/core/5/invite/`
+```
+{
+    "name": "Mohamed Ali",
+    "role": "waiter",
+    "phone": "01012345678",
+    "email": "mohamed@restaurant.com",
+    "password": "strongpassword"
+}
+
+```
+
+Login as Employee
+`POST /api/employee/login/`
+```
+{
+    "email": "mohamed@restaurant.com",
+    "password": "strongpassword"
+}
+
+```
+
+---
 ---
 
 ### System 

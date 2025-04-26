@@ -46,3 +46,39 @@ class SystemSerializer(serializers.ModelSerializer):
     class Meta:
         model = System
         fields = ['name', 'category']
+        
+        
+        
+
+from .models import Employee
+
+class EmployeeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Employee
+        fields = ['id', 'system', 'name', 'role', 'phone', 'email', 'is_active', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at', 'is_active']
+
+
+class EmployeeCreateSerializer(serializers.ModelSerializer):
+    """Used when creating/inviting an employee"""
+    class Meta:
+        model = Employee
+        fields = ['system', 'name', 'role', 'phone', 'email', 'password']
+
+    def create(self, validated_data):
+        employee = Employee(
+            system=validated_data['system'],
+            name=validated_data['name'],
+            role=validated_data['role'],
+            phone=validated_data.get('phone'),
+            email=validated_data.get('email'),
+        )
+        employee.set_password(validated_data['password'])  # hash password
+        employee.save()
+        return employee
+
+
+class EmployeeLoginSerializer(serializers.Serializer):
+    """Login serializer"""
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only=True)
