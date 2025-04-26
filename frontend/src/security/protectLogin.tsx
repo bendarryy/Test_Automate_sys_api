@@ -11,14 +11,11 @@ interface ProtectLoginProps {
 
 const ProtectLogin = (props: ProtectLoginProps) => {
   const { children } = props;
-  const { data } = useLogin();
+  const { isAuthenticated } = useLogin();
   const location = useLocation();
 
-  // Example: if data contains user info or token, consider logged in
-  const isLoggedIn = Boolean(data);
-
-  if (!isLoggedIn) {
-     return (<Navigate to="/login" state={{ from: location }} replace />);
+  if (!isAuthenticated()) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   return <>{children}</>;
