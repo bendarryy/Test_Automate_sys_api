@@ -215,3 +215,20 @@ GET /api/restaurant/5/orders/6/
     "created_at": "2025-03-25T22:28:32.042890Z",
     "updated_at": "2025-03-25T23:01:53.508999Z"
 ```
+---
+
+### Kitchen Orders API
+
+- **GET** `/api/restaurant/kitchen-orders/`
+  - **Description:** إرجاع كل الطلبات في حالة `pending` أو `preparing`.
+  
+- **PATCH** `/api/restaurant/kitchen-orders/{id}/`
+  - **Description:** تحديث حالة الطلب لـ `preparing` أو `ready`.
+  - **Example Request Body:**
+    ```json
+    {
+      "status": "ready"
+    }
+    ```
+
+---
