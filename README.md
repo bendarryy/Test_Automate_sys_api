@@ -14,3 +14,6 @@ it is under development
  CSRF_COOKIE_SAMESITE = 'None'
  CSRF_COOKIE_SECURE = True
 
+## if user is not authenticated redirect to login page
+    i use the response status code 403 to check if the user is authenticated 
+
