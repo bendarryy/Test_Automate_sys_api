@@ -42,7 +42,7 @@ class Employee(models.Model):
         ('delivery', 'Delivery'),
     ])
     phone = models.CharField(max_length=20, blank=True, null=True)
-    email = models.EmailField(blank=True, null=True)
+    email = models.EmailField(blank=True, null=True, unique=True)
     password = models.CharField(max_length=128)  # We store hashed passwords
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)

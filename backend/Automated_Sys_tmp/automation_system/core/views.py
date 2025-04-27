@@ -8,15 +8,38 @@ from django.contrib.auth.models import User, Group, Permission
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes 
 from rest_framework.response import Response
 from rest_framework import status , generics
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated ,AllowAny
 from .serializers import SystemSerializer, UserSerializer, SystemListSerializer
 from rest_framework.generics import RetrieveAPIView, ListAPIView
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
+from django.core.exceptions import PermissionDenied  # FIX for PermissionDenied
+from django_ratelimit.decorators import ratelimit
+from rest_framework import permissions
 
+
+class IsSystemOwner(permissions.BasePermission):
+    """
+    Custom permission to only allow the system owner to perform certain actions.
+    """
+
+    def has_permission(self, request, view):
+        # Ensure the user is authenticated
+        if not request.user.is_authenticated:
+            return False
+        
+        # Extract the system ID from URL kwargs
+        system_id = view.kwargs.get('system_id')
+        try:
+            system = System.objects.get(id=system_id)
+        except System.DoesNotExist:
+            return False
+        
+        # Check if the user is the owner of the system
+        return system.owner == request.user
 
 @csrf_exempt
 @api_view(["POST"])
@@ -95,58 +118,107 @@ def logout_user(request):
 
 
 # Employee 
-
-# from .serializers import EmployeeSerializer, EmployeeCreateSerializer, EmployeeLoginSerializer
-# from rest_framework.permissions import AllowAny
-# from rest_framework_simplejwt.tokens import RefreshToken
-# # from rest_framework_simplejwt.views import TokenBlacklistView
-
-# class EmployeeInviteView(generics.CreateAPIView):
-#     """Manager invites an employee to a specific system"""
-#     serializer_class = EmployeeCreateSerializer
-
-#     def perform_create(self, serializer):
-#         system_id = self.kwargs.get('system_id')
-#         system = get_object_or_404(System, id=system_id)
-#         serializer.save(system=system)
+from .serializers import EmployeeSerializer, EmployeeCreateSerializer, EmployeeLoginSerializer
+from .models import Employee
+from rest_framework_simplejwt.tokens import RefreshToken  # This is correct
 
 
-# class EmployeeLoginView(APIView):
-#     """Employee login endpoint"""
-#     permission_classes = [AllowAny]
+class EmployeeInviteView(generics.CreateAPIView):
+    """
+    Manager (system owner) invites an employee to a specific system.
+    URL example: /api/restaurant/{system_id}/invite/
+    """
+    
+    serializer_class = EmployeeCreateSerializer
+    permission_classes = [IsAuthenticated, IsSystemOwner]
 
-#     def post(self, request, *args, **kwargs):
-#         serializer = EmployeeLoginSerializer(data=request.data)
-#         serializer.is_valid(raise_exception=True)
-#         email = serializer.validated_data['email']
-#         password = serializer.validated_data['password']
-
-#         try:
-#             employee = Employee.objects.get(email=email, is_active=True)
-#         except Employee.DoesNotExist:
-#             return Response({"error": "Invalid login credentials"}, status=status.HTTP_400_BAD_REQUEST)
-
-#         if not employee.check_password(password):
-#             return Response({"error": "Invalid login credentials"}, status=status.HTTP_400_BAD_REQUEST)
-
-#         refresh = RefreshToken.for_user(employee)
-
-#         return Response({
-#             "refresh": str(refresh),
-#             "access": str(refresh.access_token),
-#             "employee": EmployeeSerializer(employee).data
-#         })
+    def perform_create(self, serializer):
+        system_id = self.kwargs.get('system_id')
+        system = get_object_or_404(System, id=system_id)
+        serializer.save(system=system)
 
 
-# class EmployeeLogoutView(APIView):
-#     """Employee logout (invalidate refresh token)"""
-#     permission_classes = [AllowAny]
 
-#     def post(self, request, *args, **kwargs):
-#         try:
-#             refresh_token = request.data["refresh"]
-#             token = RefreshToken(refresh_token)
-#             token.blacklist()
-#             return Response(status=status.HTTP_205_RESET_CONTENT)
-#         except Exception as e:
-#             return Response({"error": "Invalid token"}, status=status.HTTP_400_BAD_REQUEST)
+class EmployeeDeleteView(generics.DestroyAPIView):
+    serializer_class = EmployeeSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        system_id = self.kwargs.get('system_id')
+        employee_id = self.kwargs.get('employee_id')
+        system = get_object_or_404(System, id=system_id)
+
+        if system.owner != self.request.user:
+            raise PermissionDenied("You do not have permission to delete employees from this system.")
+
+        employee = get_object_or_404(Employee, id=employee_id, system=system)
+        return employee
+
+
+class EmployeeListView(generics.ListAPIView):
+    """
+    Manager lists all employees of a specific system
+    URL example: /api/restaurant/{system_id}/employees/
+    """
+    serializer_class = EmployeeSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        system_id = self.kwargs.get('system_id')
+        system = get_object_or_404(System, id=system_id)
+
+        # Optional: check if the current user owns the system
+        if system.owner != self.request.user:
+            raise PermissionDenied("You do not have permission to view employees of this system.")
+
+        return Employee.objects.filter(system=system)
+
+class EmployeeLoginView(APIView):
+    """
+    Employee login endpoint
+    """
+    permission_classes = [AllowAny]
+
+    @ratelimit(key='ip', rate='5/m', method='POST')
+    def post(self, request, *args, **kwargs):
+        serializer = EmployeeLoginSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        email = serializer.validated_data['email']
+        password = serializer.validated_data['password']
+
+        try:
+            employee = Employee.objects.get(email=email, is_active=True)
+        except Employee.DoesNotExist:
+            return Response({"error": "Invalid email or password."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not employee.check_password(password):
+            return Response({"error": "Invalid email or password."}, status=status.HTTP_400_BAD_REQUEST)
+
+        refresh = RefreshToken.for_user(employee)
+
+        return Response({
+            "refresh": str(refresh),
+            "access": str(refresh.access_token),
+            "employee": EmployeeSerializer(employee).data
+        }, status=status.HTTP_200_OK)
+
+
+class EmployeeLogoutView(APIView):
+    """
+    Employee logout endpoint - blacklist the refresh token
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        refresh_token = request.data.get("refresh")
+
+        if not refresh_token:
+            return Response({"error": "Refresh token is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+            return Response({"success": "Successfully logged out."}, status=status.HTTP_205_RESET_CONTENT)
+        except Exception as e:
+            return Response({"error": "Invalid refresh token."}, status=status.HTTP_400_BAD_REQUEST)
