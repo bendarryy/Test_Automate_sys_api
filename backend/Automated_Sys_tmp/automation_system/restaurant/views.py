@@ -188,3 +188,4 @@ class InventoryItemViewSet(viewsets.ModelViewSet):
             raise PermissionDenied("You do not have permission to delete inventory from this system.")
         instance.delete()
 #bola hy3ml push
+#ali
