@@ -61,6 +61,12 @@ class EmployeeSerializer(serializers.ModelSerializer):
 
 class EmployeeCreateSerializer(serializers.ModelSerializer):
     """Used when creating/inviting an employee"""
+
+    email = serializers.CharField(
+        validators=[UniqueValidator(queryset=Employee.objects.all())]
+    )
+    password = serializers.CharField(write_only=True)  # Do not return password in response
+
     class Meta:
         model = Employee
         fields = ['system', 'name', 'role', 'phone', 'email', 'password']
@@ -77,8 +83,32 @@ class EmployeeCreateSerializer(serializers.ModelSerializer):
         employee.save()
         return employee
 
+class EmployeeSerializer(serializers.ModelSerializer):
+    """Used for listing and showing employees"""
+    class Meta:
+        model = Employee
+        fields = ['id', 'name', 'role', 'phone', 'email']
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        # For example, only the system owner should see phone and email
+        if not self.context.get('request').user == instance.system.owner:
+            data.pop('phone', None)  # Remove phone number
+            data.pop('email', None)  # Remove email address
+        return data
+
+
+from django.core.exceptions import ValidationError
 
 class EmployeeLoginSerializer(serializers.Serializer):
     """Login serializer"""
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True)
+
+    def validate_email(self, value):
+        """Ensure the email exists in the database"""
+        try:
+            Employee.objects.get(email=value)
+        except Employee.DoesNotExist:
+            raise ValidationError("No user with this email found.")
+        return value
