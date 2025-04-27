@@ -16,7 +16,7 @@ const OwnerLogin: React.FC = () => {
 
   return (
     <Container className="d-flex min-vh-100 justify-content-center align-items-center">
-      <Card className="login-card shadow">
+      <Card className="login-card shadow" >
         <Card.Body>
           <h2 className="text-center mb-4 logo-text">Owner Portal</h2>
           <Form onSubmit={handleSubmit}>

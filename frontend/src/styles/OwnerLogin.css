@@ -9,6 +9,32 @@
     padding: 20px;
     border-radius: 15px;
     border: none;
+    background-color: #ffffff55;
+  }
+  .login-card::before{
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform: translate(-50%, -50%); 
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    /* orange gradient */
+    background: linear-gradient(0deg, #f03c00, #f3b173);
+    z-index: -1;
+  }
+  .login-card::after{
+    content: "";
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    transform: translate(50%, 50%); 
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background: linear-gradient(180deg, #0400f0, #73eaf3);
+    z-index: -1;
   }
   
   .logo-text {
@@ -28,8 +54,4 @@
   .custom-btn:hover {
     background-color: #2980b9;
     transform: translateY(-1px);
-  }
-  
-  body {
-    background: linear-gradient(120deg, #f6f9ff, #e9f1ff);
   }
