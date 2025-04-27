@@ -1,7 +1,7 @@
 // src/pages/EmployeeLogin.tsx
 import React, { useState } from 'react';
 import { Form, Button, Card, Container } from 'react-bootstrap';
-import '../styles/EmployeeLogin.css'; // تأكد من المسار الصحيح
+import '../styles/Login.css'; // تأكد من المسار الصحيح
 
 const EmployeeLogin: React.FC = () => {
   const [email, setEmail] = useState<string>('');

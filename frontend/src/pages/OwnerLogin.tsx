@@ -1,7 +1,7 @@
 // OwnerLogin.tsx
 import React, { useState } from 'react';
 import { Form, Button, Card, Container } from 'react-bootstrap';
-import '../styles/OwnerLogin.css';
+import '../styles/Login.css';
 
 const OwnerLogin: React.FC = () => {
   const [email, setEmail] = useState<string>('');
