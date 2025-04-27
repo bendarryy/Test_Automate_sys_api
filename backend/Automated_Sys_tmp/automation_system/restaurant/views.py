@@ -9,7 +9,8 @@ from .serializers import MenuItemSerializer , OrderSerializer , OrderItemSeriali
 from rest_framework.exceptions import PermissionDenied ,MethodNotAllowed
 from rest_framework import permissions
 from .serializers import InventoryItemSerializer
-
+from rest_framework.exceptions import NotFound
+from .models import System
 class MenuItemViewSet(viewsets.ModelViewSet):
     serializer_class = MenuItemSerializer
     permission_classes = [IsAuthenticated]
@@ -132,9 +133,16 @@ class KitchenOrderViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        return Order.objects.filter(status__in=['pending', 'preparing']).order_by('created_at')
+        system_id = self.kwargs.get('system_id')
 
-    def update(self, request, *args, **kwargs):
+        try:
+            system = System.objects.get(id=system_id, owner=self.request.user)
+        except System.DoesNotExist:
+            raise NotFound(detail="System not found or you do not have permission.", code=404)
+
+        return Order.objects.filter(system=system, status__in=['pending', 'preparing']).order_by('created_at')
+
+    def partial_update(self, request, *args, **kwargs):
         instance = self.get_object()
         new_status = request.data.get('status')
 
@@ -144,7 +152,9 @@ class KitchenOrderViewSet(viewsets.ModelViewSet):
         instance.status = new_status
         instance.save()
         serializer = self.get_serializer(instance)
-        return Response(serializer.data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
 
 
 from rest_framework.permissions import IsAuthenticated
@@ -188,4 +198,3 @@ class InventoryItemViewSet(viewsets.ModelViewSet):
             raise PermissionDenied("You do not have permission to delete inventory from this system.")
         instance.delete()
 #bola hy3ml push
-#ali

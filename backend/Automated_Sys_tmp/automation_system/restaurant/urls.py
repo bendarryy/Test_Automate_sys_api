@@ -9,7 +9,7 @@ router.register(r'(?P<system_id>\d+)/menu-items', MenuItemViewSet, basename="men
 # Register new Order routes
 router.register(r"(?P<system_id>\d+)/orders", OrderViewSet, basename="order")
 router.register(r"(?P<system_id>\d+)/orders/(?P<order_id>\d+)/items", OrderItemViewSet, basename="order-item")
-router.register(r'kitchen/orders', KitchenOrderViewSet, basename='kitchen-orders')
+router.register(r'(?P<system_id>\d+)/kitchen/orders', KitchenOrderViewSet, basename='kitchen-orders')
 urlpatterns = [
     path('', include(router.urls)),
     path('<int:system_id>/inventory/', InventoryItemViewSet.as_view({

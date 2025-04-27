@@ -215,20 +215,38 @@ GET /api/restaurant/5/orders/6/
     "created_at": "2025-03-25T22:28:32.042890Z",
     "updated_at": "2025-03-25T23:01:53.508999Z"
 ```
+## 🍽️ Kitchen Management
+
+### Base URL:
+- /api/restaurant/{system_id}/kitchen/
+
+### Authentication:
+- Required (Token Authentication)
+
 ---
 
-### Kitchen Orders API
+### 🔹 Retrieve Pending and Preparing Orders
+**GET** `/api/restaurant/{system_id}/kitchen/orders/`
 
-- **GET** `/api/restaurant/kitchen-orders/`
-  - **Description:** إرجاع كل الطلبات في حالة `pending` أو `preparing`.
-  
-- **PATCH** `/api/restaurant/kitchen-orders/{id}/`
-  - **Description:** تحديث حالة الطلب لـ `preparing` أو `ready`.
-  - **Example Request Body:**
-    ```json
-    {
-      "status": "ready"
-    }
-    ```
+- **Description:**  
+  Returns all orders with status `pending` or `preparing` for a specific restaurant system.
+
+- **Sample Response:**
+```json
+[
+  {
+    "id": 12,
+    "table_number": 5,
+    "status": "pending",
+    "order_items": [
+      {
+        "id": 1,
+        "menu_item_name": "Pizza",
+        "quantity": 2
+      }
+    ],
+    "created_at": "2025-04-27T14:00:00Z"
+  }
+]
 
 ---
