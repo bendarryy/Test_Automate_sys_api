@@ -217,8 +217,6 @@ GET /api/restaurant/5/orders/6/
 ```
 ## 🍽️ Kitchen Management
 
-### Base URL:
-- /api/restaurant/{system_id}/kitchen/
 
 ### Authentication:
 - Required (Token Authentication)
