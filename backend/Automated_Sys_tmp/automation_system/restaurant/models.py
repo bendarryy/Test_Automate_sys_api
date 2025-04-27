@@ -2,6 +2,8 @@ from django.db import models
 from core.models import System , BaseMultiTenantModel , UserRole
 from django.contrib.auth.models import User 
 
+
+
 class MenuItem(BaseMultiTenantModel):
     """Menu for restaurants and cafes"""
     system = models.ForeignKey(System, on_delete=models.CASCADE)
@@ -15,7 +17,7 @@ class MenuItem(BaseMultiTenantModel):
         ("dessert", "Dessert"), 
         ("soups", "Soups") 
     ],  null=True)  # Categorize items
-    image = models.ImageField(upload_to="images/menu_images/", blank=True, null=True)  # Optional image
+    image = models.ImageField(upload_to="menu_images/", blank=True, null=True)  # Optional image
     created_at = models.DateTimeField(auto_now_add=True, null=True)  # Timestamp when added
     updated_at = models.DateTimeField(auto_now=True)  # Timestamp when modified
 
