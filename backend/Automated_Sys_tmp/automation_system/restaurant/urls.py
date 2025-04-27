@@ -24,3 +24,4 @@ urlpatterns = [
         'delete': 'destroy',
     }), name='inventory-detail'),
 ]
+

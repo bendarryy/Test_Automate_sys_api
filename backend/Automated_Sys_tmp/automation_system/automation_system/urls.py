@@ -30,3 +30,7 @@ urlpatterns = [
     # path("api/supermarket/", include("supermarket.urls")),  # URLs for the supermarket app
     # path("api/workshop/", include("workshop.urls")),  # URLs for the workshop app
 ]
+from django.conf import settings
+from django.conf.urls.static import static
+
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
