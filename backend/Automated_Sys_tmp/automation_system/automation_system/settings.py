@@ -61,10 +61,10 @@ CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1:5173",  # Trust frontend for CSRF
 ]
 # Ensure cookie settings are correct (already set based on your headers)
-SESSION_COOKIE_SAMESITE = 'None'
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SAMESITE = 'None'
-CSRF_COOKIE_SECURE = True
+# SESSION_COOKIE_SAMESITE = 'None'
+# SESSION_COOKIE_SECURE = True
+# CSRF_COOKIE_SAMESITE = 'None'
+# CSRF_COOKIE_SECURE = True
 
 
 # Optional: Allow all origins (use only for development)
