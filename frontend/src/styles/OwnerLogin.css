@@ -1,0 +1,57 @@
+/* OwnerLogin.css */
+.min-vh-100 {
+    min-height: 100vh;
+  }
+  
+  .login-card {
+    width: 100%;
+    max-width: 400px;
+    padding: 20px;
+    border-radius: 15px;
+    border: none;
+    background-color: #ffffff55;
+  }
+  .login-card::before{
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform: translate(-50%, -50%); 
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    /* orange gradient */
+    background: linear-gradient(0deg, #f03c00, #f3b173);
+    z-index: -1;
+  }
+  .login-card::after{
+    content: "";
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    transform: translate(50%, 50%); 
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background: linear-gradient(180deg, #0400f0, #73eaf3);
+    z-index: -1;
+  }
+  
+  .logo-text {
+    color: #2c3e50;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+  }
+  
+  .custom-btn {
+    background-color: #3498db;
+    border: none;
+    padding: 12px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+  }
+  
+  .custom-btn:hover {
+    background-color: #2980b9;
+    transform: translateY(-1px);
+  }

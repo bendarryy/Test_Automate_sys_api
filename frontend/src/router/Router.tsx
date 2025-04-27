@@ -12,11 +12,30 @@ import MenuManagement from "../components/MenuManagement";
 import InventoryManagementPage from "../pages/InventoryManagementPage";
 import InventoryItemViewPage from "../pages/InventoryItemViewPage";
 import ProtectLogin from "../security/protectLogin";
-
+import OwnerLogin from "../pages/Ownerlogin";
+import EmployeeLogin from "../pages/EmployeeLogin";
 // Example components for routes
 const About = () => <h1>About Page</h1>;
 
 const router = createBrowserRouter([
+  // Auth-related routes OUTSIDE the layout
+  {
+    path: "/login",
+    element: <LoginPage />,
+  },
+  {
+    path: "/register",
+    element: <RegisterPage />,
+  },
+  {
+    path: "/ownerlogin",
+    element: <OwnerLogin />,
+  },
+  {
+    path: "/employeelogin",
+    element: <EmployeeLogin />,
+  },
+  // Main layout and protected routes
   {
     path: "/",
     element: <Layout />,
@@ -31,42 +50,32 @@ const router = createBrowserRouter([
         path: "/about",
         element: <ProtectLogin><About /></ProtectLogin>,
       },
-      // register route
-      {
-        path: "/register",
-        element: <RegisterPage />,
-      },
-      // login route
-      {
-        path: "/login",
-        element: <LoginPage />,
-      },
       {
         path: "orders",
-        element: <ProtectLogin><OrdersPage /></ProtectLogin>, // Protecting the orders page
+        element: <ProtectLogin><OrdersPage /></ProtectLogin>,
       },
       {
         path: "orders/:orderId", // Dynamic route for order details
-        element: <ProtectLogin><OrderDetailsPage /></ProtectLogin>, // Protecting the order details page
+        element: <ProtectLogin><OrderDetailsPage /></ProtectLogin>,
       },
       {
         path: "orders/:orderId/edit", // Route for editing an order
-        element: <ProtectLogin><EditOrderPage /></ProtectLogin>, // Protecting the edit order page
+        element: <ProtectLogin><EditOrderPage /></ProtectLogin>,
       },
       // Manage the menu items pages
       {
         path: "/menu",
-        element: <ProtectLogin><MenuPage /></ProtectLogin>, // Protecting the menu page
+        element: <ProtectLogin><MenuPage /></ProtectLogin>,
       },
       // menu management route
       {
         path: "/menu-management",
-        element: <ProtectLogin><MenuManagement /></ProtectLogin>, // Protecting the menu management page
+        element: <ProtectLogin><MenuManagement /></ProtectLogin>,
       },
       //  Inventory route
       {
         path: "/Inventory",
-        element: <ProtectLogin><InventoryManagementPage /></ProtectLogin>, // Protecting the inventory management page
+        element: <ProtectLogin><InventoryManagementPage /></ProtectLogin>,
       },
       // Inventory item view route
       {

@@ -64,33 +64,43 @@ const InventoryItemViewPage: React.FC = () => {
   if (!item) return <div className="alert alert-danger">Item not found</div>;
 
   return (
-    <div className="container py-4">
-      <h2>View/Edit Inventory Item</h2>
-      {error && <div className={`alert ${error === 'Saved!' ? 'alert-success' : 'alert-danger'}`}>{error}</div>}
-      <Form>
-        <Form.Group className="mb-3">
-          <Form.Label>Name</Form.Label>
-          <Form.Control name="name" value={item.name} onChange={handleChange} />
-        </Form.Group>
-        <Form.Group className="mb-3">
-          <Form.Label>Quantity</Form.Label>
-          <Form.Control name="quantity" type="number" value={item.quantity ?? ''} onChange={handleChange} />
-        </Form.Group>
-        <Form.Group className="mb-3">
-          <Form.Label>Unit</Form.Label>
-          <Form.Control name="unit" value={item.unit} onChange={handleChange} />
-        </Form.Group>
-        <Form.Group className="mb-3">
-          <Form.Label>Min Threshold</Form.Label>
-          <Form.Control name="min_threshold" type="number" value={item.min_threshold ?? ''} onChange={handleChange} />
-        </Form.Group>
-        <Button variant="primary" onClick={e => { e.preventDefault(); handleSave(); }} disabled={saving} className="me-2">
-          Save
-        </Button>
-        <Button variant="danger" onClick={e => { e.preventDefault(); handleDelete(); }} disabled={saving}>
-          Delete
-        </Button>
-      </Form>
+    <div className="container d-flex justify-content-center align-items-center min-vh-100">
+      <div className="card shadow rounded-4 p-4" style={{ maxWidth: 480, width: '100%' }}>
+        <div className="d-flex align-items-center mb-4 gap-2">
+          <i className="bi bi-box-seam-fill text-primary fs-3"></i>
+          <h3 className="mb-0 fw-bold flex-grow-1">Inventory Item Details</h3>
+        </div>
+        {error && <div className={`alert ${error === 'Saved!' ? 'alert-success' : 'alert-danger'} py-2 px-3`}>{error}</div>}
+        <Form>
+          <Form.Group className="mb-3">
+            <Form.Label className="fw-bold"><i className="bi bi-tag me-2 text-secondary"></i>Name</Form.Label>
+            <Form.Control name="name" value={item.name} onChange={handleChange} autoFocus />
+          </Form.Group>
+          <Form.Group className="mb-3">
+            <Form.Label className="fw-bold"><i className="bi bi-123 me-2 text-secondary"></i>Quantity</Form.Label>
+            <Form.Control name="quantity" type="number" value={item.quantity ?? ''} onChange={handleChange} />
+          </Form.Group>
+          <Form.Group className="mb-3">
+            <Form.Label className="fw-bold"><i className="bi bi-cup-straw me-2 text-secondary"></i>Unit</Form.Label>
+            <Form.Control name="unit" value={item.unit} onChange={handleChange} />
+          </Form.Group>
+          <Form.Group className="mb-4">
+            <Form.Label className="fw-bold"><i className="bi bi-exclamation-circle me-2 text-secondary"></i>Min Threshold</Form.Label>
+            <Form.Control name="min_threshold" type="number" value={item.min_threshold ?? ''} onChange={handleChange} />
+          </Form.Group>
+          <div className="d-flex gap-2 justify-content-between">
+            <Button variant="primary" onClick={e => { e.preventDefault(); handleSave(); }} disabled={saving} className="rounded-pill px-4 d-flex align-items-center gap-2 fw-bold shadow">
+              <i className="bi bi-save2"></i> Save
+            </Button>
+            <Button variant="danger" onClick={e => { e.preventDefault(); handleDelete(); }} disabled={saving} className="rounded-pill px-4 d-flex align-items-center gap-2 fw-bold shadow">
+              <i className="bi bi-trash3"></i> Delete
+            </Button>
+            <Button variant="secondary" onClick={() => navigate(-1)} className="rounded-pill px-4 d-flex align-items-center gap-2 fw-bold shadow">
+              <i className="bi bi-arrow-left"></i> Back
+            </Button>
+          </div>
+        </Form>
+      </div>
     </div>
   );
 };
