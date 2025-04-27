@@ -1,0 +1,45 @@
+/* src/styles/EmployeeLogin.css */
+.min-vh-100 {
+    min-height: 100vh;
+  }
+  
+  .login-card {
+    width: 100%;
+    max-width: 420px;
+    border-radius: 12px;
+    border: 1px solid #e0e0e0;
+  }
+  
+  .employee-card {
+    background: #f8f9fa;
+  }
+  
+  .logo-text {
+    color: #2c3e50;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  
+  .custom-btn {
+    background-color: #28a745;
+    border: none;
+    padding: 12px;
+    font-weight: 600;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .custom-btn:hover {
+    background-color: #218838;
+    transform: translateY(-1.5px);
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.25);
+  }
+  
+  body {
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  }
+  
+  .form-control:focus {
+    border-color: #28a745;
+    box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+  }

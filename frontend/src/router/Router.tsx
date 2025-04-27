@@ -12,7 +12,8 @@ import MenuManagement from "../components/MenuManagement";
 import InventoryManagementPage from "../pages/InventoryManagementPage";
 import InventoryItemViewPage from "../pages/InventoryItemViewPage";
 import ProtectLogin from "../security/protectLogin";
-
+import OwnerLogin from "../pages/Ownerlogin";
+import EmployeeLogin from "../pages/EmployeeLogin";
 // Example components for routes
 const About = () => <h1>About Page</h1>;
 
@@ -72,6 +73,16 @@ const router = createBrowserRouter([
       {
         path: "/restaurant/:systemId/inventory/:itemId",
         element: <ProtectLogin><InventoryItemViewPage /></ProtectLogin>,
+      },
+      // Owner login
+      {
+        path: "/Ownerlogin",
+        element: <OwnerLogin />,
+      },
+       // Employee login
+       {
+        path: "/employeelogin",
+        element: <EmployeeLogin />,
       },
     ],
   },
