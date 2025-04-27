@@ -246,5 +246,21 @@ GET /api/restaurant/5/orders/6/
     "created_at": "2025-04-27T14:00:00Z"
   }
 ]
+```
+
+**To Update the status** 
+
+`PATCH /api/restaurant/{system-id}/kitchen/orders/{id}/	`
+
+Description: تحديث حالة الطلب لـ preparing أو ready.
+
+Example Request Body:
+
+```json
+
+{
+  "status": "ready"
+}
+```
 
 ---
