@@ -112,6 +112,8 @@ Login as Employee
 
 ```
 ---
+---
+---
 
 ### View All User information  ownere && Employee 
 `GET /api/core/profile/`
@@ -141,7 +143,7 @@ Login as Employee
 }
 ```
 
-```
+```json
 {
     "user": {
         "username": "koko@email.com",
