@@ -12,7 +12,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status , generics
 from rest_framework.permissions import IsAuthenticated ,AllowAny
-from .serializers import SystemSerializer, UserSerializer, SystemListSerializer
+from .serializers import SystemSerializer, UserSerializer, SystemListSerializer , ProfileSerializer
 from rest_framework.generics import RetrieveAPIView, ListAPIView
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
@@ -54,6 +54,23 @@ class SystemRetrieveView(ListAPIView):
 # @csrf_exempt
 @api_view(["POST"])
 def register_user(request):
+    """ Exmaple of  Required data :  
+    
+    	{
+         "username":  "user11",
+	     "password": "password" ,
+         "email":"user1+1@sys.com"    }
+         
+       Optional Data : 
+ 
+         {
+        "username": "exampleuser",
+        "email": "example@example.com",
+        "password": "StrongPassword123!",
+        "first_name": "John",
+        "last_name": "Doe"}
+
+         """
     serializer = UserSerializer(
         data=request.data
     )  # Pass the request data to the serializer
@@ -107,8 +124,16 @@ def logout_user(request):
 
 
 
+class ProfileView(APIView):
+    """
+    Retrieve the authenticated user's profile data.
+    Endpoint: GET /api/core/profile/
+    """
+    permission_classes = [IsAuthenticated]
 
-
+    def get(self, request):
+        serializer = ProfileSerializer(request.user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 # Employee 
 

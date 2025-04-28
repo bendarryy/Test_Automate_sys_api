@@ -9,26 +9,32 @@ import uuid
 
 
 class UserSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True)
+    password = serializers.CharField(write_only=True, required=True)
     email = serializers.EmailField(required=True)
+    first_name = serializers.CharField(required=False, allow_blank=True)
+    last_name = serializers.CharField(required=False, allow_blank=True)
+    date_joined = serializers.DateTimeField(read_only=True)
 
     class Meta:
         model = User
-        fields = ['username', 'email', 'password']
-        extra_kwargs = {'email': {'required': False}}
+        fields = [
+            'username', 'email', 'password', 'first_name', 'last_name',
+            'date_joined'
+        ]
 
     def create(self, validated_data):
         user = User.objects.create_user(
             username=validated_data['username'],
             email=validated_data['email'],
-            password=validated_data['password']  # Hashes password
+            password=validated_data['password'],
+            first_name=validated_data.get('first_name', ''),
+            last_name=validated_data.get('last_name', '')
         )
-        user.is_staff = True  # Make user a staff member to access admin
-        user.save()  # Save changes
+        user.is_staff = True
+        user.save()
 
-        # Try adding the user to the "Owner" group
-        group, created = Group.objects.get_or_create(name="Owner")  # Create if not exists
-        user.groups.add(group)  # Assign group
+        group, _ = Group.objects.get_or_create(name="Owner")
+        user.groups.add(group)
 
         return user
 
@@ -42,7 +48,29 @@ class UserSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Email already taken")
         return value
 
+class ProfileSerializer(serializers.Serializer):
+    user = UserSerializer(source='*', read_only=True)
+    role = serializers.SerializerMethodField()
+    systems = serializers.SerializerMethodField()
 
+    def get_role(self, obj):
+        if obj.groups.filter(name="Owner").exists():
+            return "owner"
+        try:
+            employee = obj.employee_profile
+            return employee.role
+        except Employee.DoesNotExist:
+            return None
+
+    def get_systems(self, obj):
+        if obj.groups.filter(name="Owner").exists():
+            systems = System.objects.filter(owner=obj)
+            return SystemSerializer(systems, many=True).data
+        try:
+            employee = obj.employee_profile
+            return employee.system.id
+        except Employee.DoesNotExist:
+            return None
 class SystemListSerializer(serializers.ModelSerializer):
     class Meta:
         model = System
@@ -57,7 +85,8 @@ class SystemSerializer(serializers.ModelSerializer):
     )
     class Meta:
         model = System
-        fields = ['name', 'category']
+        fields = ['name', 'category' , "id"]
+        read_only_fields = ['id']
         
         
         
