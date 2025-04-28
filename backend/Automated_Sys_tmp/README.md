@@ -111,8 +111,9 @@ Login as Employee
 }
 
 ```
+---
 
-View All User information  ownere && Employee 
+### View All User information  ownere && Employee 
 `GET /api/core/profile/`
 
 ```json
