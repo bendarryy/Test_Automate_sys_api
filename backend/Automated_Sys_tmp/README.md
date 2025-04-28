@@ -31,10 +31,7 @@
 ---
 
 **GET** `/api/core/logout/`
-
-**Responses:**
-
-- **200 OK**:    Logged out successfully
+- Logout from Owner && Employee 
 
 ---
 
@@ -89,7 +86,7 @@ Invite an Employee
 ```
 
 Login as Employee
-`POST /api/employee/login/`
+`POST /api/core/employee/login/`
 ```
 {
     "email": "mohamed@restaurant.com",
@@ -97,6 +94,9 @@ Login as Employee
 }
 
 ```
+
+
+
 
 ---
 ---
