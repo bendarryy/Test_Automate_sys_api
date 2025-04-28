@@ -95,7 +95,11 @@ Login as Employee
 
 ```
 
-
+Endpoint | Method | URL Example | Request Body Example | Description
+List Employees | GET | /api/core/5/employees/ | None | Get all employees for system with ID 5.
+Get Employee Detail | GET | /api/core/5/employees/8/ | None | Get details of employee with ID 8 under system 5.
+Update Employee | PUT | /api/core/5/employees/8/ | { "phone": "01123456789" } | Update one or more fields of an employee (e.g., phone only).
+Delete Employee | DELETE | /api/core/5/employees/8/ | None | Delete employee with ID 8 under system 5. Also deletes their user account.
 
 
 ---
