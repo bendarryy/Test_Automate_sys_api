@@ -10,27 +10,52 @@ from rest_framework.exceptions import PermissionDenied ,MethodNotAllowed
 from rest_framework import permissions
 from .serializers import InventoryItemSerializer
 from rest_framework.exceptions import NotFound
-from .models import System
+from .models import System 
+from core.models import Employee
+from core.permissions import IsSystemOwner , IsWaiter , IsEmployee , IsSystemOwnerOrEmployeeWithRole
+
+
+
+from rest_framework.permissions import OR
+
 class MenuItemViewSet(viewsets.ModelViewSet):
     serializer_class = MenuItemSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         """Filter menu items based on the requested system_id and optional category."""
-        system_id = self.kwargs.get("system_id")  
-        user = self.request.user 
+        system_id = self.kwargs.get("system_id")
+        user = self.request.user
 
-        system = get_object_or_404(System, id=system_id, owner=user)
-        
+        # Check if user is owner or employee of the system
+        try:
+            system = System.objects.get(id=system_id)
+            if user == system.owner:
+                pass  # Owner has access
+            elif Employee.objects.filter(user=user, system=system, is_active=True).exists():
+                pass  # Employee has access
+            else:
+                raise System.DoesNotExist
+        except System.DoesNotExist:
+            raise NotFound("No System matches the given query.")
+
         queryset = MenuItem.objects.filter(system=system)
 
         category = self.request.query_params.get("category")
-
         if category:
             if category in MenuItemSerializer.VALID_CATEGORIES:
                 queryset = queryset.filter(category=category)
 
-        return queryset 
+        return queryset
+
+    def get_permissions(self):
+        """
+        Restrict create, update, and delete actions to system owners only.
+        Employees can only perform list and retrieve actions.
+        """
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            return [IsAuthenticated(), IsSystemOwner()]
+        return [IsAuthenticated(), OR(IsSystemOwner(), IsWaiter())]
     
     # def get_serializer_context(self):
     #     """Pass additional context to the serializer."""
@@ -39,54 +64,75 @@ class MenuItemViewSet(viewsets.ModelViewSet):
     #     return context
 
 
+
 class OrderViewSet(viewsets.ModelViewSet):
     serializer_class = OrderSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsSystemOwnerOrEmployeeWithRole]
 
     def get_queryset(self):
         """Filter orders by the requested system."""
         system_id = self.kwargs.get("system_id")
+        system = get_object_or_404(System, id=system_id)
         user = self.request.user
-        system = get_object_or_404(System, id=system_id, owner=user)
-        return Order.objects.filter(system=system)
+
+        # Allow access if user is owner or employee
+        if system.owner == user or Employee.objects.filter(system=system, user=user).exists():
+            return Order.objects.filter(system=system)
+        raise PermissionDenied("You do not have permission to access orders for this system.")
 
     def perform_create(self, serializer):
-        """Ensure the order is linked to the correct system and waiter."""
+        """Ensure the order is linked to the correct system."""
         system_id = self.kwargs.get("system_id")
-        serializer.save(system_id=system_id)
+        system = get_object_or_404(System, id=system_id)
+        serializer.save(system=system)
 
+    def perform_update(self, serializer):
+        """Restrict sensitive field updates for waiters."""
+        user = self.request.user
+        system = get_object_or_404(System, id=self.kwargs.get("system_id"))
+        
+        if system.owner != user:
+            try:
+                employee = Employee.objects.get(system=system, user=user)
+                if employee.role == 'waiter':
+                    # Ensure only allowed fields are updated
+                    allowed_fields = {'customer_name', 'table_number', 'waiter'}
+                    if any(key not in allowed_fields for key in self.request.data.keys()):
+                        raise PermissionDenied("Waiters can only update customer_name, table_number, or waiter.")
+            except Employee.DoesNotExist:
+                raise PermissionDenied("You do not have permission to update this order.")
+        
+        serializer.save()
 
 class OrderItemViewSet(viewsets.ModelViewSet):
     serializer_class = OrderItemSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsSystemOwnerOrEmployeeWithRole]
     http_method_names = ['get', 'post', 'delete', 'head', 'options']
 
     def get_queryset(self):
         system_id = self.kwargs["system_id"]
         order_id = self.kwargs["order_id"]
         user = self.request.user
-        
-        # Verify system ownership first
-        get_object_or_404(System, id=system_id, owner=user)
-        
+
+        # Verify system ownership or employee association
+        system = get_object_or_404(System, id=system_id)
+        if system.owner != user and not Employee.objects.filter(system=system, user=user).exists():
+            raise PermissionDenied("You do not have permission to access order items for this system.")
+
         return OrderItem.objects.filter(
             order_id=order_id,
             menu_item__system_id=system_id
         ).select_related('menu_item')
 
     def perform_create(self, serializer):
-        system_id = int(self.kwargs["system_id"]) 
-        user = self.request.user
-
-        # Verify system and get order in one query
+        system_id = int(self.kwargs["system_id"])
         order = get_object_or_404(
             Order.objects.select_related('system'),
             id=self.kwargs["order_id"],
-            system__owner=user,
             system_id=system_id
         )
-        
-        # 2. Get menu_item with system prefetched
+
+        # Check if the menu_item belongs to the same system
         menu_item = serializer.validated_data["menu_item"]
         menu_item = MenuItem.objects.select_related('system').get(pk=menu_item.id)
         if menu_item.system_id != system_id:
@@ -95,17 +141,12 @@ class OrderItemViewSet(viewsets.ModelViewSet):
         serializer.save(order=order)
         order.update_total_price()
 
-
     def create(self, request, *args, **kwargs):
         """Optimized bulk creation with system validation"""
-        system_id = int(self.kwargs["system_id"]) 
-        user = self.request.user
-
-        # Verify system and get order in one query
+        system_id = int(self.kwargs["system_id"])
         order = get_object_or_404(
             Order.objects.select_related('system'),
             id=self.kwargs["order_id"],
-            system__owner=user,
             system_id=system_id
         )
 
@@ -114,19 +155,18 @@ class OrderItemViewSet(viewsets.ModelViewSet):
             serializer = self.get_serializer(data=request.data, many=True)
             serializer.is_valid(raise_exception=True)
             
-            # Check all menu_items belong to system 
+            # Check if all menu_items belong to the system
             for item in serializer.validated_data:
                 if item['menu_item'].system_id != system_id:
-                    raise PermissionDenied(
-                        f"Menu item {item['menu_item'].id} doesn't belong to system"
-                    )
-            
+                    raise PermissionDenied(f"Menu item {item['menu_item'].id} doesn't belong to system")
+
             # Save all items
             items = serializer.save(order=order)
             order.update_total_price()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        
+
         return super().create(request, *args, **kwargs)
+
     #add kitchen order By Ali
 class KitchenOrderViewSet(viewsets.ModelViewSet):
     serializer_class = OrderSerializer

@@ -32,8 +32,12 @@ class System(models.Model):
 
 from django.contrib.auth.hashers import make_password, check_password
 
+
+
+
 class Employee(models.Model):
     """Employee belongs to a specific system"""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='employee_profile', null=True)
     system = models.ForeignKey('System', on_delete=models.CASCADE, related_name="employees")
     name = models.CharField(max_length=100)
     role = models.CharField(max_length=50, choices=[
@@ -42,21 +46,15 @@ class Employee(models.Model):
         ('delivery', 'Delivery'),
     ])
     phone = models.CharField(max_length=20, blank=True, null=True)
-    email = models.EmailField(blank=True, null=True, unique=True)
-    password = models.CharField(max_length=128)  # We store hashed passwords
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    def set_password(self, raw_password):
-        self.password = make_password(raw_password)
-
-    def check_password(self, raw_password):
-        return check_password(raw_password, self.password)
-
     def __str__(self):
         return f"{self.name} - {self.role}"
 
+    class Meta:
+        unique_together = ('user', 'system')
 
 
 
