@@ -8,38 +8,25 @@
 
 ### Account Managment 
 #### Owner 
-**POST** `/api/core/register/`
 
-**Request Body:**
+**POST** `/api/core/register/`
 
 ```json
 	{
-	"username":  "user80",
-	"password": "password"   
+	"username":  "user11",
+	"password": "password" ,
+  "email":"user1+1@sys.com"
 	}
 ```
-**Responses:**
-
-- **201 Created**: User registered successfully.
-- **400 Bad Request**: Errors with the registration data.
-
----
 
 **POST** `/api/core/login/`
 
-**Request Body:**
-
 ```json
 	{
 	"username":  "user80",
 	"password": "password"   
 	}
 ```
-
-**Responses:**
-
-- **200 OK**: Login successful.
-- **400 Bad Request**: Errors related to credentials.
 
 ---
 
