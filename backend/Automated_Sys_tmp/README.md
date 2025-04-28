@@ -65,12 +65,7 @@ This endpoint provides a custom admin panel for each user to manage their resour
 
 
 #### Employee 
-
-
-Endpoint | Method | Body | Description
-/api/core/<system_id>/invite/ | POST | {name, role, phone, email, password} | Invite employee under a specific system
-/api/core/employee/login/ | POST | {email, password} | Employee logs in
-/api/core/employee/logout/ | POST | {refresh} | Employee logs out (invalidate token)
+Onwer Can invite Employee (Creating Employee and join him to his system )
 
 Invite an Employee
 `POST /api/core/5/invite/`
@@ -95,12 +90,69 @@ Login as Employee
 
 ```
 
-Endpoint | Method | URL Example | Request Body Example | Description
-List Employees | GET | /api/core/5/employees/ | None | Get all employees for system with ID 5.
-Get Employee Detail | GET | /api/core/5/employees/8/ | None | Get details of employee with ID 8 under system 5.
-Update Employee | PUT | /api/core/5/employees/8/ | { "phone": "01123456789" } | Update one or more fields of an employee (e.g., phone only).
-Delete Employee | DELETE | /api/core/5/employees/8/ | None | Delete employee with ID 8 under system 5. Also deletes their user account.
+| Endpoint              | Method  | URL Example                | Request Body Example              | Description                                                      |
+|------------------------|---------|-----------------------------|-----------------------------------|------------------------------------------------------------------|
+| List Employees         | GET     | `/api/core/5/employees/`     | None                              | Get all employees for system with ID 5.                         |
+| Get Employee Detail    | GET     | `/api/core/5/employees/8/`   | None                              | Get details of employee with ID 8 under system 5.               |
+| Update Employee        | PUT     | `/api/core/5/employees/8/`   | `{ "phone": "01123456789" }`       | Update one or more fields of an employee (e.g., phone only, passowrd only ..etc).     |
+| Delete Employee        | DELETE  | `/api/core/5/employees/8/`   | None                              | Delete employee with ID 8 under system 5. Also deletes their user account. |
 
+
+`PUT /api/core/5/employees/8/`
+```json
+{
+  "phone": "01123456789",
+  "email": "newemail@example.com",
+  "password": "NewStrongPassword123!"
+}
+ or on feild (its flixable even one feild can be updated)
+{
+  "password": "OnlyPasswordChange123!"
+}
+
+```
+
+View All User information  ownere && Employee 
+`GET /api/core/profile/`
+
+```json
+{
+    "user": {
+        "username": "user80",
+        "email": "",
+        "first_name": "",
+        "last_name": "",
+        "date_joined": "2025-03-25T00:04:50Z"
+    },
+    "role": "owner",
+    "systems": [
+        {
+            "name": "new_system",
+            "category": "restaurant",
+            "id": 2
+        },
+        {
+            "name": "belan",
+            "category": "restaurant",
+            "id": 5
+        }
+    ]
+}
+```
+
+```
+{
+    "user": {
+        "username": "koko@email.com",
+        "email": "koko@email.com",
+        "first_name": "",
+        "last_name": "",
+        "date_joined": "2025-04-28T12:39:20.808281Z"
+    },
+    "role": "waiter",
+    "systems": 5
+}
+```
 
 ---
 ---
