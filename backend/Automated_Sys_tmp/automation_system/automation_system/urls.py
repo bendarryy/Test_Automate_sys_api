@@ -27,7 +27,7 @@ urlpatterns = [
     path("api/restaurant/", include("restaurant.urls")),  # URLs for the restaurant app
     path("api/inventory/", include("inventory.urls")),
     # path("api/cafe/", include("cafe.urls")),  # URLs for the cafe app
-    # path("api/supermarket/", include("supermarket.urls")),  # URLs for the supermarket app
+    path("api/supermarket/", include("supermarket.urls")),  # URLs for the supermarket app
     # path("api/workshop/", include("workshop.urls")),  # URLs for the workshop app
 ]
 from django.conf import settings

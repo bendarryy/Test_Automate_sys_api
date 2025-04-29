@@ -1,0 +1,41 @@
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .views import *
+
+
+router = DefaultRouter()
+inventory_low_stock = InventoryItemViewSet.as_view({
+    'get': 'low_stock'
+})
+inventory_item = InventoryItemViewSet.as_view({
+    'patch': 'update_stock',
+})
+
+urlpatterns = [
+    path('', include(router.urls)),
+    path('<int:system_id>/products/', InventoryItemViewSet.as_view({
+        'get': 'list',
+        'post': 'create',
+    }), name='inventory-list-create'),
+    
+    path('<int:system_id>/products/<int:pk>/', InventoryItemViewSet.as_view({
+        'get': 'retrieve',
+        'put': 'update',
+        'patch': 'partial_update',
+        'delete': 'destroy',
+    }), name='inventory-detail'),
+
+    path('<int:system_id>/products/low-stock/', inventory_low_stock, name='inventory-low-stock'),
+    
+    path('<int:system_id>/products/expiring-soon/', InventoryItemViewSet.as_view({
+        'get': 'expiring_soon',
+    }), name='inventory-expiring-soon'),
+
+    path('<int:system_id>/products/stock-history/', InventoryItemViewSet.as_view({
+        'get': 'stock_history',
+    }), name='inventory-stock-history'),
+
+    path('<int:system_id>/products/<int:pk>/stock/', InventoryItemViewSet.as_view({
+    'patch': 'update_stock',
+}), name='product-update-stock'),
+]
