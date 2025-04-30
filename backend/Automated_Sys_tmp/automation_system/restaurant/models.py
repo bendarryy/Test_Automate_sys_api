@@ -10,6 +10,7 @@ class MenuItem(BaseMultiTenantModel):
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True, null=True)  # Optional description
     price = models.DecimalField(max_digits=10, decimal_places=2)
+    cost = models.DecimalField(max_digits=10 , decimal_places=2, default=0)
     is_available = models.BooleanField(default=True)
     category = models.CharField(max_length=50, choices=[  
         ("food", "Food"),  
@@ -37,6 +38,7 @@ class Order(models.Model):
     # waiter = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)  # The waiter taking the order
     waiter = models.ForeignKey(UserRole, on_delete=models.SET_NULL, null=True)  # Waiter taking the order
     total_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    profit = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
 
     STATUS_CHOICES = [
         ("pending", "Pending"),
