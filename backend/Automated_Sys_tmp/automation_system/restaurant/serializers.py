@@ -65,7 +65,9 @@ class OrderItemSerializer(serializers.ModelSerializer):
         model = OrderItem
         fields = ["id", "menu_item", "menu_item_name", "quantity"]
         read_only_fields = ["id", "menu_item_name"]
-
+    
+   
+    
     def validate(self, data):
         return data
 
@@ -76,8 +78,8 @@ class OrderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Order
-        fields = ["id", "system", "customer_name", "table_number", "waiter", "total_price", "status", "order_items", "created_at", "updated_at"]
-        read_only_fields = ["id", "total_price", "created_at", "updated_at", "system"]
+        fields = ["id", "system", "customer_name", "table_number", "waiter", "total_price", "profit", "status", "order_items", "created_at", "updated_at" ]
+        read_only_fields = ["id", "total_price" , "created_at", "updated_at", "system" ]
 
     def create(self, validated_data):
         request = self.context["request"]
@@ -88,26 +90,26 @@ class OrderSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
     
     def get_profit(self, obj):
-        pass
+        return obj.calculate_profit()
 
-    def validate_waiter(self, value):
-        """Ensure the selected user is a waiter and restrict waiters to assigning themselves."""
-        request = self.context["request"]
-        system_id = self.context["view"].kwargs.get("system_id")
-        system = get_object_or_404(System, id=system_id)
+    # def validate_waiter(self, value):
+    #     """Ensure the selected user is a waiter and restrict waiters to assigning themselves."""
+    #     request = self.context["request"]
+    #     system_id = self.context["view"].kwargs.get("system_id")
+    #     system = get_object_or_404(System, id=system_id)
 
-        if value:
-            if value.role != "waiter":
-                raise serializers.ValidationError("Selected user is not a waiter.")
-            # If the user is a waiter, they can only assign themselves
-            if system.owner != request.user:
-                try:
-                    employee = Employee.objects.get(system=system, user=request.user)
-                    if employee.role == 'waiter' and value != employee:
-                        raise serializers.ValidationError("Waiters can only assign themselves to orders.")
-                except Employee.DoesNotExist:
-                    raise PermissionDenied("You do not have permission to assign waiters.")
-        return value
+    #     if value:
+    #         if value.role != "waiter":
+    #             raise serializers.ValidationError("Selected user is not a waiter.")
+    #         # If the user is a waiter, they can only assign themselves
+    #         if system.owner != request.user:
+    #             try:
+    #                 employee = Employee.objects.get(system=system, user=request.user)
+    #                 if employee.role == 'waiter' and value != employee:
+    #                     raise serializers.ValidationError("Waiters can only assign themselves to orders.")
+    #             except Employee.DoesNotExist:
+    #                 raise PermissionDenied("You do not have permission to assign waiters.")
+    #     return value
 
 
 class InventoryItemSerializer(serializers.ModelSerializer):

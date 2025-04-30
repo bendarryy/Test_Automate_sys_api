@@ -38,7 +38,6 @@ class Order(models.Model):
     # waiter = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)  # The waiter taking the order
     waiter = models.ForeignKey(UserRole, on_delete=models.SET_NULL, null=True)  # Waiter taking the order
     total_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
-    profit = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
 
     STATUS_CHOICES = [
         ("pending", "Pending"),
@@ -56,6 +55,12 @@ class Order(models.Model):
         """Recalculate total price based on OrderItems."""
         self.total_price = sum(item.total_price() for item in self.order_items.all())
         self.save()
+    
+    def calculate_profit(self):
+        """Calculate total profit from all order items."""
+        return sum(
+            (item.menu_item.price - item.menu_item.cost) * item.quantity
+            for item in self.order_items.all())
 
     def __str__(self):
         return f"Order {self.id} - {self.customer_name or 'Table ' + self.table_number} ({self.status})"
