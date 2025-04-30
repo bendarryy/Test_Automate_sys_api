@@ -23,8 +23,10 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import { useEditOrder } from "../hooks/useEditOrder";
 import { useNavigate } from "react-router-dom";
 import { useGetMenu } from "../hooks/useGetMenu";
+import { useSelectedSystemId } from '../hooks/useSelectedSystemId';
 
 const EditOrderPage: React.FC = () => {
+  const [selectedSystemId] = useSelectedSystemId();
   const {
     formData,
     orderItems,
@@ -39,7 +41,7 @@ const EditOrderPage: React.FC = () => {
     handleSubmit,
   } = useEditOrder();
 
-  const { getMenu, data, loading: menuLoading, error: menuError } = useGetMenu(5);
+  const { getMenu, data, loading: menuLoading, error: menuError } = useGetMenu(Number(selectedSystemId));
   
   React.useEffect(() => {
     getMenu();
@@ -149,7 +151,7 @@ const EditOrderPage: React.FC = () => {
               </TableBody>
             </Table>
           </TableContainer>
-          <Button variant="outlined" color="primary" onClick={handleAddItem} sx={{ mt: 2 }}>
+          <Button variant="outlined" color="primary" onClick={() => handleAddItem()} sx={{ mt: 2 }}>
             Add Item
           </Button>
           <Typography variant="h6" sx={{ mt: 3 }}>

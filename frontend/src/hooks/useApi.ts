@@ -36,7 +36,7 @@ export const useApi = <T = any>() => {
         err.response.data &&
         err.response.data.detail === "Authentication credentials were not provided."
       ) {
-        navigate('/login');
+        navigate('/ownerLogin');
       }
       setState({ data: null, loading: false, error: err.message });
       throw err;

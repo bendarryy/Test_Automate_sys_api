@@ -13,7 +13,7 @@ const RegisterPage: React.FC = () => {
     e.preventDefault();
     try {
       await register({ username, password });
-      navigate('/login');
+      navigate('/ownerLogin');
     } catch (err) {
       console.error(err);
     }

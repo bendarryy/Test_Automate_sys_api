@@ -1,17 +1,27 @@
 // src/pages/EmployeeLogin.tsx
 import React, { useState } from 'react';
-import { Form, Button, Card, Container } from 'react-bootstrap';
+import { Form, Button, Card, Container, Alert, Spinner } from 'react-bootstrap';
+import { useApi } from '../hooks/useApi';
+import { useNavigate } from 'react-router-dom';
 import '../styles/Login.css'; // تأكد من المسار الصحيح
 
 const EmployeeLogin: React.FC = () => {
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
-  const [rememberMe, setRememberMe] = useState<boolean>(false);
+  const { loading, error, callApi, data } = useApi();
+  const [success, setSuccess] = useState(false);
+  const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle login logic here
-    console.log({ email, password, rememberMe });
+    try {
+      await callApi('post', '/core/employee/login/', { email, password });
+      setSuccess(true);
+      // يمكنك التوجيه بعد النجاح إذا أردت
+      // setTimeout(() => navigate('/employee-dashboard'), 1200);
+    } catch {
+      setSuccess(false);
+    }
   };
 
   return (
@@ -20,6 +30,8 @@ const EmployeeLogin: React.FC = () => {
         <Card.Body>
           <h2 className="text-center mb-4 logo-text">Employee Portal</h2>
           <Form onSubmit={handleSubmit}>
+            {success && <Alert variant="success">Login successful! Welcome.</Alert>}
+            {error && <Alert variant="danger">{error}</Alert>}
             <Form.Group controlId="formEmail" className="mb-3">
               <Form.Label>Email</Form.Label>
               <Form.Control
@@ -28,10 +40,11 @@ const EmployeeLogin: React.FC = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                autoFocus
               />
             </Form.Group>
 
-            <Form.Group controlId="formPassword" className="mb-3">
+            <Form.Group controlId="formPassword" className="mb-4">
               <Form.Label>Password</Form.Label>
               <Form.Control
                 type="password"
@@ -42,17 +55,9 @@ const EmployeeLogin: React.FC = () => {
               />
             </Form.Group>
 
-            <Form.Group controlId="formRememberMe" className="mb-3">
-              <Form.Check
-                type="checkbox"
-                label="Remember this device"
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
-              />
-            </Form.Group>
-
-            <Button variant="success" type="submit" className="w-100 custom-btn">
-              Login 
+            <Button variant="success" type="submit" className="w-100 custom-btn" disabled={loading}>
+              {loading ? <Spinner animation="border" size="sm" className="me-2" /> : null}
+              Login
             </Button>
           </Form>
         </Card.Body>

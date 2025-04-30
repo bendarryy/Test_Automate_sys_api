@@ -1,9 +1,7 @@
-import React from "react";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Layout from "../Layout";
 import HomePage from "../pages/HomePage";
 import RegisterPage from "../pages/RegisterPage";
-import LoginPage from "../pages/LoginPage";
 import OrdersPage from "../pages/OrderPage";
 import OrderDetailsPage from "../pages/OrderDetailsPage";
 import EditOrderPage from "../pages/EditOrderPage";
@@ -12,17 +10,17 @@ import MenuManagement from "../components/MenuManagement";
 import InventoryManagementPage from "../pages/InventoryManagementPage";
 import InventoryItemViewPage from "../pages/InventoryItemViewPage";
 import ProtectLogin from "../security/protectLogin";
-import OwnerLogin from "../pages/Ownerlogin";
 import EmployeeLogin from "../pages/EmployeeLogin";
-// Example components for routes
+import OwnerLogin from "../pages/OwnerLogin";
+import Systems from "../pages/Systems";
+import KdsPage from "../pages/KdsPage";
+import InviteEmployeePage from "../pages/InviteEmployeePage";
+import EmployeesPage from "../pages/EmployeesPage";
+
 const About = () => <h1>About Page</h1>;
 
 const router = createBrowserRouter([
   // Auth-related routes OUTSIDE the layout
-  {
-    path: "/login",
-    element: <LoginPage />,
-  },
   {
     path: "/register",
     element: <RegisterPage />,
@@ -35,19 +33,22 @@ const router = createBrowserRouter([
     path: "/employeelogin",
     element: <EmployeeLogin />,
   },
-  // Main layout and protected routes
+  {
+    path: "/systems",
+    element: <ProtectLogin><Systems /></ProtectLogin>,
+  },
+
+  // All main routes under systemId
   {
     path: "/",
     element: <Layout />,
     children: [
-      // home route
       {
-        path: "/",
+        path: "",
         element: <ProtectLogin><HomePage /></ProtectLogin>,
       },
-      // about route
       {
-        path: "/about",
+        path: "about",
         element: <ProtectLogin><About /></ProtectLogin>,
       },
       {
@@ -55,33 +56,41 @@ const router = createBrowserRouter([
         element: <ProtectLogin><OrdersPage /></ProtectLogin>,
       },
       {
-        path: "orders/:orderId", // Dynamic route for order details
+        path: "orders/:orderId",
         element: <ProtectLogin><OrderDetailsPage /></ProtectLogin>,
       },
       {
-        path: "orders/:orderId/edit", // Route for editing an order
+        path: "orders/:orderId/edit",
         element: <ProtectLogin><EditOrderPage /></ProtectLogin>,
       },
-      // Manage the menu items pages
       {
-        path: "/menu",
+        path: "menu",
         element: <ProtectLogin><MenuPage /></ProtectLogin>,
       },
-      // menu management route
       {
-        path: "/menu-management",
+        path: "menu-management",
         element: <ProtectLogin><MenuManagement /></ProtectLogin>,
       },
-      //  Inventory route
       {
-        path: "/Inventory",
+        path: "inventory",
         element: <ProtectLogin><InventoryManagementPage /></ProtectLogin>,
       },
-      // Inventory item view route
       {
-        path: "/restaurant/:systemId/inventory/:itemId",
+        path: "inventory/:itemId",
         element: <ProtectLogin><InventoryItemViewPage /></ProtectLogin>,
       },
+      {
+        path: "kds",
+        element: <ProtectLogin><KdsPage /></ProtectLogin>,
+      },
+      {
+        path: "invite-employee",
+        element: <ProtectLogin><InviteEmployeePage /></ProtectLogin>,
+      },
+      {
+        path: "employees",
+        element: <ProtectLogin><EmployeesPage /></ProtectLogin>,
+      }
     ],
   },
 ]);

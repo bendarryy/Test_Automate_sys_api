@@ -3,8 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Table, Form, ProgressBar, Button, Modal } from 'react-bootstrap';
 import styles from '../styles/InventoryManagementPage.module.css';
 import { useInventory, InventoryItem } from '../hooks/useInventory';
-
-const SYSTEM_ID = '5'; // TODO: replace with dynamic system id as needed
+import { useSelectedSystemId } from '../hooks/useSelectedSystemId';
 
 // Helper to calculate status and availability
 function computeStatusAndAvailability(item: InventoryItem) {
@@ -20,6 +19,7 @@ function computeStatusAndAvailability(item: InventoryItem) {
 }
 
 const InventoryManagementPage: React.FC = () => {
+  const [selectedSystemId] = useSelectedSystemId();
   const [searchTerm, setSearchTerm] = useState('');
   const [newItem, setNewItem] = useState<Omit<InventoryItem, 'id'>>({
     name: '',
@@ -31,17 +31,21 @@ const InventoryManagementPage: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
-    fetchInventory(SYSTEM_ID);
+    if (selectedSystemId) {
+      fetchInventory(selectedSystemId);
+    }
     // eslint-disable-next-line
-  }, []);
+  }, [selectedSystemId]);
 
   const handleOpenModal = () => setShowModal(true);
   const handleCloseModal = () => setShowModal(false);
 
   const handleAddNewIngredient = async () => {
-    if (!newItem.name || newItem.quantity === null || !newItem.unit) return;
-    await addInventoryItem(SYSTEM_ID, newItem);
-    fetchInventory(SYSTEM_ID);
+    if (!newItem.name || newItem.quantity === null || !newItem.unit || !selectedSystemId) return;
+    await addInventoryItem(selectedSystemId, newItem);
+    fetchInventory(selectedSystemId);
+    setNewItem({ name: '', quantity: null, unit: '', min_threshold: null });
+    handleCloseModal();
     setNewItem({ name: '', quantity: null, unit: '', min_threshold: null });
     handleCloseModal();
   };
@@ -115,7 +119,8 @@ const InventoryManagementPage: React.FC = () => {
                     variant="info"
                     size="sm"
                     className="rounded-pill d-flex align-items-center gap-1"
-                    href={`/restaurant/${SYSTEM_ID}/inventory/${item.id}`}
+                    href={selectedSystemId ? `/restaurant/${selectedSystemId}/inventory/${item.id}` : undefined}
+                    disabled={!selectedSystemId}
                   >
                     <i className="bi bi-eye-fill"></i>
                     View

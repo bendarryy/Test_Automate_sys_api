@@ -22,22 +22,17 @@ import {
 import DeleteIcon from "@mui/icons-material/Delete";
 import SortIcon from "@mui/icons-material/Sort";
 import { useNavigate } from "react-router-dom";
+import { useSelectedSystemId } from '../hooks/useSelectedSystemId';
 
 const OrdersPage: React.FC = () => {
-  const systemId = 5; // Example system ID
+  const [selectedSystemId] = useSelectedSystemId();
   const { orders, loading, error, handleFilter, sortOrders, updateOrderStatus, deleteOrder } =
-    useOrders(systemId);
+    useOrders(Number(selectedSystemId));
   const navigate = useNavigate();
 
   const [sortKey, setSortKey] = useState<"created_at" | "total_price">("created_at");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
-  interface Order {
-    id: number;
-    customer_name: string;
-    table_number: number;
-    total_price: number;
-    status: string;
-  }
+
   return (
     <Container maxWidth="lg" sx={{ mt: 4 }}>
       <Typography variant="h4" gutterBottom>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Modal, Tab, Tabs, Table, Form, Spinner } from 'react-bootstrap';
 import { useGetMenu } from '../hooks/useGetMenu';
-
+import { useSelectedSystemId } from '../hooks/useSelectedSystemId';
 const categories = ['Food', 'Drink', 'Soups', 'Dessert'];
 
 const initialItem = {
@@ -14,8 +14,9 @@ const initialItem = {
 };
 
 const MenuManagement = () => {
-  const systemId = 5; // Replace with the actual system ID
-  const { getMenu, createMenuItem, updateMenuItem, deleteMenuItem, data, loading, error } = useGetMenu(systemId);
+
+const [selectedSystemId] = useSelectedSystemId();
+  const { getMenu, createMenuItem, updateMenuItem, deleteMenuItem, loading, error } = useGetMenu(Number(selectedSystemId));
 
   interface MenuItem {
     id: number;
@@ -30,7 +31,7 @@ const MenuManagement = () => {
   const [items, setItems] = useState<MenuItem[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState(initialItem);
-  const [editItem, setEditItem] = useState(null);
+  const [editItem, setEditItem] = useState<MenuItem | null>(null);
   const [activeTab, setActiveTab] = useState('Food');
 
   useEffect(() => {
@@ -56,41 +57,77 @@ const MenuManagement = () => {
     setShowModal(true);
   };
 
-  const handleEditClick = (item) => {
-    setFormData(item);
+  const handleEditClick = (item: MenuItem) => {
+    setFormData({ ...item, price: item.price.toString() });
     setEditItem(item);
     setShowModal(true);
   };
 
-  const handleDeleteClick = async (item) => {
+  const handleDeleteClick = async (item: MenuItem) => {
     await deleteMenuItem(item.id);
     setItems(items.filter((i) => i.id !== item.id));
   };
 
   const handleSave = async () => {
-    if (!formData.name || !formData.price || isNaN(formData.price) || formData.price <= 0) {
+    if (!formData.name || !formData.price || isNaN(Number(formData.price)) || Number(formData.price) <= 0) {
       alert('Please fill in all fields correctly.');
       return;
     }
   
     const updatedFormData = {
       ...formData,
+      price: Number(formData.price),
       category: formData.category.toLowerCase(), // Convert category to lowercase
     };
-  
+
     if (editItem) {
       await updateMenuItem(editItem.id, updatedFormData);
-      setItems(items.map((item) => (item.id === editItem.id ? { ...updatedFormData, id: editItem.id } : item)));
+      setItems(items.map((item) => (
+        item.id === editItem.id
+          ? {
+              id: editItem.id,
+              name: updatedFormData.name,
+              category: updatedFormData.category,
+              price: Number(updatedFormData.price),
+              available: updatedFormData.available,
+              description: updatedFormData.description,
+              specialOffer: updatedFormData.specialOffer,
+            }
+          : item
+      )));
     } else {
-      const newItem = await createMenuItem(updatedFormData);
-      setItems([...items, newItem]);
+      const newItem = await createMenuItem({ ...updatedFormData, id: Date.now() });
+      // Ensure newItem has all MenuItem properties and correct types
+      if (
+        newItem &&
+        typeof newItem.id === 'number' &&
+        typeof newItem.name === 'string' &&
+        typeof newItem.category === 'string' &&
+        typeof newItem.price === 'number' &&
+        typeof newItem.available === 'boolean' &&
+        typeof newItem.description === 'string' &&
+        typeof newItem.specialOffer === 'boolean'
+      ) {
+        setItems([
+          ...items,
+          {
+            id: newItem.id,
+            name: newItem.name,
+            category: newItem.category,
+            price: newItem.price,
+            available: newItem.available,
+            description: newItem.description,
+            specialOffer: newItem.specialOffer,
+          },
+        ]);
+      }
     }
     setShowModal(false);
   };
 
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData({ ...formData, [name]: type === 'checkbox' ? checked : value });
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value, type } = e.target;
+    setFormData({ ...formData, [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value });
   };
 
   return (
@@ -103,9 +140,9 @@ const MenuManagement = () => {
       {loading ? (
         <Spinner animation="border" />
       ) : error ? (
-        <p>Error loading menu: {error.message}</p>
+        <p>Error loading menu: {error}</p>
       ) : (
-        <Tabs activeKey={activeTab} onSelect={(k) => setActiveTab(k)} className="mb-3">
+        <Tabs activeKey={activeTab} onSelect={(k) => setActiveTab(k || 'Food')} className="mb-3">
           {categories.map((cat) => (
             <Tab eventKey={cat} title={cat} key={cat}>
               <Table striped bordered hover>

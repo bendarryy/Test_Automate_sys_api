@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useGetMenu } from '../hooks/useGetMenu';
 import styles from '../styles/MenuPage.module.css';
+import { useSelectedSystemId } from '../hooks/useSelectedSystemId';
 
 const MenuPage = () => {
-  const systemId = 5; // Example system ID
+  const [selectedSystemId] = useSelectedSystemId();
   const { 
     getMenu, 
     createMenuItem, 
@@ -12,7 +13,7 @@ const MenuPage = () => {
     data: menuItems, 
     loading, 
     error 
-  } = useGetMenu(systemId);
+  } = useGetMenu(Number(selectedSystemId));
 
   const [newItem, setNewItem] = useState({
     name: '',
@@ -48,11 +49,11 @@ const MenuPage = () => {
     getMenu(); // Refresh menu
   };
 
-  const handleEdit = (item: any) => {
+  const handleEdit = (item: { id: number; name: string; description?: string; price: number; category: string }) => {
     setEditingItem(item.id);
     setUpdatedItem({
       name: item.name,
-      description: item.description || '',
+      description: item.description ?? "",
       price: item.price,
       category: item.category,
     });
@@ -69,7 +70,7 @@ const MenuPage = () => {
   };
 
   if (loading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error.message}</div>;
+  if (error) return <div>Error: {error}</div>;
 
   return (
     <div className={styles.container}>

@@ -10,6 +10,8 @@ import {
   FiChevronLeft,
   FiChevronRight,
   FiInfo,
+  FiMonitor,
+  FiUsers,
 } from "react-icons/fi"
 import styles from "../styles/Sidebar.module.css"
 
@@ -19,14 +21,19 @@ interface NavItem {
   href: string
 }
 
-const navItems: NavItem[] = [
-  { name: "Home", icon: FiHome, href: "/" },
-  { name: "Orders", icon: FiList, href: "/orders" },
-  { name: "Menu", icon: FiBookOpen, href: "/menu" },
-  { name: "Menu Management", icon: FiClipboard, href: "/menu-management" },
-  { name: "Inventory", icon: FiBox, href: "/Inventory" },
-  { name: "About", icon: FiInfo, href: "/about" },
-]
+function getNavItems(): NavItem[] {
+  return [
+    { name: "Home", icon: FiHome, href: "/" },
+    { name: "Orders", icon: FiList, href: "/orders" },
+    { name: "Menu", icon: FiBookOpen, href: "/menu" },
+    { name: "Menu Management", icon: FiClipboard, href: "/menu-management" },
+    { name: "Inventory", icon: FiBox, href: "/Inventory" },
+    { name: "KDS", icon: FiMonitor, href: `/kds/` },
+    { name: "Invite Employee", icon: FiClipboard, href: "/invite-employee" },
+    { name: "Employees", icon: FiUsers, href: "/employees" },
+    { name: "About", icon: FiInfo, href: "/about" },
+  ];
+}
 
 export function Sidebar({ defaultIconsOnly = false, className = "" }: { defaultIconsOnly?: boolean, className?: string }) {
   const [iconsOnly, setIconsOnly] = useState(defaultIconsOnly)
@@ -52,7 +59,7 @@ export function Sidebar({ defaultIconsOnly = false, className = "" }: { defaultI
 
       <div className={styles['sidebar-content']}>
         <ul className={styles['nav-menu']}>
-          {navItems.map((item) => (
+          {getNavItems().map((item) => (
             <li key={item.name} className={styles['nav-item'] + (location.pathname == item.href ? ` ${styles['active']}` : "") }>
               <NavLink to={item.href} className={styles['nav-link']} title={iconsOnly ? item.name : ""} end={item.href === "/"}>
                 <span className={styles['icon']}>

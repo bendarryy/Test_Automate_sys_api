@@ -15,7 +15,7 @@ import {
 import styles from "../styles/BillSection.module.css";
 import { IoMdAddCircleOutline } from "react-icons/io";
 import { useSendOrders } from "../hooks/useSendOrders";
-
+import { useSelectedSystemId } from '../hooks/useSelectedSystemId';
 const BillSection = () => {
   const billItems = useSelector((state: RootState) => state.bill.items);
   const selectedTable = useSelector((state: RootState) => state.bill.selectedTable);
@@ -23,7 +23,9 @@ const BillSection = () => {
 
   const [discount, setDiscount] = useState<number>(0);
   const [isSending, setIsSending] = useState<boolean>(false);
-  const { createOrder, addItemToOrder, loading: apiLoading } = useSendOrders(5); // Replace '1' with the actual systemId
+
+const [selectedSystemId] = useSelectedSystemId();
+const { createOrder, addItemToOrder, loading: apiLoading } = useSendOrders(Number(selectedSystemId));
 
   const total = billItems.reduce((total, item) => total + item.price, 0);
   const discountedTotal = total - (total * discount) / 100;
