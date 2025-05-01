@@ -5,18 +5,25 @@ import { useDispatch } from "react-redux";
 import { addItem } from "../store/billSlice";
 import { useGetMenu } from "../hooks/useGetMenu";
 
+interface Product {
+  id: number | string;
+  name: string;
+  price: number | string;
+  category?: string;
+}
+
 const ProductsSection = () => {
   const dispatch = useDispatch();
   const [selectedCategories, setSelectedCategories] = React.useState<string[]>([]);
   const { getMenu, data } = useGetMenu(5);
 
-  const toggleCategorySelection = (category: string) => {
+  const toggleCategorySelection = React.useCallback((category: string) => {
     setSelectedCategories((prev) =>
       prev.includes(category)
         ? prev.filter((cat) => cat !== category)
         : [...prev, category]
     );
-  };
+  }, []);
   
   useEffect(() => { 
       if (selectedCategories.length > 0) {
@@ -25,12 +32,9 @@ const ProductsSection = () => {
         // جلب جميع المنتجات عندما لا توجد فئات مختارة
         getMenu();
       }
-
-    
-    console.log(data);
   }, [selectedCategories]);
 
-  const categories = [...new Set((data || []).map((product) => product.category))];
+  const categories = React.useMemo(() => [...new Set((data || []).map((product) => product.category))], [data]);
 
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "1rem" }}>
@@ -57,29 +61,30 @@ const ProductsSection = () => {
         </div>
       </div>
       <GridScrollX
-        items={data || []}
-        renderItem={(product, index) => (
-          <div key={`${product.id}-${index}`}>
-            <label htmlFor={`product-${product.id.toString()}-${index}`}>
+        items={(data || []) as Product[]}
+        renderItem={(product, index) => {
+          const p = product as Product;
+          return (
+            <div key={`${p.id}-${index}`}>
               <div
                 className={styles.product}
                 onClick={() => {
                   dispatch(
                     addItem({
-                      ...product,
-                      id: product.id.toString(),
-                      price: Number(product.price), // Ensure price is a number
+                      ...p,
+                      id: p.id.toString(),
+                      price: Number(p.price), // Ensure price is a number
                       quantity: 1, // Default quantity for new items
                     })
                   );
                 }}
               >
-                <h3>{product.name}</h3>
-                <p>${product.price}</p>
+                <h3>{p.name}</h3>
+                <p>${p.price}</p>
               </div>
-            </label>
-          </div>
-        )}
+            </div>
+          );
+        }}
       />
     </div>
   );

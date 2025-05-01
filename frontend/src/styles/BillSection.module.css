@@ -1,102 +1,129 @@
 .container {
-    padding: 1.5rem;
-    border: 1px solid #e0e0e0;
-    border-radius: 12px;
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.05);
-    background-color: #ffffff;
-    max-width: 600px;
-    margin: 0 auto;
-    height: 100%;
-  }
-  
-  .title {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: #333;
-    margin-bottom: 1rem;
-  }
-  
-  .list {
-    margin-bottom: 1.5rem;
-  }
-  
-  .listItem {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.75rem 0;
-  }
-  
-  .listItemText {
-    font-size: 1rem;
-    color: #555;
-  }
-  
-  .removeButton {
-    font-size: 0.875rem;
-    padding: 0.25rem 0.75rem;
-    border-radius: 6px;
-  }
-  
-  .divider {
-    margin: 0.5rem 0;
-  }
-  
-  .alert {
-    margin-bottom: 1rem;
-  }
-  
-  .discountInput {
-    margin-bottom: 1rem;
-  }
-  
-  .total {
-    font-size: 1.25rem;
-    font-weight: 500;
-    color: #333;
-    margin-bottom: 0.5rem;
-  }
-  
-  .discountedTotal {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: #1976d2;
-    margin-bottom: 1rem;
-  }
-  
-  .buttonContainer {
-    display: flex;
-    justify-content: space-between;
-    gap: 1rem;
-  }
-  
-  .button {
-    flex: 1;
-    padding: 0.75rem;
-    font-size: 1rem;
-    border-radius: 8px;
-    text-transform: none;
-  }
-  
-  .clearButton {
-    background-color: #f44336;
-    color: #fff;
-  }
-  
-  .sendButton {
-    background-color: #ff9800;
-    color: #fff;
-  }
-  
-  .printButton {
-    background-color: #4caf50;
-    color: #fff;
-  }
-  .emptyBill{
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100%;
-    flex-direction: column;
-    color: #00000029;
-  }
+  padding: 1.5rem;
+  border: 1px solid #e3e6f0;
+  border-radius: 16px;
+  box-shadow: 0 6px 24px rgba(25, 118, 210, 0.06);
+  background-color: #f7fafd;
+  max-width: 600px;
+  margin: 0 auto;
+  height: 100%;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1976d2;
+  margin-bottom: 1.25rem;
+  letter-spacing: 0.5px;
+}
+
+.list {
+  margin-bottom: 1.5rem;
+}
+
+.listItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+}
+
+.listItemText {
+  font-size: 1rem;
+  color: #263238;
+}
+
+.removeButton {
+  font-size: 0.875rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 6px;
+  background-color: #e53935 !important;
+  color: #fff !important;
+  border: none;
+  transition: background 0.2s;
+}
+
+.removeButton:hover {
+  background-color: #b71c1c !important;
+}
+
+.divider {
+  margin: 0.5rem 0;
+}
+
+.alert {
+  margin-bottom: 1rem;
+}
+
+.discountInput {
+  margin-bottom: 1rem;
+}
+
+.total {
+  font-size: 1.15rem;
+  font-weight: 500;
+  color: #222b45;
+  margin-bottom: 0.5rem;
+}
+
+.discountedTotal {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #388e3c;
+  margin-bottom: 1rem;
+}
+
+.buttonContainer {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.button {
+  flex: 1;
+  padding: 0.75rem;
+  font-size: 1rem;
+  border-radius: 8px;
+  text-transform: none;
+  border: none;
+  transition: background 0.2s, color 0.2s;
+}
+
+.clearButton {
+  background-color: #e3e6f0;
+  color: #1976d2;
+  border: 1px solid #1976d2;
+}
+
+.clearButton:hover {
+  background-color: #1976d2;
+  color: #fff;
+}
+
+.sendButton {
+  background-color: #1976d2;
+  color: #fff;
+}
+
+.sendButton:hover {
+  background-color: #115293;
+  color: #fff;
+}
+
+.printButton {
+  background-color: #43a047;
+  color: #fff;
+}
+
+.printButton:hover {
+  background-color: #2e7031;
+}
+
+.emptyBill {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  flex-direction: column;
+  color: #b0bec5;
+}

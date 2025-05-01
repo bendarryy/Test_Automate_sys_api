@@ -1,6 +1,11 @@
 // InventoryManagementPage.tsx
 import React, { useState, useEffect } from 'react';
-import { Table, Form, ProgressBar, Button, Modal } from 'react-bootstrap';
+// تم حذف استيراد bootstrap الجماعي. استخدم الاستيراد المنفرد فقط للمكونات المطلوبة.
+import Table from 'react-bootstrap/Table';
+import Form from 'react-bootstrap/Form';
+import ProgressBar from 'react-bootstrap/ProgressBar';
+import Button from 'react-bootstrap/Button';
+import Modal from 'react-bootstrap/Modal';
 import styles from '../styles/InventoryManagementPage.module.css';
 import { useInventory, InventoryItem } from '../hooks/useInventory';
 import { useSelectedSystemId } from '../hooks/useSelectedSystemId';

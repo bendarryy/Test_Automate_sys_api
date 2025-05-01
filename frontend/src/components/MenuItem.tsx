@@ -1,6 +1,6 @@
 import React from 'react';
 
-const MenuItem = ({ item, orderId, onRemove }) => {
+const MenuItem = React.memo(({ item, orderId, onRemove }) => {
   return (
     <div className="d-flex justify-content-between align-items-center border-bottom py-2">
       <div>
