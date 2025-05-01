@@ -17,6 +17,21 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import path, include
+from rest_framework import permissions
+from drf_yasg.views import get_schema_view
+from drf_yasg import openapi
+
+
+schema_view = get_schema_view(
+    openapi.Info(
+        title="Smart System API",
+        default_version='v1',
+        description="Multi-System API for core, restaurant, supermarket, and cafe",
+        contact=openapi.Contact(email="support@example.com"),
+    ),
+    public=True,
+    permission_classes=(permissions.AllowAny,),
+)ix
 
 urlpatterns = [
     path("admin/", admin.site.urls),  # Admin panel URL
@@ -25,10 +40,14 @@ urlpatterns = [
         "api/core/", include("core.urls")
     ),  # URLs for the core app (e.g., user management)
     path("api/restaurant/", include("restaurant.urls")),  # URLs for the restaurant app
-    path("api/inventory/", include("inventory.urls")),
+    # path("api/inventory/", include("inventory.urls")),
     # path("api/cafe/", include("cafe.urls")),  # URLs for the cafe app
-    path("api/supermarket/", include("supermarket.urls")),  # URLs for the supermarket app
+    # path("api/supermarket/", include("supermarket.urls")),  # URLs for the supermarket app
     # path("api/workshop/", include("workshop.urls")),  # URLs for the workshop app
+    # Swagger & Redoc
+    
+    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+    path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
 ]
 from django.conf import settings
 from django.conf.urls.static import static
