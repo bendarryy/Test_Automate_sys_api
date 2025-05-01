@@ -1,21 +1,24 @@
+// تم تفعيل التحميل الكسول (React.lazy) لجميع الصفحات الثقيلة لتحسين الأداء.
+import React, { Suspense, lazy } from "react";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Layout from "../Layout";
-import HomePage from "../pages/HomePage";
-import RegisterPage from "../pages/RegisterPage";
-import OrdersPage from "../pages/OrderPage";
-import OrderDetailsPage from "../pages/OrderDetailsPage";
-import EditOrderPage from "../pages/EditOrderPage";
-import MenuPage from "../pages/MenuPage";
-import MenuManagement from "../components/MenuManagement";
-import InventoryManagementPage from "../pages/InventoryManagementPage";
-import InventoryItemViewPage from "../pages/InventoryItemViewPage";
 import ProtectLogin from "../security/protectLogin";
-import EmployeeLogin from "../pages/EmployeeLogin";
-import OwnerLogin from "../pages/OwnerLogin";
-import Systems from "../pages/Systems";
-import KdsPage from "../pages/KdsPage";
-import InviteEmployeePage from "../pages/InviteEmployeePage";
-import EmployeesPage from "../pages/EmployeesPage";
+
+const HomePage = lazy(() => import("../pages/HomePage"));
+const RegisterPage = lazy(() => import("../pages/RegisterPage"));
+const OrdersPage = lazy(() => import("../pages/OrderPage"));
+const OrderDetailsPage = lazy(() => import("../pages/OrderDetailsPage"));
+const EditOrderPage = lazy(() => import("../pages/EditOrderPage"));
+const MenuPage = lazy(() => import("../pages/MenuPage"));
+const MenuManagement = lazy(() => import("../components/MenuManagement"));
+const InventoryManagementPage = lazy(() => import("../pages/InventoryManagementPage"));
+const InventoryItemViewPage = lazy(() => import("../pages/InventoryItemViewPage"));
+const EmployeeLogin = lazy(() => import("../pages/EmployeeLogin"));
+const OwnerLogin = lazy(() => import("../pages/OwnerLogin"));
+const Systems = lazy(() => import("../pages/Systems"));
+const KdsPage = lazy(() => import("../pages/KdsPage"));
+const InviteEmployeePage = lazy(() => import("../pages/InviteEmployeePage"));
+const EmployeesPage = lazy(() => import("../pages/EmployeesPage"));
 
 const About = () => <h1>About Page</h1>;
 
@@ -95,5 +98,9 @@ const router = createBrowserRouter([
   },
 ]);
 
-const Router = () => <RouterProvider router={router} />;
+const Router = () => (
+  <Suspense fallback={<div>Loading...</div>}>
+    <RouterProvider router={router} />
+  </Suspense>
+);
 export default Router;

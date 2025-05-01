@@ -2,7 +2,7 @@ import React from 'react';
 import MenuItem from './MenuItem';
 import MenuForm from './MenuForm'; // ✅
 
-const MenuList = ({ order, onAddItem, onRemoveItem }) => {
+const MenuList = React.memo(({ order, onAddItem, onRemoveItem }) => {
   if (!order || !order.items) return <p>Order not found or has no items.</p>;
 
   return (

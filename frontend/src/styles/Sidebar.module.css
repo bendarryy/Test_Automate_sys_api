@@ -200,23 +200,6 @@
 /* Responsive Styles */
 @media (max-width: 768px) {
   .creative-sidebar {
-    position: fixed;
-    z-index: 100;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  }
-
-  .creative-sidebar.expanded {
-    width: 240px;
-  }
-
-  .creative-sidebar.icons-only {
-    width: 0;
-    border-right: none;
-  }
-
-  .icons-only .sidebar-header,
-  .icons-only .sidebar-content,
-  .icons-only .sidebar-footer {
-    opacity: 0;
+    display: none !important;
   }
 }

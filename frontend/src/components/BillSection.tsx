@@ -2,20 +2,12 @@ import React, { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../store";
 import { removeItem, clearBill, addItem } from "../store/billSlice";
-import {
-  Box,
-  Typography,
-  Button,
-  List,
-  ListItem,
-  ListItemText,
-  Divider,
-  TextField,
-} from "@mui/material";
+// تم نقل استيراد bootstrap إلى نقطة دخول التطبيق (main.tsx أو index.tsx) لتحسين الأداء ومنع تكرار التحميل.
 import styles from "../styles/BillSection.module.css";
 import { IoMdAddCircleOutline } from "react-icons/io";
 import { useSendOrders } from "../hooks/useSendOrders";
 import { useSelectedSystemId } from '../hooks/useSelectedSystemId';
+
 const BillSection = () => {
   const billItems = useSelector((state: RootState) => state.bill.items);
   const selectedTable = useSelector((state: RootState) => state.bill.selectedTable);
@@ -24,13 +16,15 @@ const BillSection = () => {
   const [discount, setDiscount] = useState<number>(0);
   const [isSending, setIsSending] = useState<boolean>(false);
 
-const [selectedSystemId] = useSelectedSystemId();
-const { createOrder, addItemToOrder, loading: apiLoading } = useSendOrders(Number(selectedSystemId));
+  const [selectedSystemId] = useSelectedSystemId();
+  const { createOrder, addItemToOrder, loading: apiLoading } = useSendOrders(Number(selectedSystemId));
 
-  const total = billItems.reduce((total, item) => total + item.price, 0);
-  const discountedTotal = total - (total * discount) / 100;
+  // حساب الإجمالي باستخدام useMemo
+  const total = React.useMemo(() => billItems.reduce((total, item) => total + item.price, 0), [billItems]);
+  const discountedTotal = React.useMemo(() => total - (total * discount) / 100, [total, discount]);
 
-  const handleSendBill = async () => {
+  // استخدم useCallback لمنع إعادة إنشاء الدوال إلا عند الحاجة
+  const handleSendBill = React.useCallback(async () => {
     setIsSending(true);
     try {
       const orderData = {
@@ -60,43 +54,38 @@ const { createOrder, addItemToOrder, loading: apiLoading } = useSendOrders(Numbe
     } finally {
       setIsSending(false);
     }
-  };
+  }, [billItems, createOrder, addItemToOrder, dispatch]);
 
-  const handlePrintBill = () => {
+  const handlePrintBill = React.useCallback(() => {
     window.print();
-  };
+  }, []);
 
   return (
-    <Box className={styles.container} justifyContent={"space-between"} display={"flex"} flexDirection={"column"}>
-      <Typography className={styles.title}>
-        {selectedTable
-          ? `Bill for Table: ${selectedTable}`
-          : "Bill for External Order"}
-      </Typography>
-      <Box className={styles.body}>
-      {billItems.length === 0 ? (
-        <Box className={styles.emptyBill}>
-        <IoMdAddCircleOutline size={100} />
-        <h3>
-          Add items to the bill
-        </h3>
-        </Box>
-      ) : (
-        <List className={styles.list}>
-          {billItems.map((item) => (
-            <React.Fragment key={item.id}>
-              <ListItem className={styles.listItem}>
-                <ListItemText
-                  primary={item.name}
-                  secondary={`Price: $${item.price.toFixed(2)}`}
-                  className={styles.listItemText}
-                />
-                <TextField
+    <div className={`${styles.container} d-flex flex-column justify-content-between`}>
+      <h4 className={styles.title}>
+        {selectedTable ? `Bill for Table: ${selectedTable}` : "Bill for External Order"}
+      </h4>
+      <div className={styles.body}>
+        {billItems.length === 0 ? (
+          <div className={styles.emptyBill}>
+            <IoMdAddCircleOutline size={100} />
+            <h3>Add items to the bill</h3>
+          </div>
+        ) : (
+          <ul className={`list-group ${styles.list}`}>
+            {billItems.map((item) => (
+              <li key={item.id} className={`list-group-item d-flex align-items-center justify-content-between ${styles.listItem}`}>
+                <div className={styles.listItemText}>
+                  <strong>{item.name}</strong>
+                  <div className="text-muted">Price: ${item.price.toFixed(2)}</div>
+                </div>
+                <input
                   type="number"
-                  value={item.quantity} // عرض الكمية الحالية
-                  InputProps={{ inputProps: { min: 1 } }}
-                  className={styles.quantityInput}
-                  size="small"
+                  name="quantity"
+                  id={`quantity-${item.id}`}
+                  min={1}
+                  value={item.quantity}
+                  className={`form-control form-control-sm ${styles.quantityInput}`}
                   style={{ width: "80px", marginRight: "10px" }}
                   onChange={(e) => {
                     const newQuantity = Number(e.target.value);
@@ -104,74 +93,65 @@ const { createOrder, addItemToOrder, loading: apiLoading } = useSendOrders(Numbe
                       dispatch(
                         addItem({
                           ...item,
-                          quantity: newQuantity - item.quantity, // تحديث الكمية بناءً على الفرق
+                          quantity: newQuantity - item.quantity,
                         })
                       );
                     }
                   }}
                 />
-                <Button
-                  variant="outlined"
-                  color="error"
-                  size="small"
+                <button
+                  className={`btn btn-outline-danger btn-sm ${styles.removeButton}`}
                   onClick={() => dispatch(removeItem(item.id))}
-                  className={styles.removeButton}
                 >
                   Remove
-                </Button>
-              </ListItem>
-              <Divider className={styles.divider} />
-            </React.Fragment>
-          ))}
-        </List>
-      )}
-      </Box>
-      
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
 
-      <Box className={styles.footer}>
-          <TextField
-            label="Discount (%)"
-            type="number"
-            value={discount}
-            onChange={(e) => setDiscount(Number(e.target.value))}
-            fullWidth
-            className={styles.discountInput}
-          />
-          <Typography className={styles.total}>
-            Total: ${total.toFixed(2)}
-          </Typography>
-          <Typography className={styles.discountedTotal}>
-            Total after Discount: ${discountedTotal.toFixed(2)}
-          </Typography>
+      <div className={styles.footer}>
+        <input
+          type="number"
+          id="discount"
+          min={0}
+          max={100}
+          value={discount}
+          onChange={(e) => setDiscount(Number(e.target.value))}
+          className={`form-control ${styles.discountInput}`}
+          placeholder="Discount (%)"
+        />
+        <h5 className={styles.total}>
+          Total: ${total.toFixed(2)}
+        </h5>
+        <h5 className={styles.discountedTotal}>
+          Total after Discount: ${discountedTotal.toFixed(2)}
+        </h5>
 
-
-      
-        <Box className={styles.buttonContainer}>
-          <Button
-            variant="contained"
+        <div className={styles.buttonContainer}>
+          <button
+            className={`btn btn-secondary ${styles.button} ${styles.clearButton} me-2`}
             onClick={() => dispatch(clearBill())}
-            className={`${styles.button} ${styles.clearButton}`}
           >
             Clear Bill
-          </Button>
-          <Button
-            variant="contained"
+          </button>
+          <button
+            className={`btn btn-primary ${styles.button} ${styles.sendButton} me-2`}
             onClick={handleSendBill}
             disabled={isSending || apiLoading}
-            className={`${styles.button} ${styles.sendButton}`}
           >
             {isSending || apiLoading ? "Sending..." : "Send Bill"}
-          </Button>
-          <Button
-            variant="contained"
+          </button>
+          <button
+            className={`btn btn-outline-dark ${styles.button} ${styles.printButton}`}
             onClick={handlePrintBill}
-            className={`${styles.button} ${styles.printButton}`}
           >
             Print Bill
-          </Button>
-        </Box>
-      </Box>
-    </Box>
+          </button>
+        </div>
+      </div>
+    </div>
   );
 };
 

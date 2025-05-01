@@ -1,14 +1,44 @@
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vite';
+import { visualizer } from 'vite-plugin-visualizer'; // لتحليل حجم الحزمة
 import react from '@vitejs/plugin-react'
-import fs from 'fs'
-import path from 'path'
-
-// Fix for TypeScript: Use import.meta.url for file paths
-const __dirname = path.dirname(new URL(import.meta.url).pathname)
+import viteCompression from 'vite-plugin-compression'
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    visualizer({
+      filename: 'dist/bundle-visualizer.html',
+      open: false, // يمكنك تغييره إلى true لفتح التحليل تلقائيًا بعد البناء
+      gzipSize: true,
+      brotliSize: true,
+    }),
+  ],
+  
+  // تحسين الكاشينج للصور والملفات الثابتة
+  build: {
+    assetsInlineLimit: 4096, // الصور الأقل من 4KB ستُضمّن مباشرة
+    rollupOptions: {
+      output: {
+        assetFileNames: (assetInfo) => {
+          if (/\.(gif|jpe?g|png|svg|webp)$/.test(assetInfo.name ?? '')) {
+            return 'assets/images/[name]-[hash][extname]';
+          }
+          return 'assets/[name]-[hash][extname]';
+        },
+      },
+    },
+  },
+  // ملاحظة: يفضل ضغط الصور وتحويلها إلى webp قبل إضافتها لمجلد assets
+
+  plugins: [
+    react(),
+    viteCompression({
+      algorithm: 'gzip', // Use 'brotliCompress' for Brotli
+      ext: '.gz',        // File extension for compressed files
+      threshold: 1024,   // Only assets bigger than this are compressed (bytes)
+      deleteOriginFile: false // Keep original files
+    })
+  ],
   server: {
     host: '127.0.0.1',
     proxy: {

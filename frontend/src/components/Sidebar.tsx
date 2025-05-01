@@ -15,6 +15,9 @@ import {
 } from "react-icons/fi"
 import styles from "../styles/Sidebar.module.css"
 
+// ملاحظة: في الـ layout الرئيسي، أضف <Sidebar /> و <BottomNavBar /> معاً.
+// Sidebar يظهر فقط على الشاشات الكبيرة، وBottomNavBar يظهر فقط على الشاشات الصغيرة (راجع CSS).
+
 interface NavItem {
   name: string
   icon: any

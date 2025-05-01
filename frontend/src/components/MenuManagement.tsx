@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Modal, Tab, Tabs, Table, Form, Spinner } from 'react-bootstrap';
+// تم تحسين الاستيراد لتقليل حجم الباندل:
+import Button from 'react-bootstrap/Button';
+import Modal from 'react-bootstrap/Modal';
+import Tab from 'react-bootstrap/Tab';
+import Tabs from 'react-bootstrap/Tabs';
+import Table from 'react-bootstrap/Table';
+import Form from 'react-bootstrap/Form';
+import Spinner from 'react-bootstrap/Spinner';
 import { useGetMenu } from '../hooks/useGetMenu';
 import { useSelectedSystemId } from '../hooks/useSelectedSystemId';
 const categories = ['Food', 'Drink', 'Soups', 'Dessert'];
@@ -51,24 +58,24 @@ const [selectedSystemId] = useSelectedSystemId();
     console.log('Items updated:', items);
   }, [items]);
 
-  const handleAddClick = () => {
+  const handleAddClick = React.useCallback(() => {
     setFormData(initialItem);
     setEditItem(null);
     setShowModal(true);
-  };
+  }, []);
 
-  const handleEditClick = (item: MenuItem) => {
+  const handleEditClick = React.useCallback((item: MenuItem) => {
     setFormData({ ...item, price: item.price.toString() });
     setEditItem(item);
     setShowModal(true);
-  };
+  }, []);
 
-  const handleDeleteClick = async (item: MenuItem) => {
+  const handleDeleteClick = React.useCallback(async (item: MenuItem) => {
     await deleteMenuItem(item.id);
     setItems(items.filter((i) => i.id !== item.id));
-  };
+  }, []);
 
-  const handleSave = async () => {
+  const handleSave = React.useCallback(async () => {
     if (!formData.name || !formData.price || isNaN(Number(formData.price)) || Number(formData.price) <= 0) {
       alert('Please fill in all fields correctly.');
       return;
@@ -123,12 +130,12 @@ const [selectedSystemId] = useSelectedSystemId();
       }
     }
     setShowModal(false);
-  };
+  }, []);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const handleChange = React.useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
     setFormData({ ...formData, [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value });
-  };
+  }, []);
 
   return (
     <div className="container mt-5">

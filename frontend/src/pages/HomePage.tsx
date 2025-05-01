@@ -2,23 +2,22 @@ import React from "react";
 import TablesSection from "../components/TablesSection";
 import ProductsSection from "../components/ProductsSection";
 import BillSection from "../components/BillSection";
-import Grid from "@mui/material/Grid";
-import { Box } from "@mui/material";
+// تم حذف استيراد bootstrap لأن الاستيراد موجود في main.tsx فقط
 
 const HomePage = () => {
   return (
     <main>
-      <Box display="flex" height="calc(100vh - 64px)">
+      <div className="d-flex" style={{ height: 'calc(100vh - 64px)' }}>
         {/* العمود الأول: مكدس TablesSection وProductsSection */}
-        <Box flex={2} display="flex" flexDirection="column" gap={2} sx={{ width : "70%" }}>
+        <div className="d-flex flex-column gap-2" style={{ flex: 2, width: '70%' }}>
           <TablesSection />
           <ProductsSection />
-        </Box>
+        </div>
         {/* العمود الثاني: BillSection */}
-        <Box flex={1}>
+        <div style={{ flex: 1 }}>
           <BillSection />
-        </Box>
-      </Box>
+        </div>
+      </div>
     </main>
   );
 };

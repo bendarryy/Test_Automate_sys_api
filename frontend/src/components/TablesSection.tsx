@@ -4,7 +4,7 @@ import { RootState } from "../store";
 import { setSelectedTable } from "../store/billSlice";
 import GridScrollX from "./GridScrollX";
 import styles from "../styles/TablesSection.module.css";
-import PeopleOutlineIcon from "@mui/icons-material/PeopleOutline";
+import { MdPeopleOutline } from "react-icons/md";
 
 const tables = [
   {
@@ -102,7 +102,7 @@ const TablesSection: React.FC = () => {
             <div className={`${styles.table} ${styles[table.status]}`}>
               <h3>table {index + 1}</h3>
               <p>
-                {table.capacity} <PeopleOutlineIcon fontSize="small" />
+                {table.capacity} <MdPeopleOutline size={24} />
               </p>
               <div className={`${styles[table.status]} ${styles.status}`}>
                 {table.status}

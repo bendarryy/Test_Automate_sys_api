@@ -1,7 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useApi } from '../hooks/useApi';
 import { useEmployeeApi } from '../hooks/useEmployeeApi';
-import { Card, Container, Spinner, Alert, Table, Button, Modal, Form } from 'react-bootstrap';
+// تم حذف استيراد bootstrap الجماعي. استخدم الاستيراد المنفرد فقط للمكونات المطلوبة.
+import Card from 'react-bootstrap/Card';
+import Container from 'react-bootstrap/Container';
+import Spinner from 'react-bootstrap/Spinner';
+import Alert from 'react-bootstrap/Alert';
+import Table from 'react-bootstrap/Table';
+import Button from 'react-bootstrap/Button';
+import Modal from 'react-bootstrap/Modal';
+import Form from 'react-bootstrap/Form';
 import { FiUsers, FiEye, FiEdit2, FiTrash2, FiSave, FiXCircle } from 'react-icons/fi';
 
 interface Employee {

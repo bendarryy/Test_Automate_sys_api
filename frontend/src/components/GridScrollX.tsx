@@ -6,7 +6,7 @@ interface GridScrollXProps<T> {
   renderItem: (item: T, index: number) => React.ReactNode;
 }
 
-const GridScrollX = <T,>({ items, renderItem }: GridScrollXProps<T>) => {
+const GridScrollX = React.memo(<T,>({ items, renderItem }: GridScrollXProps<T>) => {
   return (
     <div className={styles.tablesContainer} style={{ flex: 1 }}>
       <div className={styles.tables}>
@@ -18,6 +18,6 @@ const GridScrollX = <T,>({ items, renderItem }: GridScrollXProps<T>) => {
       </div>
     </div>
   );
-};
+});
 
 export default GridScrollX;

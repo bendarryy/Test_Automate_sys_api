@@ -1,24 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useApi } from "../hooks/useApi";
-import {
-  Container,
-  Typography,
-  CircularProgress,
-  Card,
-  CardContent,
-  Grid,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Chip,
-  Divider,
-  Box,
-} from "@mui/material";
+// تم حذف استيراد bootstrap لأن الاستيراد موجود في main.tsx فقط
+import Container from 'react-bootstrap/Container';
+import Card from 'react-bootstrap/Card';
+import Table from 'react-bootstrap/Table';
+import Row from 'react-bootstrap/Row';
+import Col from 'react-bootstrap/Col';
+import Badge from 'react-bootstrap/Badge';
+import Alert from 'react-bootstrap/Alert';
+import Spinner from 'react-bootstrap/Spinner';
 
 interface OrderDetails {
   id: number;
@@ -30,12 +21,12 @@ interface OrderDetails {
   created_at: string;
 }
 
-const statusColors: Record<string, "default" | "warning" | "success" | "error"> = {
+const statusVariant: Record<string, string> = {
   pending: "warning",
-  preparing: "default",
+  preparing: "secondary",
   ready: "success",
   completed: "success",
-  canceled: "error",
+  canceled: "danger",
 };
 
 const OrderDetailsPage: React.FC = () => {
@@ -55,84 +46,60 @@ const OrderDetailsPage: React.FC = () => {
 
   if (loading)
     return (
-      <Box sx={{ display: "flex", justifyContent: "center", mt: 5 }}>
-        <CircularProgress />
-      </Box>
+      <div className="d-flex justify-content-center align-items-center mt-5">
+        <Spinner animation="border" />
+      </div>
     );
 
   if (error)
     return (
-      <Container maxWidth="sm">
-        <Typography color="error">{error}</Typography>
+      <Container className="mt-4">
+        <Alert variant="danger">{error}</Alert>
       </Container>
     );
 
   return (
-    <Container maxWidth="md" sx={{ mt: 4 }}>
+    <Container className="mt-4">
       {orderDetails ? (
-        <Card sx={{ p: 3, boxShadow: 3 }}>
-          <CardContent>
-            <Typography variant="h5" fontWeight="bold" gutterBottom>
-              Order #{orderDetails.id}
-            </Typography>
-
-            <Grid container spacing={3}>
-              <Grid item xs={6}>
-                <Typography>
-                  <strong>Customer:</strong> {orderDetails.customer_name}
-                </Typography>
-                <Typography>
-                  <strong>Table:</strong> {orderDetails.table_number}
-                </Typography>
-              </Grid>
-              <Grid item xs={6}>
-                <Typography>
-                  <strong>Total Price:</strong> ${orderDetails.total_price}
-                </Typography>
-                <Typography>
-                  <strong>Created At:</strong>{" "}
-                  {new Date(orderDetails.created_at).toLocaleString()}
-                </Typography>
-              </Grid>
-            </Grid>
-
-            <Divider sx={{ my: 2 }} />
-
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <Typography variant="h6">Status:</Typography>
-              <Chip
-                label={orderDetails.status.toUpperCase()}
-                color={statusColors[orderDetails.status] || "default"}
-                sx={{ fontWeight: "bold" }}
-              />
-            </Box>
-
-            <Typography variant="h6" sx={{ mt: 3, mb: 1 }}>
-              Order Items:
-            </Typography>
-
-            <TableContainer component={Paper}>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell><strong>Item</strong></TableCell>
-                    <TableCell align="center"><strong>Quantity</strong></TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {orderDetails.order_items.map((item, index) => (
-                    <TableRow key={index}>
-                      <TableCell>{item.menu_item_name}</TableCell>
-                      <TableCell align="center">{item.quantity}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </CardContent>
+        <Card className="p-3 shadow">
+          <h5 className="fw-bold mb-3">Order #{orderDetails.id}</h5>
+          <Row className="mb-3">
+            <Col md={6}>
+              <div><strong>Customer:</strong> {orderDetails.customer_name}</div>
+              <div><strong>Table:</strong> {orderDetails.table_number}</div>
+            </Col>
+            <Col md={6}>
+              <div><strong>Total Price:</strong> ${orderDetails.total_price}</div>
+              <div><strong>Created At:</strong> {new Date(orderDetails.created_at).toLocaleString()}</div>
+            </Col>
+          </Row>
+          <hr />
+          <div className="d-flex align-items-center gap-2 mb-3">
+            <span className="fw-bold">Status:</span>
+            <Badge bg={statusVariant[orderDetails.status] || "secondary"} className="text-uppercase fw-bold">
+              {orderDetails.status}
+            </Badge>
+          </div>
+          <h6 className="mt-3 mb-2">Order Items:</h6>
+          <Table bordered hover responsive>
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th className="text-center">Quantity</th>
+              </tr>
+            </thead>
+            <tbody>
+              {orderDetails.order_items.map((item, index) => (
+                <tr key={index}>
+                  <td>{item.menu_item_name}</td>
+                  <td className="text-center">{item.quantity}</td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
         </Card>
       ) : (
-        <Typography>No order details found.</Typography>
+        <div className="text-center">No order details found.</div>
       )}
     </Container>
   );

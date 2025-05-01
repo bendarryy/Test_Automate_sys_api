@@ -1,16 +1,11 @@
 import React, { useState } from "react";
 import { useApi } from "../hooks/useApi";
-import RestaurantIcon from "@mui/icons-material/Restaurant";
-import NotificationsIcon from "@mui/icons-material/Notifications";
-import NotificationsActiveIcon from "@mui/icons-material/NotificationsActive";
-import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import { MdNotifications, MdNotificationsActive, MdAccountCircle } from "react-icons/md"; // react-icons Material Design
 import { useNavigate } from "react-router-dom";
 
-interface NavbarProps {
-  title: string;
-}
 
-const Navbar = ({ title }: NavbarProps) => {
+
+const Navbar = () => {
   const [numOfNotification] = useState(2);
   const { callApi } = useApi();
   const [showNotificationDropdown, setShowNotificationDropdown] = useState(false);
@@ -30,10 +25,6 @@ const Navbar = ({ title }: NavbarProps) => {
   return (
     <nav className="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
       <div className="container-fluid">
-        <a className="navbar-brand d-flex align-items-center" href="#">
-          <RestaurantIcon style={{ marginRight: 8 }} />
-          {title}
-        </a>
         <div className="d-flex align-items-center ms-auto">
           <div className="position-relative me-3">
             <button
@@ -43,13 +34,13 @@ const Navbar = ({ title }: NavbarProps) => {
             >
               {numOfNotification > 0 ? (
                 <>
-                  <NotificationsActiveIcon />
+                  <MdNotificationsActive size={24} />
                   <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
                     {numOfNotification}
                   </span>
                 </>
               ) : (
-                <NotificationsIcon />
+                <MdNotifications size={24} />
               )}
             </button>
             {showNotificationDropdown && (
@@ -78,7 +69,7 @@ const Navbar = ({ title }: NavbarProps) => {
               onClick={() => setShowAccountDropdown((v) => !v)}
               style={{ boxShadow: 'none' }}
             >
-              <AccountCircleIcon fontSize="large" />
+              <MdAccountCircle size={32} />
             </button>
             {showAccountDropdown && (
               <div className="dropdown-menu show mt-2" style={{ minWidth: 150, right: 0, left: 'auto' }}>
