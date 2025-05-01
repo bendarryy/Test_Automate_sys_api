@@ -31,7 +31,7 @@ schema_view = get_schema_view(
     ),
     public=True,
     permission_classes=(permissions.AllowAny,),
-)ix
+)
 
 urlpatterns = [
     path("admin/", admin.site.urls),  # Admin panel URL
