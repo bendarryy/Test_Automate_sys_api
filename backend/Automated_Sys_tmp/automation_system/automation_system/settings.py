@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'workshop',
     'inventory',
     'corsheaders',
+    'drf_yasg',
 ]
 
 CORS_ALLOWED_ORIGINS = [
