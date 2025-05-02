@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useGetMenu } from '../../hooks/useGetMenu';
-import styles from '../styles/MenuPage.module.css';
+import styles from '../../styles/MenuPage.module.css';
 import { useSelectedSystemId } from '../../hooks/useSelectedSystemId';
 
 const MenuPage = () => {

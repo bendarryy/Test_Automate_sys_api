@@ -10,7 +10,7 @@ import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Badge from 'react-bootstrap/Badge';
 import { FaUser, FaChair, FaUserTie, FaCheckCircle, FaArrowLeft } from 'react-icons/fa';
-import icon from '../assets/icon.png';
+import icon from '../../assets/icon.png';
 import './KdsOrderDetails.css';
 
 interface KitchenOrder {
