@@ -1,17 +1,18 @@
 import { defineConfig } from 'vite';
-import { visualizer } from 'vite-plugin-visualizer'; // لتحليل حجم الحزمة
+
 import react from '@vitejs/plugin-react'
 import viteCompression from 'vite-plugin-compression'
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
-    visualizer({
-      filename: 'dist/bundle-visualizer.html',
-      open: false, // يمكنك تغييره إلى true لفتح التحليل تلقائيًا بعد البناء
-      gzipSize: true,
-      brotliSize: true,
-    }),
+    react(),
+    viteCompression({
+      algorithm: 'gzip', // Use 'brotliCompress' for Brotli
+      ext: '.gz',        // File extension for compressed files
+      threshold: 1024,   // Only assets bigger than this are compressed (bytes)
+      deleteOriginFile: false // Keep original files
+    })
   ],
   
   // تحسين الكاشينج للصور والملفات الثابتة
@@ -30,15 +31,7 @@ export default defineConfig({
   },
   // ملاحظة: يفضل ضغط الصور وتحويلها إلى webp قبل إضافتها لمجلد assets
 
-  plugins: [
-    react(),
-    viteCompression({
-      algorithm: 'gzip', // Use 'brotliCompress' for Brotli
-      ext: '.gz',        // File extension for compressed files
-      threshold: 1024,   // Only assets bigger than this are compressed (bytes)
-      deleteOriginFile: false // Keep original files
-    })
-  ],
+
   server: {
     host: '127.0.0.1',
     proxy: {

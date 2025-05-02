@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { useApi } from '../hooks/useApi';
-import { useParams, Link, Outlet } from 'react-router-dom';
+import { useApi } from '../../hooks/useApi';
+import { useParams, Link } from 'react-router-dom';
+
+import Spinner from 'react-bootstrap/Spinner';
+import Alert from 'react-bootstrap/Alert';
+import KdsOrderDetails from './KdsOrderDetails';
 
 interface KitchenOrder {
   id: number;
@@ -10,12 +14,17 @@ interface KitchenOrder {
 
 const KdsPage: React.FC = () => {
   // Use dynamic systemId from URL if present
-  const params = useParams<{ systemId: string }>();
+  const params = useParams<{ systemId?: string; orderId?: string }>();
   // Prefer systemId from URL, else from localStorage, else fallback to '5'
   const systemId = params.systemId || localStorage.getItem('selectedSystemId');
   const { /* data, */ loading, error, callApi } = useApi<KitchenOrder[]>();
   const [orders, setOrders] = useState<KitchenOrder[]>([]);
   const [updating, setUpdating] = useState<number | null>(null);
+
+  // تفاصيل الطلب في حالة وجود orderId في الرابط
+  const [orderDetails, setOrderDetails] = useState<any | null>(null);
+  const [detailsLoading, setDetailsLoading] = useState(false);
+  const [detailsError, setDetailsError] = useState<string | null>(null);
 
   // Status options for orders
   const STATUS_OPTIONS = [
@@ -40,6 +49,17 @@ const KdsPage: React.FC = () => {
     // eslint-disable-next-line
   }, [systemId]);
 
+  // إذا كان هناك orderId في الرابط، اجلب تفاصيل الطلب
+  useEffect(() => {
+    if (!params.orderId) return;
+    setDetailsLoading(true);
+    setDetailsError(null);
+    callApi('get', `/restaurant/${systemId}/kitchen/orders/${params.orderId}/`)
+      .then((data) => setOrderDetails(data))
+      .catch((err) => setDetailsError(err?.message || 'Error loading order details'))
+      .finally(() => setDetailsLoading(false));
+  }, [params.orderId, systemId]);
+
   const handleStatusUpdate = async (id: number, status: 'preparing' | 'ready' | 'completed' | 'canceled') => {
     if (!systemId) return;
     setUpdating(id);
@@ -51,6 +71,21 @@ const KdsPage: React.FC = () => {
     }
   };
 
+  // إذا كان هناك orderId في الرابط، اعرض تفاصيل الطلب فقط
+  // if (params.orderId) {
+  //   return (
+  //     <div className="container py-4">
+  //       <button className="btn btn-link mb-3" onClick={() => window.history.back()}>
+  //         <i className="bi bi-arrow-left"></i> Back to Orders
+  //       </button>
+  //       {detailsLoading && <div className="text-center my-5"><Spinner animation="border" /></div>}
+  //       {detailsError && <Alert variant="danger">{detailsError}</Alert>}
+  //       {orderDetails && <KitchenOrderDetails {...orderDetails} />}
+  //     </div>
+  //   );
+  // }
+
+  // الوضع الافتراضي: عرض جدول الطلبات
   return (
     <div className="container py-4">
       <h2 className="mb-4 fw-bold text-primary display-5">
@@ -92,7 +127,7 @@ const KdsPage: React.FC = () => {
                   <div className="d-flex flex-wrap justify-content-center gap-2">
                     <Link
                       className="btn btn-outline-primary btn-sm"
-                      to={`/kds/${systemId}/order/${order.id}`}
+                      to={`/kds/order/${order.id}`}
                       title="View Order Details"
                     >
                       <i className="bi bi-eye"></i> Details
@@ -123,7 +158,13 @@ const KdsPage: React.FC = () => {
           </tbody>
         </table>
       </div>
-      <Outlet />
+      {params.orderId && 
+      <>
+        {detailsLoading && <div className="text-center my-5"><Spinner animation="border" /></div>}
+        {detailsError && <Alert variant="danger">{detailsError}</Alert>}
+        {orderDetails && <KdsOrderDetails />}
+      </>
+      }
     </div>
   );
 };

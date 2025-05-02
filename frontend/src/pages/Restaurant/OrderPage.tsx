@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useOrders } from "../hooks/useOrders";
+import { useOrders } from "../../hooks/useOrders";
 // تم حذف استيراد bootstrap لأن الاستيراد موجود في main.tsx فقط
 import Container from 'react-bootstrap/Container';
 import Table from 'react-bootstrap/Table';
@@ -9,7 +9,7 @@ import Button from 'react-bootstrap/Button';
 import { MdDelete, MdSort } from "react-icons/md";
 
 import { useNavigate } from "react-router-dom";
-import { useSelectedSystemId } from '../hooks/useSelectedSystemId';
+import { useSelectedSystemId } from '../../hooks/useSelectedSystemId';
 
 const OrdersPage: React.FC = () => {
   const [selectedSystemId] = useSelectedSystemId();

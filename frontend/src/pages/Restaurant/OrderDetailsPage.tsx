@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { useApi } from "../hooks/useApi";
+import { useApi } from "../../hooks/useApi";
 // تم حذف استيراد bootstrap لأن الاستيراد موجود في main.tsx فقط
 import Container from 'react-bootstrap/Container';
 import Card from 'react-bootstrap/Card';

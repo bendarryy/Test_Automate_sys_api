@@ -7,8 +7,9 @@ import ProgressBar from 'react-bootstrap/ProgressBar';
 import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
 import styles from '../styles/InventoryManagementPage.module.css';
-import { useInventory, InventoryItem } from '../hooks/useInventory';
-import { useSelectedSystemId } from '../hooks/useSelectedSystemId';
+import { useInventory, InventoryItem } from '../../hooks/useInventory';
+import { useSelectedSystemId } from '../../hooks/useSelectedSystemId';
+import { useNavigate } from 'react-router-dom';
 
 // Helper to calculate status and availability
 function computeStatusAndAvailability(item: InventoryItem) {
@@ -24,6 +25,7 @@ function computeStatusAndAvailability(item: InventoryItem) {
 }
 
 const InventoryManagementPage: React.FC = () => {
+  const navigate = useNavigate();
   const [selectedSystemId] = useSelectedSystemId();
   const [searchTerm, setSearchTerm] = useState('');
   const [newItem, setNewItem] = useState<Omit<InventoryItem, 'id'>>({
@@ -124,7 +126,7 @@ const InventoryManagementPage: React.FC = () => {
                     variant="info"
                     size="sm"
                     className="rounded-pill d-flex align-items-center gap-1"
-                    href={selectedSystemId ? `/restaurant/${selectedSystemId}/inventory/${item.id}` : undefined}
+                    onClick={() => navigate(`/inventory/${item.id}`)} 
                     disabled={!selectedSystemId}
                   >
                     <i className="bi bi-eye-fill"></i>

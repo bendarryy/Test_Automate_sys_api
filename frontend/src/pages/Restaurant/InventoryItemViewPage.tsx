@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button, Form, Spinner } from 'react-bootstrap';
-import { useInventory, InventoryItem } from '../hooks/useInventory';
+import { useInventory, InventoryItem } from '../../hooks/useInventory';
+import { useSelectedSystemId } from '../../hooks/useSelectedSystemId';
 
 const InventoryItemViewPage: React.FC = () => {
-  const { systemId, itemId } = useParams<{ systemId: string; itemId: string }>();
+  const { itemId } = useParams<{ itemId: string }>();
+  const systemId = localStorage.getItem('selectedSystemId');
   const navigate = useNavigate();
   const { getInventoryItem, updateInventoryItem, deleteInventoryItem } = useInventory();
   const [item, setItem] = useState<InventoryItem | null>(null);

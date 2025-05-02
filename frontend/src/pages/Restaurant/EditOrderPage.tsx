@@ -9,10 +9,10 @@ import Table from 'react-bootstrap/Table';
 import Spinner from 'react-bootstrap/Spinner';
 import Alert from 'react-bootstrap/Alert';
 import { MdAdd, MdRemove, MdDelete } from "react-icons/md";
-import { useEditOrder } from "../hooks/useEditOrder";
+import { useEditOrder } from "../../hooks/useEditOrder";
 import { useNavigate } from "react-router-dom";
-import { useGetMenu } from "../hooks/useGetMenu";
-import { useSelectedSystemId } from '../hooks/useSelectedSystemId';
+import { useGetMenu } from "../../hooks/useGetMenu";
+import { useSelectedSystemId } from '../../hooks/useSelectedSystemId';
 
 const EditOrderPage: React.FC = () => {
   const [selectedSystemId] = useSelectedSystemId();

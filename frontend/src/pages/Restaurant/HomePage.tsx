@@ -1,7 +1,7 @@
 import React from "react";
-import TablesSection from "../components/TablesSection";
-import ProductsSection from "../components/ProductsSection";
-import BillSection from "../components/BillSection";
+import TablesSection from "../../components/TablesSection";
+import ProductsSection from "../../components/ProductsSection";
+import BillSection from "../../components/BillSection";
 // تم حذف استيراد bootstrap لأن الاستيراد موجود في main.tsx فقط
 
 const HomePage = () => {

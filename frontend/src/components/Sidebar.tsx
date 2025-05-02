@@ -25,6 +25,16 @@ interface NavItem {
 }
 
 function getNavItems(): NavItem[] {
+  const systemId = localStorage.getItem('selectedSystemId');
+  if (systemId == '8') {
+    //supermarket system
+    return [
+      { name: "Home", icon: FiHome, href: "/" },
+      { name: "inventory", icon: FiBox, href: "/inventory" },
+      { name: "About", icon: FiInfo, href: "/about" },
+    ];
+
+  }
   return [
     { name: "Home", icon: FiHome, href: "/" },
     { name: "Orders", icon: FiList, href: "/orders" },
@@ -39,6 +49,7 @@ function getNavItems(): NavItem[] {
 }
 
 export function Sidebar({ defaultIconsOnly = false, className = "" }: { defaultIconsOnly?: boolean, className?: string }) {
+  const systemId = localStorage.getItem('selectedSystemId');
   const [iconsOnly, setIconsOnly] = useState(defaultIconsOnly)
   const location = useLocation()
 

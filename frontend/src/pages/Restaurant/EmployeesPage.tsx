@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { useApi } from '../hooks/useApi';
-import { useEmployeeApi } from '../hooks/useEmployeeApi';
+import { useApi } from '../../hooks/useApi';
+import { useEmployeeApi } from '../../hooks/useEmployeeApi';
 // تم حذف استيراد bootstrap الجماعي. استخدم الاستيراد المنفرد فقط للمكونات المطلوبة.
 import Card from 'react-bootstrap/Card';
 import Container from 'react-bootstrap/Container';
