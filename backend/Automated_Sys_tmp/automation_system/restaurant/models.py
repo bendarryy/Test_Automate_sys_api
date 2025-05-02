@@ -1,6 +1,7 @@
 from django.db import models
-from core.models import System , BaseMultiTenantModel , UserRole
+from core.models import System , BaseMultiTenantModel 
 from django.contrib.auth.models import User 
+from core.models import Employee
 
 
 
@@ -36,7 +37,7 @@ class Order(models.Model):
     customer_name = models.CharField(max_length=100, blank=True, null=True)  # Optional customer name
     table_number = models.CharField(max_length=10, blank=True, null=True)  # Table for dine-in
     # waiter = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)  # The waiter taking the order
-    waiter = models.ForeignKey(UserRole, on_delete=models.SET_NULL, null=True)  # Waiter taking the order
+    waiter = models.ForeignKey(Employee, on_delete=models.SET_NULL, null=True)  # Waiter taking the order
     total_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
 
     STATUS_CHOICES = [

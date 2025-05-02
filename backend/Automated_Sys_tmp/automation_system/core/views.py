@@ -19,10 +19,12 @@ from rest_framework.views import APIView
 from django.core.exceptions import PermissionDenied 
 from rest_framework import permissions
 from rest_framework.exceptions import NotFound
-from .permissions import IsSystemOwner , IsWaiter
+from .permissions import IsSystemOwner
 from rest_framework.exceptions import NotFound, ValidationError
 from django.contrib.auth.hashers import make_password , check_password
+from drf_yasg.utils import swagger_auto_schema
 
+from drf_yasg import openapi
 
 @csrf_exempt
 @api_view(["POST"])
@@ -155,7 +157,7 @@ class EmployeeInviteView(APIView):
     }`
     """
     permission_classes = [IsAuthenticated, IsSystemOwner]
-
+    @swagger_auto_schema(request_body=EmployeeCreateSerializer)
     def post(self, request, system_id, *args, **kwargs):
         # Get the system
         try:
@@ -212,6 +214,9 @@ Example :Update only passowrd/email ...  -> `{"password":"password" }` """
         serializer = EmployeeListSerializer(employee, context={'request': request})
         return Response(serializer.data)
 
+    @swagger_auto_schema(
+        request_body=EmployeeUpdateSerializer,
+        responses={200: EmployeeUpdateSerializer})
     def put(self, request, system_id, employee_id):
         """Update an employee's details"""
         system = self.get_system(system_id)
@@ -280,6 +285,7 @@ class EmployeeLoginView(APIView):
     """
     permission_classes = [AllowAny]
 
+    @swagger_auto_schema(request_body=EmployeeLoginSerializer)
     def post(self, request, *args, **kwargs):
         serializer = EmployeeLoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)

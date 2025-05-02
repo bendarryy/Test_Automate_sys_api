@@ -1,4 +1,4 @@
-from core.models import System ,UserRole , Employee
+from core.models import System  , Employee
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 from .models import MenuItem

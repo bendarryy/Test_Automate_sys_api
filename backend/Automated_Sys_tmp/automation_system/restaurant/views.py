@@ -12,7 +12,7 @@ from .serializers import InventoryItemSerializer
 from rest_framework.exceptions import NotFound
 from .models import System 
 from core.models import Employee
-from core.permissions import IsSystemOwner , IsWaiter , IsEmployee , IsSystemOwnerOrEmployeeWithRole
+from core.permissions import IsSystemOwner  , IsEmployeeRolePermission
 
 
 
@@ -54,8 +54,8 @@ class MenuItemViewSet(viewsets.ModelViewSet):
         Employees can only perform list and retrieve actions.
         """
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
-            return [IsAuthenticated(), IsSystemOwner()]
-        return [IsAuthenticated(), OR(IsSystemOwner(), IsWaiter())]
+            return [IsAuthenticated(), OR(IsSystemOwner(), IsEmployeeRolePermission('manager', "head chef"))]
+        return [IsAuthenticated(), OR(IsSystemOwner(), IsEmployeeRolePermission())]
     
     # def get_serializer_context(self):
     #     """Pass additional context to the serializer."""
@@ -67,46 +67,59 @@ class MenuItemViewSet(viewsets.ModelViewSet):
 
 class OrderViewSet(viewsets.ModelViewSet):
     serializer_class = OrderSerializer
-    permission_classes = [IsAuthenticated, IsSystemOwnerOrEmployeeWithRole]
 
     def get_queryset(self):
         """Filter orders by the requested system."""
         system_id = self.kwargs.get("system_id")
-        system = get_object_or_404(System, id=system_id)
         user = self.request.user
-
-        # Allow access if user is owner or employee
-        if system.owner == user or Employee.objects.filter(system=system, user=user).exists():
-            return Order.objects.filter(system=system)
-        raise PermissionDenied("You do not have permission to access orders for this system.")
+        try:
+            system = System.objects.get(id=system_id)
+            if user != system.owner and not Employee.objects.filter(system=system, user=user, is_active=True).exists():
+                raise PermissionDenied("You do not have permission to access orders for this system.")
+        except System.DoesNotExist:
+            raise NotFound("System not found.")
+        
+        return Order.objects.filter(system=system)
 
     def perform_create(self, serializer):
-        """Ensure the order is linked to the correct system."""
+        """Link order to correct system."""
         system_id = self.kwargs.get("system_id")
         system = get_object_or_404(System, id=system_id)
         serializer.save(system=system)
 
     def perform_update(self, serializer):
-        """Restrict sensitive field updates for waiters."""
+        """Restrict update fields for waiters."""
         user = self.request.user
         system = get_object_or_404(System, id=self.kwargs.get("system_id"))
-        
-        if system.owner != user:
+
+        if user != system.owner:
             try:
                 employee = Employee.objects.get(system=system, user=user)
                 if employee.role == 'waiter':
-                    # Ensure only allowed fields are updated
                     allowed_fields = {'customer_name', 'table_number', 'waiter'}
-                    if any(key not in allowed_fields for key in self.request.data.keys()):
-                        raise PermissionDenied("Waiters can only update customer_name, table_number, or waiter.")
+                    if any(field not in allowed_fields for field in self.request.data.keys()):
+                        raise PermissionDenied("Waiters can only update limited fields.")
             except Employee.DoesNotExist:
                 raise PermissionDenied("You do not have permission to update this order.")
-        
+
         serializer.save()
+
+    def get_permissions(self):
+        """
+        Role-based access control for order actions:
+        - Owners, waiters, and cashiers: Full access (create, update, delete)
+        - Others (chef, delivery): Read-only
+        """
+        editable_roles = ['waiter', 'cashier', 'manager']  # You can expand this if needed
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            return [IsAuthenticated(), OR(IsSystemOwner(), IsEmployeeRolePermission(*editable_roles))]
+        # editable_roles.append()
+        return [IsAuthenticated(), OR(IsSystemOwner(), IsEmployeeRolePermission(*editable_roles))]
+
 
 class OrderItemViewSet(viewsets.ModelViewSet):
     serializer_class = OrderItemSerializer
-    permission_classes = [IsAuthenticated, IsSystemOwnerOrEmployeeWithRole]
+    permission_classes = [IsAuthenticated]
     http_method_names = ['get', 'post', 'delete', 'head', 'options']
 
     def get_queryset(self):
@@ -167,20 +180,43 @@ class OrderItemViewSet(viewsets.ModelViewSet):
 
         return super().create(request, *args, **kwargs)
 
+    def get_permissions(self):
+        """
+        Role-based access control for order item actions:
+        - Owners, waiters, cashiers, and managers: Can create and delete
+        -         """
+        editable_roles = ['waiter', 'cashier', 'manager']
+        if self.action in ['create', 'destroy']:
+            return [IsAuthenticated(), OR(IsSystemOwner(), IsEmployeeRolePermission(*editable_roles))]
+        return [IsAuthenticated(), OR(IsSystemOwner(), IsEmployeeRolePermission(*editable_roles))]
+
     #add kitchen order By Ali
 class KitchenOrderViewSet(viewsets.ModelViewSet):
     serializer_class = OrderSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticated]
+    http_method_names = ['get', 'patch', 'head', 'options']
+
+    def get_permissions(self):
+        """
+        Only allow system owners, chefs, or managers to access this view.
+        """
+        if self.action in ['partial_update', 'get']:
+            return [
+                IsAuthenticated(),
+                OR(IsSystemOwner(), IsEmployeeRolePermission('chef', 'manager'))
+            ]
+        return [
+            IsAuthenticated(),
+            OR(IsSystemOwner(), IsEmployeeRolePermission('chef', 'manager'))
+        ]
 
     def get_queryset(self):
         system_id = self.kwargs.get('system_id')
-
-        try:
-            system = System.objects.get(id=system_id, owner=self.request.user)
-        except System.DoesNotExist:
-            raise NotFound(detail="System not found or you do not have permission.", code=404)
-
-        return Order.objects.filter(system=system, status__in=['pending', 'preparing']).order_by('created_at')
+        system = get_object_or_404(System, id=system_id)
+        return Order.objects.filter(
+            system=system,
+            status__in=['pending', 'preparing']
+        ).order_by('created_at')
 
     def partial_update(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -197,44 +233,32 @@ class KitchenOrderViewSet(viewsets.ModelViewSet):
 
 
 
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.exceptions import PermissionDenied
+
 class InventoryItemViewSet(viewsets.ModelViewSet):
     serializer_class = InventoryItemSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        system_id = self.kwargs.get('system_id')
-        user = self.request.user
-
-        # Make sure the system belongs to the authenticated user
-        try:
-            system = System.objects.get(id=system_id, owner=user)
-        except System.DoesNotExist:
-            raise PermissionDenied("You do not have permission to access this system's inventory.")
-
+        system_id = self.kwargs.get("system_id")
+        system = get_object_or_404(System, id=system_id)
+    
         return InventoryItem.objects.filter(system=system)
 
     def perform_create(self, serializer):
         system_id = self.kwargs.get('system_id')
-        user = self.request.user
-
-        try:
-            system = System.objects.get(id=system_id, owner=user)
-        except System.DoesNotExist:
-            raise PermissionDenied("You do not have permission to add inventory to this system.")
-
+        system = get_object_or_404(System, id=system_id)
         serializer.save(system=system)
 
     def perform_update(self, serializer):
-        system = serializer.instance.system
-        if system.owner != self.request.user:
-            raise PermissionDenied("You do not have permission to update inventory in this system.")
         serializer.save()
 
     def perform_destroy(self, instance):
-        system = instance.system
-        if system.owner != self.request.user:
-            raise PermissionDenied("You do not have permission to delete inventory from this system.")
         instance.delete()
+
+    def get_permissions(self):
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            return [IsAuthenticated(), OR(IsSystemOwner(), IsEmployeeRolePermission('manager'))]
+        return [IsAuthenticated(), OR(IsSystemOwner(), IsEmployeeRolePermission('manager', 'chef'))]
+
+
 #bola hy3ml push

@@ -48,7 +48,6 @@ INSTALLED_APPS = [
     'cafe',
     'supermarket',
     'workshop',
-    'inventory',
     'corsheaders',
     'drf_yasg',
 ]

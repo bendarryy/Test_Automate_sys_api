@@ -44,6 +44,8 @@ class Employee(models.Model):
         ('waiter', 'Waiter'),
         ('chef', 'Chef'),
         ('delivery', 'Delivery'),
+        ('manager', "Manager"),
+        ("head chef" , "Head Chef")
     ])
     phone = models.CharField(max_length=20, blank=True, null=True)
     is_active = models.BooleanField(default=True)
