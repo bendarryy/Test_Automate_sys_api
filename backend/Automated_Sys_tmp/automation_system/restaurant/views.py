@@ -25,20 +25,7 @@ class MenuItemViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         """Filter menu items based on the requested system_id and optional category."""
         system_id = self.kwargs.get("system_id")
-        user = self.request.user
-
-        # Check if user is owner or employee of the system
-        try:
-            system = System.objects.get(id=system_id)
-            if user == system.owner:
-                pass  # Owner has access
-            elif Employee.objects.filter(user=user, system=system, is_active=True).exists():
-                pass  # Employee has access
-            else:
-                raise System.DoesNotExist
-        except System.DoesNotExist:
-            raise NotFound("No System matches the given query.")
-
+        system = get_object_or_404(System, id=system_id)
         queryset = MenuItem.objects.filter(system=system)
 
         category = self.request.query_params.get("category")
@@ -56,12 +43,7 @@ class MenuItemViewSet(viewsets.ModelViewSet):
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
             return [IsAuthenticated(), OR(IsSystemOwner(), IsEmployeeRolePermission('manager', "head chef"))]
         return [IsAuthenticated(), OR(IsSystemOwner(), IsEmployeeRolePermission())]
-    
-    # def get_serializer_context(self):
-    #     """Pass additional context to the serializer."""
-    #     context = super().get_serializer_context()  # Get the default context
-    #     context["view"] = self  # Optionally make the view accessible in the serializer
-    #     return context
+
 
 
 
@@ -71,14 +53,7 @@ class OrderViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         """Filter orders by the requested system."""
         system_id = self.kwargs.get("system_id")
-        user = self.request.user
-        try:
-            system = System.objects.get(id=system_id)
-            if user != system.owner and not Employee.objects.filter(system=system, user=user, is_active=True).exists():
-                raise PermissionDenied("You do not have permission to access orders for this system.")
-        except System.DoesNotExist:
-            raise NotFound("System not found.")
-        
+        system = get_object_or_404(System , id=system_id)
         return Order.objects.filter(system=system)
 
     def perform_create(self, serializer):
@@ -129,8 +104,7 @@ class OrderItemViewSet(viewsets.ModelViewSet):
 
         # Verify system ownership or employee association
         system = get_object_or_404(System, id=system_id)
-        if system.owner != user and not Employee.objects.filter(system=system, user=user).exists():
-            raise PermissionDenied("You do not have permission to access order items for this system.")
+        
 
         return OrderItem.objects.filter(
             order_id=order_id,
