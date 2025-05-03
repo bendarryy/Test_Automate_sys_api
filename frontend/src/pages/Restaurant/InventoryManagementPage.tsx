@@ -6,7 +6,7 @@ import Form from 'react-bootstrap/Form';
 import ProgressBar from 'react-bootstrap/ProgressBar';
 import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
-import styles from '../styles/InventoryManagementPage.module.css';
+import styles from '../../styles/InventoryManagementPage.module.css';
 import { useInventory, InventoryItem } from '../../hooks/useInventory';
 import { useSelectedSystemId } from '../../hooks/useSelectedSystemId';
 import { useNavigate } from 'react-router-dom';

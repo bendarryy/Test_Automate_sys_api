@@ -23,5 +23,9 @@ urlpatterns = [
         'patch': 'partial_update',
         'delete': 'destroy',
     }), name='inventory-detail'),
+    path('<int:system_id>/orders/analytics/profit-summary/', ProfitSummaryView.as_view(), name='profit-summary'),
+    path('<int:system_id>/orders/analytics/profit-trend/', ProfitTrendView.as_view(), name='profit-trend'),
+    path('<int:system_id>/orders/analytics/order-summary/', OrderSummaryView.as_view(), name='order-summary'),
+    #path('<int:system_id>/orders/analytics/waiters/', WaiterStatsView.as_view(), name='waiter-stats'),
 ]
 
