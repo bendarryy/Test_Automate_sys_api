@@ -14,13 +14,16 @@ const EditOrderPage = lazy(() => import("../pages/Restaurant/EditOrderPage"));
 const MenuPage = lazy(() => import("../pages/Restaurant/MenuPage"));
 const MenuManagement = lazy(() => import("../components/MenuManagement"));
 const InventoryManagementPage = lazy(() => import("../pages/Restaurant/InventoryManagementPage"));
+const InventoryManagementSMPage = lazy(() => import("../pages/supermarket/InventoryManagementPage"));
 const InventoryItemViewPage = lazy(() => import("../pages/Restaurant/InventoryItemViewPage"));
 const EmployeeLogin = lazy(() => import("../pages/EmployeeLogin"));
 const OwnerLogin = lazy(() => import("../pages/OwnerLogin"));
 const Systems = lazy(() => import("../pages/Systems"));
 const KdsPage = lazy(() => import("../pages/Restaurant/KdsPage"));
 const InviteEmployeePage = lazy(() => import("../pages/Restaurant/InviteEmployeePage"));
+
 const EmployeesPage = lazy(() => import("../pages/Restaurant/EmployeesPage"));
+
 
 const About = () => <h1>About Page</h1>;
 
@@ -49,55 +52,55 @@ const router = createBrowserRouter([
     element: <Layout />,
     children: [
       {
-        path: "",
+        path: "/",
         element: <ProtectLogin><HomePage /></ProtectLogin>,
       },
       {
-        path: "about",
+        path: "/about",
         element: <ProtectLogin><About /></ProtectLogin>,
       },
       {
-        path: "orders",
+        path: "/orders",
         element: <ProtectLogin><OrdersPage /></ProtectLogin>,
       },
       {
-        path: "orders/:orderId",
+        path: "/orders/:orderId",
         element: <ProtectLogin><OrderDetailsPage /></ProtectLogin>,
       },
       {
-        path: "orders/:orderId/edit",
+        path: "/orders/:orderId/edit",
         element: <ProtectLogin><EditOrderPage /></ProtectLogin>,
       },
       {
-        path: "menu",
+        path: "/menu",
         element: <ProtectLogin><MenuPage /></ProtectLogin>,
       },
       {
-        path: "menu-management",
+        path: "/menu-management",
         element: <ProtectLogin><MenuManagement /></ProtectLogin>,
       },
       {
-        path: "inventory",
+        path: "/inventory",
         element: <ProtectLogin><InventoryManagementPage /></ProtectLogin>,
       },
       {
-        path: "inventory/:itemId",
+        path: "/inventory/:itemId",
         element: <ProtectLogin><InventoryItemViewPage /></ProtectLogin>,
       },
       {
-        path: "kds",
+        path: "/kds",
         element: <ProtectLogin><KdsPage /></ProtectLogin>,
       },
       {
-        path: "kds/order/:orderId",
+        path: "/kds/order/:orderId",
         element: <ProtectLogin><KdsPage /></ProtectLogin>,
       },
       {
-        path: "invite-employee",
+        path: "/invite-employee",
         element: <ProtectLogin><InviteEmployeePage /></ProtectLogin>,
       },
       {
-        path: "employees",
+        path: "/employees",
         element: <ProtectLogin><EmployeesPage /></ProtectLogin>,
       }
     ],
@@ -128,8 +131,12 @@ const supermarketRouter = createBrowserRouter([
     element: <Layout />,
     children: [
       {
-        path: "",
+        path: "/",
         element: <ProtectLogin><SupermarketPage /></ProtectLogin>,
+      },
+      {
+        path: "/inventory",
+        element: <ProtectLogin><InventoryManagementSMPage /></ProtectLogin>,
       },
     ],
   },
