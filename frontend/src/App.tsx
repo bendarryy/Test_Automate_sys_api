@@ -4,8 +4,8 @@ import {Router, SupermarketRouter} from './router/Router'
 
 
 function App() {
-  const systemId = localStorage.getItem('selectedSystemId');
-  if (systemId == '8') {
+  const systemCategory = localStorage.getItem('selectedSystemCategory');
+  if (systemCategory == 'supermarket') {
     return <SupermarketRouter />
   }
   return (

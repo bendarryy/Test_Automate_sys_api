@@ -2,16 +2,18 @@ import React, { useEffect } from 'react';
 import { useApi } from '../hooks/useApi';
 import { useNavigate } from 'react-router-dom';
 import { useSelectedSystemId } from '../hooks/useSelectedSystemId';
+
 const Systems: React.FC = () => {
   interface System {
-  id: number;
-  name?: string;
-  description?: string;
-}
+    id: number;
+    name?: string;
+    description?: string;
+    category: string;
+  }
 
-const { data, loading, error, callApi } = useApi<System[]>();
+  const { data, loading, error, callApi } = useApi<System[]>();
   const navigate = useNavigate();
-  const [, setSelectedSystemId] = useSelectedSystemId();
+  const [, setSelectedSystemId, , setSelectedCategory] = useSelectedSystemId();
 
   useEffect(() => {
     callApi('get', '/core/systems');
@@ -32,9 +34,14 @@ const { data, loading, error, callApi } = useApi<System[]>();
                   <p className="card-text">
                     {system.description || 'لا يوجد وصف متاح.'}
                   </p>
+                  <div className="badge bg-secondary mb-2">{system.category}</div>
                   <button
                     className="btn btn-primary mt-2"
-                    onClick={() => { setSelectedSystemId(system.id.toString()); navigate('/'); }}
+                    onClick={() => { 
+                      setSelectedSystemId(system.id.toString());
+                      setSelectedCategory(system.category);
+                      navigate('/'); 
+                    }}
                   >
                     الانتقال إلى النظام
                   </button>

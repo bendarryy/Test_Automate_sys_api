@@ -25,8 +25,8 @@ interface NavItem {
 }
 
 function getNavItems(): NavItem[] {
-  const systemId = localStorage.getItem('selectedSystemId');
-  if (systemId == '8') {
+  const systemCategory = localStorage.getItem('selectedSystemCategory');
+  if (systemCategory == 'supermarket') {
     //supermarket system
     return [
       { name: "Home", icon: FiHome, href: "/" },

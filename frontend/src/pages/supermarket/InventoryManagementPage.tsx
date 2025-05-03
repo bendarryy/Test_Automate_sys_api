@@ -8,7 +8,11 @@ import {
   Form,
   Space,
   Tabs,
-  message
+  message,
+  Modal,
+  Input,
+  InputNumber,
+  DatePicker
 } from 'antd';
 import dayjs from 'dayjs';
 
@@ -42,12 +46,19 @@ const InventoryManagementPage = () => {
     data: products
   } = useSupermarketInventory(system_id);
 
-  const { form, editingId, handleEdit, handleCancel } = useInventoryTable();
+  const { form, editingId, handleEdit, handleCancel: handleCancelEdit } = useInventoryTable();
 
   const [expiringProducts, setExpiringProducts] = useState<Product[]>([]);
   const [lowStockProducts, setLowStockProducts] = useState<Product[]>([]);
   const [stockHistory, setStockHistory] = useState<StockHistoryItem[]>([]);
   const [activeTab, setActiveTab] = useState('1');
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [newProduct, setNewProduct] = useState({
+    name: '',
+    price: 0,
+    stock_quantity: 0,
+    expiry_date: dayjs().format('YYYY-MM-DD')
+  });
 
   const fetchProducts = useCallback(async () => {
     try {
@@ -68,7 +79,7 @@ const InventoryManagementPage = () => {
         ...values,
         expiry_date: dayjs(values.expiry_date).format('YYYY-MM-DD')
       });
-      handleCancel();
+      handleCancelEdit();
       message.success('Product updated successfully');
       fetchProducts();
     } catch {
@@ -146,6 +157,25 @@ const InventoryManagementPage = () => {
     }
   };
 
+  const showModal = () => {
+    setIsModalVisible(true);
+  };
+
+  const handleOk = async () => {
+    try {
+      await createProduct(newProduct);
+      message.success('Product added successfully');
+      setIsModalVisible(false);
+      fetchProducts();
+    } catch {
+      message.error('Failed to add product');
+    }
+  };
+
+  const handleCancel = () => {
+    setIsModalVisible(false);
+  };
+
   type SafeData<T> = T[];
 
   const safeData = <T,>(data: SafeData<T> | unknown): SafeData<T> => {
@@ -157,7 +187,7 @@ const InventoryManagementPage = () => {
     handleEdit,
     handleDelete,
     handleSave,
-    handleCancel
+    handleCancel: handleCancelEdit
   });
 
   const tabItems = [
@@ -169,15 +199,7 @@ const InventoryManagementPage = () => {
           <Space>
             <Button 
               type="primary" 
-              onClick={() => {
-                form.resetFields();
-                createProduct({
-                  name: '',
-                  price: 0,
-                  stock_quantity: 0,
-                  expiry_date: dayjs().format('YYYY-MM-DD')
-                });
-              }}
+              onClick={showModal}
             >
               Add Product
             </Button>
@@ -247,6 +269,43 @@ const InventoryManagementPage = () => {
 
   return (
     <div style={{ padding: '20px' }}>
+      <Modal 
+        title="Add New Product" 
+        visible={isModalVisible} 
+        onOk={handleOk}
+        onCancel={handleCancel}
+      >
+        <Form layout="vertical">
+          <Form.Item label="Product Name">
+            <Input 
+              value={newProduct.name}
+              onChange={(e) => setNewProduct({...newProduct, name: e.target.value})}
+            />
+          </Form.Item>
+          <Form.Item label="Price">
+            <InputNumber 
+              value={newProduct.price}
+              onChange={(value) => setNewProduct({...newProduct, price: value || 0})}
+              style={{ width: '100%' }}
+            />
+          </Form.Item>
+          <Form.Item label="Stock Quantity">
+            <InputNumber 
+              value={newProduct.stock_quantity}
+              onChange={(value) => setNewProduct({...newProduct, stock_quantity: value || 0})}
+              style={{ width: '100%' }}
+            />
+          </Form.Item>
+          <Form.Item label="Expiry Date">
+            <DatePicker 
+              value={dayjs(newProduct.expiry_date)}
+              onChange={(date) => setNewProduct({...newProduct, expiry_date: date?.format('YYYY-MM-DD') || dayjs().format('YYYY-MM-DD')})}
+              style={{ width: '100%' }}
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
+      
       <Tabs 
         defaultActiveKey="1" 
         activeKey={activeTab}
