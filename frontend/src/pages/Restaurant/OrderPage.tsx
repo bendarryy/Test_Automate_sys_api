@@ -1,136 +1,259 @@
-import React, { useState } from "react";
-import { useOrders } from "../../hooks/useOrders";
-// تم حذف استيراد bootstrap لأن الاستيراد موجود في main.tsx فقط
-import Container from 'react-bootstrap/Container';
-import Table from 'react-bootstrap/Table';
-import Form from 'react-bootstrap/Form';
-import Spinner from 'react-bootstrap/Spinner';
-import Button from 'react-bootstrap/Button';
-import { MdDelete, MdSort } from "react-icons/md";
+import React from 'react';
+import { Table, Button, Select, notification, Input, Space, Tag } from 'antd';
+import { SearchOutlined, DeleteOutlined } from '@ant-design/icons';
+import { useOrders } from '../../hooks/useOrders';
+import { useNavigate } from 'react-router-dom';
 
-import { useNavigate } from "react-router-dom";
-import { useSelectedSystemId } from '../../hooks/useSelectedSystemId';
+type OrderStatus = 'pending' | 'preparing' | 'ready' | 'completed' | 'canceled';
 
-const OrdersPage: React.FC = () => {
-  const [selectedSystemId] = useSelectedSystemId();
-  const { orders, loading, error, handleFilter, sortOrders, updateOrderStatus, deleteOrder } =
-    useOrders(Number(selectedSystemId));
+interface Order {
+  id: string;
+  system: number;
+  customer_name: string;
+  table_number: string;
+  waiter?: number;
+  total_price: string;
+  profit: number;
+  status: OrderStatus;
+  order_items: {
+    id: string;
+    menu_item: number;
+    menu_item_name: string;
+    quantity: number;
+  }[];
+  created_at: string;
+  updated_at: string;
+}
+
+const statusColors: Record<OrderStatus, string> = {
+  pending: 'orange',
+  preparing: 'blue',
+  ready: 'green',
+  completed: 'purple',
+  canceled: 'red'
+};
+
+const OrderPage: React.FC = () => {
+  const systemId = localStorage.getItem('selectedSystemId') || '';
+  const { data: orders = [], loading, getOrders, updateOrderStatus, deleteOrder } = useOrders(systemId);
   const navigate = useNavigate();
+  const [searchText, setSearchText] = React.useState('');
+  const [statusFilter, setStatusFilter] = React.useState<OrderStatus[]>([]);
+  const [selectedRowKeys, setSelectedRowKeys] = React.useState<string[]>([]);
 
-  const [sortKey, setSortKey] = useState<"created_at" | "total_price">("created_at");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const rowSelection = {
+    selectedRowKeys,
+    onChange: (keys: React.Key[]) => setSelectedRowKeys(keys as string[]),
+  };
+
+  const handleBulkDelete = async () => {
+    try {
+      await Promise.all(selectedRowKeys.map(id => deleteOrder(id)));
+      notification.success({ 
+        message: 'Success', 
+        description: `Deleted ${selectedRowKeys.length} orders successfully` 
+      });
+      setSelectedRowKeys([]);
+      getOrders();
+    } catch (err) {
+      notification.error({
+        message: 'Error',
+        description: 'Failed to delete selected orders'
+      });
+    }
+  };
+
+  React.useEffect(() => {
+    getOrders();
+  }, [systemId]);
+
+  const handleStatusChange = async (id: string, status: string) => {
+    try {
+      await updateOrderStatus(id, status);
+      notification.success({ message: 'Order status updated' });
+      getOrders();
+    } catch (err: unknown) {
+      const error = err as Error;
+      notification.error({ message: 'Failed to update order status', description: error.message });
+    }
+  };
+
+  const filteredOrders = (Array.isArray(orders) ? orders : []).filter(order => {
+    const matchesSearch = 
+      order.customer_name.toLowerCase().includes(searchText.toLowerCase()) ||
+      order.table_number.includes(searchText) ||
+      order.id.toString().includes(searchText);
+    
+    const matchesStatus = statusFilter.length === 0 || statusFilter.includes(order.status);
+    
+    return matchesSearch && matchesStatus;
+  });
+
+  const columns = [
+    {
+      title: 'Order ID',
+      dataIndex: 'id',
+      key: 'id',
+      render: (id: string) => (
+        <Button type="link" onClick={() => navigate(`/orders/${id}`)}>
+          #{id}
+        </Button>
+      ),
+      sorter: (a: Order, b: Order) => a.id.localeCompare(b.id),
+    },
+    {
+      title: 'Customer',
+      dataIndex: 'customer_name',
+      key: 'customer_name',
+      filterDropdown: ({ setSelectedKeys, selectedKeys, confirm }) => (
+        <div style={{ padding: 8 }}>
+          <Input
+            placeholder="Search customer"
+            value={selectedKeys[0]}
+            onChange={e => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+            onPressEnter={confirm}
+            style={{ width: 188, marginBottom: 8, display: 'block' }}
+          />
+        </div>
+      ),
+      filterIcon: filtered => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />,
+      onFilter: (value, record) => record.customer_name.toLowerCase().includes(value.toLowerCase()),
+      sorter: (a: Order, b: Order) => a.customer_name.localeCompare(b.customer_name),
+    },
+    {
+      title: 'Table',
+      dataIndex: 'table_number',
+      key: 'table_number',
+      sorter: (a: Order, b: Order) => a.table_number.localeCompare(b.table_number),
+    },
+    {
+      title: 'Status',
+      dataIndex: 'status',
+      key: 'status',
+      render: (status: OrderStatus) => (
+        <Tag color={statusColors[status]} style={{ textTransform: 'capitalize' }}>
+          {status}
+        </Tag>
+      ),
+      filters: Object.entries(statusColors).map(([status, color]) => ({
+        text: status.charAt(0).toUpperCase() + status.slice(1),
+        value: status,
+      })),
+      onFilter: (value, record) => record.status === value,
+    },
+    {
+      title: 'Total',
+      dataIndex: 'total_price',
+      key: 'total_price',
+      render: (total: string) => `$${total}`,
+      sorter: (a: Order, b: Order) => parseFloat(a.total_price) - parseFloat(b.total_price),
+    },
+    {
+      title: 'Date',
+      dataIndex: 'created_at',
+      key: 'created_at',
+      render: (date: string) => new Date(date).toLocaleString(),
+      sorter: (a: Order, b: Order) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+    },
+    {
+      title: 'Actions',
+      key: 'actions',
+      render: (text: string, record: Order) => (
+        <Space size="middle">
+          <Select
+            value={record.status}
+            style={{ width: 120 }}
+            onChange={(value) => handleStatusChange(record.id, value)}
+          >
+            <Select.Option value="pending">Pending</Select.Option>
+            <Select.Option value="preparing">Preparing</Select.Option>
+            <Select.Option value="ready">Ready</Select.Option>
+            <Select.Option value="completed">Completed</Select.Option>
+            <Select.Option value="canceled">Canceled</Select.Option>
+          </Select>
+          <Button 
+            danger 
+            onClick={async () => {
+              try {
+                await deleteOrder(record.id);
+                notification.success({ message: 'Order deleted successfully' });
+                getOrders();
+              } catch (err: unknown) {
+                const error = err as Error;
+                notification.error({ message: 'Failed to delete order', description: error.message });
+              }
+            }}
+          >
+            Delete
+          </Button>
+        </Space>
+      ),
+    },
+  ];
 
   return (
-    <Container className="mt-4">
-      <h4 className="mb-4">Order Management</h4>
-      {/* Filter Orders */}
-      <Form.Group className="mb-3 d-inline-block me-2" style={{ minWidth: 200 }}>
-        <Form.Label>Status</Form.Label>
-        <Form.Select onChange={(e) => handleFilter(e.target.value)} defaultValue="">
-          <option value="">All</option>
-          <option value="pending">Pending</option>
-          <option value="preparing">Preparing</option>
-          <option value="ready">Ready</option>
-          <option value="completed">Completed</option>
-          <option value="canceled">Canceled</option>
-        </Form.Select>
-      </Form.Group>
-
-      {/* Sort Orders */}
-      <Button
-        variant="secondary"
-        className="mb-3 ms-2"
-        onClick={() => {
-          setSortOrder(sortOrder === "asc" ? "desc" : "asc");
-          sortOrders(sortKey, sortOrder);
+    <div style={{ padding: '24px' }}>
+      {selectedRowKeys.length > 0 && (
+        <div style={{ 
+          marginBottom: 16, 
+          padding: 12,
+          background: '#fafafa',
+          border: '1px solid #d9d9d9',
+          borderRadius: 4,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <span>
+            <Tag color="blue">{selectedRowKeys.length}</Tag> orders selected
+          </span>
+          <Button 
+            danger 
+            icon={<DeleteOutlined />}
+            onClick={handleBulkDelete}
+          >
+            Delete Selected
+          </Button>
+        </div>
+      )}
+      <div style={{ marginBottom: 16 }}>
+        <Input
+          placeholder="Search orders (ID, Customer, Table)"
+          prefix={<SearchOutlined />}
+          value={searchText}
+          onChange={e => setSearchText(e.target.value)}
+          style={{ width: 300, marginRight: 16 }}
+        />
+        <Select
+          mode="multiple"
+          placeholder="Filter by status"
+          value={statusFilter}
+          onChange={setStatusFilter}
+          style={{ width: 300 }}
+          allowClear
+        >
+          {Object.entries(statusColors).map(([status, color]) => (
+            <Select.Option key={status} value={status}>
+              <Tag color={color}>{status.charAt(0).toUpperCase() + status.slice(1)}</Tag>
+            </Select.Option>
+          ))}
+        </Select>
+      </div>
+      
+      <Table
+        rowSelection={{
+          type: 'checkbox',
+          ...rowSelection,
         }}
-      >
-        <span className="me-2"><MdSort size={20} /></span>
-        Sort by {sortKey} ({sortOrder})
-      </Button>
-
-      {/* Loading and Error States */}
-      {loading && <Spinner animation="border" />}
-      {error && <div className="text-danger">{error}</div>}
-
-      {/* Orders Table */}
-      <Table bordered hover responsive className="mt-3">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Customer</th>
-            <th>Table</th>
-            <th style={{ cursor: 'pointer' }}
-              onClick={() => {
-                setSortKey("total_price");
-                setSortOrder(sortOrder === "asc" ? "desc" : "asc");
-                sortOrders("total_price", sortOrder);
-              }}>
-              Total Price
-              <span className="ms-1"><MdSort size={16} /></span>
-            </th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {orders.length === 0 ? (
-            <tr>
-              <td colSpan={6} className="text-center">
-                No orders found.
-              </td>
-            </tr>
-          ) : (
-            orders.map((order) => (
-              <tr key={order.id}>
-                <td>{order.id}</td>
-                <td>{order.customer_name}</td>
-                <td>{order.table_number}</td>
-                <td>${order.total_price}</td>
-                <td>
-                  <Form.Select
-                    value={order.status}
-                    onChange={(e) => updateOrderStatus(order.id, e.target.value)}
-                  >
-                    <option value="pending">Pending</option>
-                    <option value="preparing">Preparing</option>
-                    <option value="ready">Ready</option>
-                    <option value="completed">Completed</option>
-                    <option value="canceled">Canceled</option>
-                  </Form.Select>
-                </td>
-                <td>
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    className="me-1"
-                    onClick={() => navigate(`/orders/${order.id}`)}
-                  >
-                    View
-                  </Button>
-                  <Button
-                    variant="outline-secondary"
-                    size="sm"
-                    className="me-1"
-                    onClick={() => navigate(`/orders/${order.id}/edit`)}
-                  >
-                    Edit
-                  </Button>
-                  <Button
-                    variant="danger"
-                    size="sm"
-                    onClick={() => deleteOrder(order.id)}
-                  >
-                    <MdDelete size={18} />
-                  </Button>
-                </td>
-              </tr>
-            ))
-          )}
-        </tbody>
-      </Table>
-    </Container>
+        columns={columns}
+        dataSource={filteredOrders}
+        loading={loading}
+        rowKey="id"
+        pagination={{ pageSize: 8 }}
+        bordered
+      />
+    </div>
   );
 };
 
-export default OrdersPage;
+export default OrderPage;
