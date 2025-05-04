@@ -310,3 +310,100 @@ Example Request Body:
 ```
 
 ---
+# 📊 Finances Dashboard API Documentation
+
+## 1. Total Profit Overview
+### Endpoint
+
+GET /api/restaurant/<system_id>/orders/analytics/profit-summary/
+
+### Response Example
+json
+{
+  "day_profit": 2450,
+  "day_change": 12.5,
+  "week_profit": 15780,
+  "week_change": 8.2,
+  "month_profit": 64320,
+  "month_change": -2.4
+}
+
+- *day_profit*: أرباح اليوم الحالي.
+- *day_change*: نسبة التغير مقارنة بأرباح أمس.
+- *week_profit*: أرباح هذا الأسبوع.
+- *week_change*: نسبة التغير مقارنة بالأسبوع الماضي.
+- *month_profit*: أرباح هذا الشهر.
+- *month_change*: نسبة التغير مقارنة بالشهر الماضي.
+
+---
+
+## 2. Profit Trend (Line Chart)
+### Endpoint
+
+GET /api/restaurant/<system_id>/orders/analytics/profit-trend/?view=daily
+GET /api/restaurant/<system_id>/orders/analytics/profit-trend/?view=monthly
+
+- *view=daily*: أرباح كل يوم لآخر 30 يوم (افتراضي).
+- *view=monthly*: أرباح كل شهر لآخر 12 شهر.
+
+### Response Example
+json
+[
+  {"date": "2025-04-01", "profit": 320.50},
+  {"date": "2025-04-02", "profit": 420.20}
+]
+
+---
+
+## 3. Order Count (KPI Cards)
+### Endpoint
+
+GET /api/restaurant/<system_id>/orders/analytics/order-summary/
+
+### Response Example
+json
+{
+  "today_orders": 45,
+  "today_change": 10.5,
+  "week_orders": 230,
+  "week_change": -3.2,
+  "month_orders": 812,
+  "month_change": 5.7
+}
+
+- *today_orders*: عدد الطلبات اليوم.
+- *today_change*: نسبة التغير مقارنة بأمس.
+- *week_orders*: عدد الطلبات هذا الأسبوع.
+- *week_change*: نسبة التغير مقارنة بالأسبوع الماضي.
+- *month_orders*: عدد الطلبات هذا الشهر.
+- *month_change*: نسبة التغير مقارنة بالشهر الماضي.
+
+---
+
+## 4. Top Waiters (Table)
+### Endpoint
+
+GET /api/restaurant/<system_id>/orders/analytics/waiters/?range=day
+GET /api/restaurant/<system_id>/orders/analytics/waiters/?range=week
+GET /api/restaurant/<system_id>/orders/analytics/waiters/?range=month
+
+- *range*: فلترة حسب اليوم أو الأسبوع أو الشهر (day, week, month).
+
+### Response Example
+json
+[
+  {"waiter": "Ali Hassan", "orders": 34},
+  {"waiter": "Sara Nabil", "orders": 29}
+]
+
+---
+
+# 🔒 Permissions
+- جميع الـ Endpoints تتطلب مصادقة (Authentication).
+- الصلاحيات: مالك النظام (owner)، المدير (manager)، الكاشير (cashier).
+
+---
+
+# ⚡ Notes
+- جميع القيم المالية تعتمد فقط على الطلبات المكتملة (status='completed').
+- إذا لم تظهر بيانات في بعض الفترات، تأكد من وجود طلبات مكتملة في تلك الفترة.
