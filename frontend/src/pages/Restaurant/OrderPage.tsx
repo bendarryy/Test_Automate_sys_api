@@ -1,5 +1,6 @@
 import React from 'react';
 import { Table, Button, Select, notification, Input, Space, Tag } from 'antd';
+import type { ColumnsType } from 'antd/es/table';
 import { SearchOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useOrders } from '../../hooks/useOrders';
 import { useNavigate } from 'react-router-dom';
@@ -55,7 +56,7 @@ const OrderPage: React.FC = () => {
       });
       setSelectedRowKeys([]);
       getOrders();
-    } catch (err) {
+    } catch  {
       notification.error({
         message: 'Error',
         description: 'Failed to delete selected orders'
@@ -78,7 +79,7 @@ const OrderPage: React.FC = () => {
     }
   };
 
-  const filteredOrders = (Array.isArray(orders) ? orders : []).filter(order => {
+  const filteredOrders = (Array.isArray(orders) ? orders : []).filter((order: Order) => {
     const matchesSearch = 
       order.customer_name.toLowerCase().includes(searchText.toLowerCase()) ||
       order.table_number.includes(searchText) ||
@@ -89,7 +90,7 @@ const OrderPage: React.FC = () => {
     return matchesSearch && matchesStatus;
   });
 
-  const columns = [
+  const columns: ColumnsType<Order> = [
     {
       title: 'Order ID',
       dataIndex: 'id',
@@ -99,13 +100,13 @@ const OrderPage: React.FC = () => {
           #{id}
         </Button>
       ),
-      sorter: (a: Order, b: Order) => a.id.localeCompare(b.id),
+      sorter: (a: Order, b: Order) => Number(a.id) - Number(b.id),
     },
     {
       title: 'Customer',
       dataIndex: 'customer_name',
       key: 'customer_name',
-      filterDropdown: ({ setSelectedKeys, selectedKeys, confirm }) => (
+      filterDropdown: ({ setSelectedKeys, selectedKeys, confirm }: { setSelectedKeys: (keys: React.Key[]) => void; selectedKeys: React.Key[]; confirm: () => void }) => (
         <div style={{ padding: 8 }}>
           <Input
             placeholder="Search customer"
@@ -116,9 +117,19 @@ const OrderPage: React.FC = () => {
           />
         </div>
       ),
-      filterIcon: filtered => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />,
-      onFilter: (value, record) => record.customer_name.toLowerCase().includes(value.toLowerCase()),
-      sorter: (a: Order, b: Order) => a.customer_name.localeCompare(b.customer_name),
+      filterIcon: (filtered: boolean) => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />,
+      onFilter: (value: boolean | React.Key, record: Order) => {
+        if (typeof value === 'boolean') {
+          return value;
+        }
+        return record.customer_name.toLowerCase().includes(String(value).toLowerCase());
+      },
+      sorter: (a: Order, b: Order) => {
+        const nameA = a.customer_name?.toLowerCase() || '';
+        const nameB = b.customer_name?.toLowerCase() || '';
+        return nameA.localeCompare(nameB , undefined, { numeric: true,
+          sensitivity: 'base' });
+      },
     },
     {
       title: 'Table',
@@ -135,11 +146,16 @@ const OrderPage: React.FC = () => {
           {status}
         </Tag>
       ),
-      filters: Object.entries(statusColors).map(([status, color]) => ({
+      filters: Object.entries(statusColors).map(([status]) => ({
         text: status.charAt(0).toUpperCase() + status.slice(1),
         value: status,
       })),
-      onFilter: (value, record) => record.status === value,
+      onFilter: (value: boolean | React.Key, record: Order) => {
+        if (typeof value === 'boolean') {
+          return value; // Handle boolean case
+        }
+        return record.status === String(value);
+      }
     },
     {
       title: 'Total',

@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import apiClient from '../apiClient'
 import { useNavigate } from 'react-router-dom';
+import { ApiError } from '../types';
 
 interface ApiState<T> {
   data: T | null;
@@ -9,7 +10,7 @@ interface ApiState<T> {
   error: string | null;
 }
 
-export const useApi = <T = any>() => {
+export const useApi = <T,>() => {
   const [state, setState] = useState<ApiState<T>>({
     data: null,
     loading: false,
@@ -17,7 +18,7 @@ export const useApi = <T = any>() => {
   });
   const navigate = useNavigate();
 
-  const callApi = async (method: 'get' | 'post' | 'put' | 'patch' | 'delete', url: string, payload?: any) => {
+  const callApi = async <T = unknown>(method: 'get' | 'post' | 'put' | 'patch' | 'delete', url: string, payload?: T) => {
     setState({ data: null, loading: true, error: null });
     try {
       const response = await apiClient[method](url, {
@@ -28,17 +29,21 @@ export const useApi = <T = any>() => {
       });
       setState({ data: response.data, loading: false, error: null });
       return response.data;
-    } catch (err: any) {
+    } catch (err: unknown) {
       // Check for 403 and specific error detail
+      const apiError = err as ApiError;
       if (
-        err.response &&
-        err.response.status === 403 &&
-        err.response.data &&
-        err.response.data.detail === "Authentication credentials were not provided."
+        apiError.response &&
+        apiError.response.status === 403 &&
+        apiError.response.data?.detail === "Authentication credentials were not provided."
       ) {
         navigate('/ownerLogin');
       }
-      setState({ data: null, loading: false, error: err.message });
+      setState({ 
+        data: null, 
+        loading: false, 
+        error: apiError.message || 'An unknown error occurred'
+      });
       throw err;
     }
   };

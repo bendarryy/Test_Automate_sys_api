@@ -41,3 +41,15 @@ interface User {
     menu_item_name: string;
     quantity: number;
   }
+
+  // نوع خطأ API
+  interface ApiError extends Error {
+    response?: {
+      status: number;
+      data: {
+        detail?: string;
+      };
+    };
+  }
+
+export { ApiError };

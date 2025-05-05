@@ -21,7 +21,7 @@ interface Employee {
 }
 
 const EmployeesPage: React.FC = () => {
-  const { data, loading, error, callApi } = useApi();
+  const { data, loading, error, callApi } = useApi<Employee[]>();
   const employeeApi = useEmployeeApi();
   const [showModal, setShowModal] = useState(false);
   const [modalMode, setModalMode] = useState<'view' | 'edit'>('view');
@@ -45,8 +45,8 @@ const EmployeesPage: React.FC = () => {
       const details = await employeeApi.getEmployee(emp.id);
       setSelectedEmployee(details);
       setEditForm(details);
-    } catch (e: any) {
-      setModalError(e.message || 'Error loading employee');
+    } catch (e: unknown) {
+      setModalError(e instanceof Error ? e.message : 'Error loading employee');
     } finally {
       setModalLoading(false);
     }
@@ -70,8 +70,8 @@ const EmployeesPage: React.FC = () => {
       setSelectedEmployee(updated);
       setModalMode('view');
       fetchEmployees();
-    } catch (e: any) {
-      setModalError(e.message || 'Error updating employee');
+    } catch (e: unknown) {
+      setModalError(e instanceof Error ? e.message : 'Error updating employee');
     } finally {
       setModalLoading(false);
     }
@@ -85,8 +85,8 @@ const EmployeesPage: React.FC = () => {
       await employeeApi.deleteEmployee(selectedEmployee.id);
       setShowModal(false);
       fetchEmployees();
-    } catch (e: any) {
-      setModalError(e.message || 'Error deleting employee');
+    } catch (e: unknown) {
+      setModalError(e instanceof Error ? e.message : 'Error deleting employee');
     } finally {
       setDeleteLoading(false);
     }
@@ -160,11 +160,11 @@ const EmployeesPage: React.FC = () => {
                 <Form>
                   <Form.Group className="mb-3">
                     <Form.Label>Name</Form.Label>
-                    <Form.Control name="name" value={editForm.name || ''} onChange={handleEditChange} />
+                    <Form.Control name="name" value={editForm.name || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleEditChange(e)} />
                   </Form.Group>
                   <Form.Group className="mb-3">
                     <Form.Label>Role</Form.Label>
-                    <Form.Select name="role" value={editForm.role || ''} onChange={handleEditChange}>
+                    <Form.Select name="role" value={editForm.role || ''} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => handleEditChange(e)}>
                       <option value="">Select Role</option>
                       <option value="waiter">Waiter</option>
                       <option value="chef">Chef</option>
@@ -173,11 +173,11 @@ const EmployeesPage: React.FC = () => {
                   </Form.Group>
                   <Form.Group className="mb-3">
                     <Form.Label>Phone</Form.Label>
-                    <Form.Control name="phone" value={editForm.phone || ''} onChange={handleEditChange} />
+                    <Form.Control name="phone" value={editForm.phone || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleEditChange(e)} />
                   </Form.Group>
                   <Form.Group className="mb-3">
                     <Form.Label>Email</Form.Label>
-                    <Form.Control name="email" value={editForm.email || ''} onChange={handleEditChange} />
+                    <Form.Control name="email" value={editForm.email || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleEditChange(e)} />
                   </Form.Group>
                 </Form>
               )}

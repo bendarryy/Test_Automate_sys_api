@@ -12,7 +12,7 @@ const Layout = () => {
       <div style={{ display: 'flex', height: '100vh', width: '100vw' }}>
         <Sidebar />
         <div style={{ flex: 1, height: '100vh', overflow: 'hidden', position: 'relative' }}>
-          <Navbar title="Restaurant App" />
+          <Navbar />
           <main style={{ height: 'calc(100vh - 64px)', overflow: 'auto', background: 'white' }}>
             <Outlet />
           </main>

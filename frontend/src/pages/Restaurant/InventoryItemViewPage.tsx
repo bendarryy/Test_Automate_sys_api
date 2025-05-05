@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button, Form, Spinner } from 'react-bootstrap';
 import { useInventory, InventoryItem } from '../../hooks/useInventory';
-import { useSelectedSystemId } from '../../hooks/useSelectedSystemId';
 
 const InventoryItemViewPage: React.FC = () => {
   const { itemId } = useParams<{ itemId: string }>();
@@ -41,8 +40,8 @@ const InventoryItemViewPage: React.FC = () => {
     try {
       await updateInventoryItem(systemId, itemId, item);
       setError('Saved!');
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Error updating inventory item');
     } finally {
       setSaving(false);
     }
@@ -55,8 +54,8 @@ const InventoryItemViewPage: React.FC = () => {
     try {
       await deleteInventoryItem(systemId, itemId);
       navigate('/Inventory');
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Error deleting inventory item');
     } finally {
       setSaving(false);
     }

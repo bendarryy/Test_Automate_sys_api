@@ -22,7 +22,7 @@ const KdsPage: React.FC = () => {
   const [updating, setUpdating] = useState<number | null>(null);
 
   // تفاصيل الطلب في حالة وجود orderId في الرابط
-  const [orderDetails, setOrderDetails] = useState<any | null>(null);
+  const [orderDetails, setOrderDetails] = useState<KitchenOrder | null>(null);
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [detailsError, setDetailsError] = useState<string | null>(null);
 

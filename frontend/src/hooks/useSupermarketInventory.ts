@@ -1,6 +1,13 @@
 // useSupermarketInventory.ts
 import { useApi } from './useApi';
-import { Product } from '../types';
+
+interface Product {
+    id: number;
+    name: string;
+    price: number;
+    stock_quantity: number;
+    expiry_date: string;
+}
 
 export const useSupermarketInventory = (systemId: string) => {
   const api = useApi<Product[] | Product>();

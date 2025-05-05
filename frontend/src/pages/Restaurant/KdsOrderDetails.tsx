@@ -32,7 +32,7 @@ const KdsOrderDetails: React.FC = () => {
   useEffect(() => {
     if (!orderId) return;
     callApi('get', `/restaurant/${systemId}/kitchen/orders/${orderId}/`)
-      .then((data: any) => {
+      .then((data) => {
         setOrder(data);
         setTimeout(() => setShow(true), 200);
       })

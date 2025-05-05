@@ -2,15 +2,13 @@
 import React, { useState } from 'react';
 import { Form, Button, Card, Container, Alert, Spinner } from 'react-bootstrap';
 import { useApi } from '../hooks/useApi';
-import { useNavigate } from 'react-router-dom';
 import '../styles/Login.css'; // تأكد من المسار الصحيح
 
 const EmployeeLogin: React.FC = () => {
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
-  const { loading, error, callApi, data } = useApi();
+  const { loading, error, callApi } = useApi();
   const [success, setSuccess] = useState(false);
-  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

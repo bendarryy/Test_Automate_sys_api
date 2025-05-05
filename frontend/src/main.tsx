@@ -5,7 +5,7 @@ import store from "./store";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./index.css";
 import App from "./App.tsx";
-
+import '@ant-design/v5-patch-for-react-19';
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
