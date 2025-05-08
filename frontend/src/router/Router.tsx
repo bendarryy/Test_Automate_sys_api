@@ -21,9 +21,8 @@ const OwnerLogin = lazy(() => import("../pages/OwnerLogin"));
 const Systems = lazy(() => import("../pages/Systems"));
 const KdsPage = lazy(() => import("../pages/Restaurant/KdsPage"));
 const InviteEmployeePage = lazy(() => import("../pages/Restaurant/InviteEmployeePage"));
-
 const EmployeesPage = lazy(() => import("../pages/Restaurant/EmployeesPage"));
-
+const Financesdashboards = lazy(() => import("../pages/Restaurant/financesdashboards"));
 
 const About = () => <h1>About Page</h1>;
 
@@ -102,7 +101,11 @@ const router = createBrowserRouter([
       {
         path: "/employees",
         element: <ProtectLogin><EmployeesPage /></ProtectLogin>,
-      }
+      },
+       {
+        path: "/financesdashboards",
+        element: <ProtectLogin><Financesdashboards /></ProtectLogin>,
+      },
     ],
   },
 ]);

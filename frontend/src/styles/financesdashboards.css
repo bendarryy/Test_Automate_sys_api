@@ -1,0 +1,165 @@
+/* FinancesDashboards.css */
+
+.dashboard-container {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  
+  .dashboard-header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+  
+  .dashboard-header h1 {
+    color: #2c3e50;
+    font-size: 2.5rem;
+    margin-bottom: 15px;
+  }
+  
+  .dashboard-header p {
+    color: #7f8c8d;
+    font-size: 1.1rem;
+    margin-bottom: 30px;
+  }
+  
+  .navigation {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-bottom: 30px;
+  }
+  
+  .navigation button {
+    background: none;
+    border: none;
+    padding: 12px 25px;
+    font-size: 1rem;
+    cursor: pointer;
+    color: #7f8c8d;
+    transition: all 0.3s ease;
+    border-radius: 6px;
+  }
+  
+  .navigation button.active {
+    color: #3498db;
+    font-weight: 600;
+    background-color: #f0f8ff;
+    border-bottom: 3px solid #3498db;
+  }
+  
+  .profit-overview {
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  }
+  
+  .profit-overview h2 {
+    color: #2c3e50;
+    font-size: 1.8rem;
+    margin-bottom: 30px;
+  }
+  
+  .profit-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 25px;
+    margin-bottom: 30px;
+  }
+  
+  .profit-card {
+    background: #ffffff;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.06);
+    transition: transform 0.3s ease;
+  }
+  
+  .profit-card:hover {
+    transform: translateY(-5px);
+  }
+  
+  .profit-card h3 {
+    color: #7f8c8d;
+    font-size: 1.1rem;
+    margin-bottom: 15px;
+  }
+  
+  .profit-amount {
+    color: #2c3e50;
+    font-size: 2.2rem;
+    font-weight: 700;
+    margin: 15px 0;
+  }
+  
+  .change-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 1rem;
+    padding: 8px 12px;
+    border-radius: 20px;
+    font-weight: 500;
+  }
+  
+  .change-indicator.positive {
+    background-color: #e8f5e9;
+    color: #27ae60;
+  }
+  
+  .change-indicator.negative {
+    background-color: #ffebee;
+    color: #c0392b;
+  }
+  
+  .comparison {
+    color: #95a5a6;
+    font-size: 0.9rem;
+    margin-top: 10px;
+  }
+  
+  .export-button {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    padding: 15px 35px;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    display: block;
+    margin: 30px auto 0;
+    width: fit-content;
+  }
+  
+  .export-button:hover {
+    background-color: #2980b9;
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .profit-cards {
+      grid-template-columns: 1fr;
+    }
+    
+    .dashboard-header h1 {
+      font-size: 2rem;
+    }
+    
+    .profit-amount {
+      font-size: 1.8rem;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .dashboard-container {
+      padding: 15px;
+    }
+    
+    .navigation button {
+      padding: 10px 15px;
+      font-size: 0.9rem;
+    }
+  }
