@@ -21,6 +21,8 @@ from .serializers import StockUpdateSerializer
 from rest_framework.response import Response
 from .serializers import StockChangeSerializer, ProductSerializer
 from datetime import timedelta
+from rest_framework.permissions import OR
+from core.permissions import IsSystemOwner, IsEmployeeRolePermission
 
 
 class InventoryItemViewSet(viewsets.ModelViewSet):
@@ -144,17 +146,30 @@ class InventoryItemViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=["get"], url_path="expired")
     def expired_products(self, request, system_id=None):
-        try:
-            system = System.objects.get(id=system_id, owner=request.user)
-        except System.DoesNotExist:
-            return Response(
-                {"detail": "System not found or not owned by you."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
-
         today = date.today()
-        expired_products = Product.objects.filter(system=system, expiry_date__lt=today)
+        expired_products = Product.objects.filter(
+            system_id=system_id, expiry_date__lt=today
+        )
+
         serializer = ProductSerializer(
             expired_products, many=True, context={"request": request}
         )
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def get_permissions(self):
+        """
+        Define permission rules for each action.
+        """
+        if self.action in ["create", "update", "partial_update", "destroy"]:
+            return [
+                IsAuthenticated(),
+                OR(IsSystemOwner(), IsEmployeeRolePermission("manager", "head chef")),
+            ]
+
+        if self.action == "expired_products":  # Custom action name
+            return [
+                IsAuthenticated(),
+                OR(IsSystemOwner(), IsEmployeeRolePermission("manager")),
+            ]
+
+        return [IsAuthenticated(), OR(IsSystemOwner(), IsEmployeeRolePermission())]
