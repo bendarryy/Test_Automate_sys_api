@@ -47,3 +47,12 @@ it is under development
 ## if user is not authenticated redirect to login page
     i use the response status code 403 to check if the user is authenticated 
 
+
+
+
+## inspect 
+[`npm run dev`](http://localhost:5173/__inspect/)
+
+
+
+
