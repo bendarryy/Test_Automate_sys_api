@@ -2,7 +2,7 @@ import { defineConfig } from 'vite';
 
 import react from '@vitejs/plugin-react'
 import viteCompression from 'vite-plugin-compression'
-
+import Inspect from 'vite-plugin-inspect'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
@@ -12,9 +12,10 @@ export default defineConfig({
       ext: '.gz',        // File extension for compressed files
       threshold: 1024,   // Only assets bigger than this are compressed (bytes)
       deleteOriginFile: false // Keep original files
-    })
+    }),
+    Inspect()
+
   ],
-  
   // تحسين الكاشينج للصور والملفات الثابتة
   build: {
     assetsInlineLimit: 4096, // الصور الأقل من 4KB ستُضمّن مباشرة

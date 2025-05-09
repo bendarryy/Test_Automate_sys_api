@@ -1,12 +1,13 @@
 import React from 'react';
 import styles from '../styles/TablesSection.module.css';
+import { Table } from '../types';
 
 interface GridScrollXProps<T> {
   items: T[];
   renderItem: (item: T, index: number) => React.ReactNode;
 }
 
-const GridScrollX = React.memo(<T,>({ items, renderItem }: GridScrollXProps<T>) => {
+const GridScrollX = React.memo(({ items, renderItem }: GridScrollXProps<Table>) => {
   return (
     <div className={styles.tablesContainer} style={{ flex: 1 }}>
       <div className={styles.tables}>

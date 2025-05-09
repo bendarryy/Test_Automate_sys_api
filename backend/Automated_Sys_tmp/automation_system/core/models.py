@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+import uuid
 
 
 # Create your models here.
@@ -25,10 +26,22 @@ class System(models.Model):
     name = models.CharField(max_length=100)
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
     category = models.CharField(max_length=50, choices=SYSTEM_CATEGORIES)
+    subdomain = models.CharField(max_length=100, unique=True, null=True, blank=True)
+    description = models.TextField(blank=True)
+    is_public = models.BooleanField(default=True)
 
     def __str__(self):
         return f"{self.name} ({self.category})"
 
+    def save(self, *args, **kwargs):
+        if not self.subdomain:
+            # Generate a unique subdomain
+            while True:
+                subdomain = str(uuid.uuid4())[:8]
+                if not System.objects.filter(subdomain=subdomain).exists():
+                    self.subdomain = subdomain
+                    break
+        super().save(*args, **kwargs)
 
 from django.contrib.auth.hashers import make_password, check_password
 

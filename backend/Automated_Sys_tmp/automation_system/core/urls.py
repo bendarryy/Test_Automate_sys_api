@@ -21,4 +21,7 @@ urlpatterns = [
     
     path("create-system/", views.create_system, name="create_system"),  # System creation endpoint
     path("systems/", views.SystemRetrieveView.as_view(), name="systems"),
+    path('systems/', views.create_system, name='create_system'),
+    path('systems/list/', views.SystemRetrieveView.as_view(), name='system_list'),
+    path('systems/<int:system_id>/subdomain/', views.update_system_subdomain, name='update_system_subdomain'),
 ]

@@ -18,15 +18,24 @@ export const useApi = <T,>() => {
   });
   const navigate = useNavigate();
 
-  const callApi = async <T = unknown>(method: 'get' | 'post' | 'put' | 'patch' | 'delete', url: string, payload?: T) => {
+  const callApi = async <T = unknown>(method: 'get' | 'post' | 'put' | 'patch' | 'delete', url: string, payload?: T, isFormData?: boolean) => {
     setState({ data: null, loading: true, error: null });
     try {
-      const response = await apiClient[method](url, {
-        ...payload,
-        headers: {
-          'X-CSRFToken': "gpPejT7onkPSewykjLJNNl4YLhPyTy7b",
-        },
-      });
+      let response;
+      if (isFormData || (payload && typeof FormData !== 'undefined' && payload instanceof FormData)) {
+        response = await apiClient[method](url, payload, {
+          headers: {
+            'X-CSRFToken': "gpPejT7onkPSewykjLJNNl4YLhPyTy7b",
+            // Do NOT set Content-Type for FormData; browser will handle it
+          },
+        });
+      } else {
+        response = await apiClient[method](url, payload, {
+          headers: {
+            'X-CSRFToken': "gpPejT7onkPSewykjLJNNl4YLhPyTy7b",
+          },
+        });
+      }
       setState({ data: response.data, loading: false, error: null });
       return response.data;
     } catch (err: unknown) {

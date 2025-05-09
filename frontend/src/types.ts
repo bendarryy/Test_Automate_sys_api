@@ -3,10 +3,20 @@ export interface MenuItem {
   id: number;
   name: string;
   price: number;
+  cost: number;
+
   category: string;
-  available: boolean;
+  is_available: boolean;
   description: string;
-  specialOffer: boolean;
+  image?: string | null | File;
+}
+
+// نوع طاولة المطعم
+export interface Table {
+  id: number;
+  name: string;
+  capacity: number;
+  status: 'available' | 'occupied' | 'reserved';
 }
 
 // نوع خطأ API

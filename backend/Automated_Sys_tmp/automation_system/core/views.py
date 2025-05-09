@@ -330,3 +330,42 @@ class EmployeeLogoutView(APIView):
     def post(self, request, *args, **kwargs):
         logout(request)
         return Response({"success": "Successfully logged out."}, status=status.HTTP_200_OK)
+
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated, IsSystemOwner])
+def update_system_subdomain(request, system_id):
+    """
+    Update the subdomain of a system.
+    Only the system owner can update the subdomain.
+    """
+    system = get_object_or_404(System, id=system_id)
+    
+    # Check if the user is the owner
+    if system.owner != request.user:
+        return Response(
+            {"error": "Only the system owner can update the subdomain"},
+            status=status.HTTP_403_FORBIDDEN
+        )
+    
+    new_subdomain = request.data.get('subdomain')
+    if not new_subdomain:
+        return Response(
+            {"error": "Subdomain is required"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    # Check if subdomain is already taken
+    if System.objects.filter(subdomain=new_subdomain).exclude(id=system_id).exists():
+        return Response(
+            {"error": "This subdomain is already taken"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    # Update the subdomain
+    system.subdomain = new_subdomain
+    system.save()
+    
+    return Response({
+        "message": "Subdomain updated successfully",
+        "subdomain": system.subdomain
+    })
