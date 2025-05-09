@@ -44,6 +44,8 @@ class Order(models.Model):
         ("pending", "Pending"),
         ("preparing", "Preparing"),
         ("ready", "Ready"),
+        ("served", "Served"),
+        ("out_for_delivery", "Out for Delivery"),
         ("completed", "Completed"),
         ("canceled", "Canceled"),
     ]
