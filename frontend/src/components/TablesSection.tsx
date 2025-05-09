@@ -5,74 +5,81 @@ import { setSelectedTable } from "../store/billSlice";
 import GridScrollX from "./GridScrollX";
 import styles from "../styles/TablesSection.module.css";
 import { MdPeopleOutline } from "react-icons/md";
+import { Table } from '../types';
 
-const tables = [
+const tables: Table[] = [
   {
     id: 1,
+    name: 'Table 1',
     status: "available",
-    capacity: 4,
-    isReserved: false,
+    capacity: 4
   },
   {
     id: 2,
-    status: "occupied",
-    capacity: 4,
-    isReserved: false,
+    name: 'Table 2',
+    status: "available",
+    capacity: 6
   },
   {
     id: 3,
-    status: "booked",
-    capacity: 4,
-    isReserved: false,
+    name: 'Table 3',
+    status: "reserved",
+    capacity: 2
   },
   {
-    id:4,
-    status: "available",
-    capacity: 4,
-    isReserved: false,
+    id: 4,
+    name: 'Table 4',
+    status: "occupied",
+    capacity: 8
   },
   {
     id: 5,
+    name: 'Table 5',
     status: "available",
-    capacity: 4,
-    isReserved: false,
+    capacity: 4
   },
   {
     id: 6,
-    status: "available",
-    capacity: 4,
-    isReserved: false,
+    name: 'Table 6',
+    status: "reserved",
+    capacity: 6
   },
   {
     id: 7,
-    status: "booked",
-    capacity: 4,
-    isReserved: false,
+    name: 'Table 7',
+    status: "available",
+    capacity: 2
   },
   {
     id: 8,
+    name: 'Table 8',
     status: "occupied",
-    capacity: 4,
-    isReserved: false,
+    capacity: 8
   },
   {
     id: 9,
+    name: 'Table 9',
     status: "available",
-    capacity: 4,
-    isReserved: false,
+    capacity: 4
   },
   {
     id: 10,
-    status: "available",
-    capacity: 4,
-    isReserved: false,
+    name: 'Table 10',
+    status: "reserved",
+    capacity: 6
   },
   {
     id: 11,
+    name: 'Table 11',
     status: "available",
-    capacity: 4,
-    isReserved: false,
+    capacity: 2
   },
+  {
+    id: 12,
+    name: 'Table 12',
+    status: "occupied",
+    capacity: 8
+  }
 ];
 
 const TablesSection: React.FC = () => {
@@ -88,7 +95,7 @@ const TablesSection: React.FC = () => {
     <GridScrollX
       
       items={tables}
-      renderItem={(table, index) => (
+      renderItem={(table: Table) => (
         <>
           <input
             type="checkbox"
@@ -100,7 +107,7 @@ const TablesSection: React.FC = () => {
           />
           <label htmlFor={`table-${table.id}`}>
             <div className={`${styles.table} ${styles[table.status]}`}>
-              <h3>table {index + 1}</h3>
+              <h3>{table.name}</h3>
               <p>
                 {table.capacity} <MdPeopleOutline size={24} />
               </p>

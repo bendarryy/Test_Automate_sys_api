@@ -21,8 +21,11 @@ export const useGetMenu = (systemId: number, category?: string) => {
     return await callApi('get', url);
   };
 
-  const createMenuItem = async (menuItem: MenuItem) => {
+  const createMenuItem = async (menuItem: MenuItem | FormData) => {
     const url = `/restaurant/${systemId}/menu-items/`;
+    if (menuItem instanceof FormData) {
+      return await callApi('post', url, menuItem, true);
+    }
     return await callApi('post', url, menuItem);
   };
 
@@ -31,8 +34,11 @@ export const useGetMenu = (systemId: number, category?: string) => {
     return await callApi('get', url);
   };
 
-  const updateMenuItem = async (id: number, menuItem: Partial<MenuItem>) => {
+  const updateMenuItem = async (id: number, menuItem: Partial<MenuItem> | FormData) => {
     const url = `/restaurant/${systemId}/menu-items/${id}/`;
+    if (menuItem instanceof FormData) {
+      return await callApi('put', url, menuItem, true);
+    }
     return await callApi('put', url, menuItem);
   };
 

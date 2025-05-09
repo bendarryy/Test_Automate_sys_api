@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Modal, Tabs, Input, Space, Tag, Spin, Table } from 'antd';
+import { Button, Modal, Tabs, Input, Space, Tag, Spin, Table, Upload, message } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
 import { Key } from 'antd/es/table/interface';
 import { useGetMenu } from '../hooks/useGetMenu';
 import { useSelectedSystemId } from '../hooks/useSelectedSystemId';
@@ -12,13 +13,13 @@ const initialItem: MenuItem = {
   name: '',
   category: 'Food',
   price: 0,
-  available: true,
+  cost: 0,
+  is_available: true,
   description: '',
-  specialOffer: false,
+  image: null,
 };
 
 const MenuManagement = () => {
-
   const [selectedSystemId] = useSelectedSystemId();
   const { getMenu, createMenuItem, updateMenuItem, deleteMenuItem, loading } = useGetMenu(Number(selectedSystemId));
 
@@ -32,7 +33,17 @@ const MenuManagement = () => {
     const fetchMenu = async () => {
       try {
         const fetchedItems = await getMenu();
-        setItems(fetchedItems || []);
+        setItems((fetchedItems || []).map((item: any) => ({
+          id: item.id,
+          name: item.name,
+          category: item.category,
+          price: typeof item.price === 'number' ? item.price : Number(item.price),
+          cost: typeof item.cost === 'number' ? item.cost : Number(item.cost),
+          is_available: item.is_available,
+          description: item.description,
+          image: item.image ?? null,
+        })));
+
         console.log('Fetched items:', items);
       } catch (error) {
         console.error('Error fetching menu:', error);
@@ -63,68 +74,122 @@ const MenuManagement = () => {
   }, []);
 
   const handleSave = React.useCallback(async () => {
-    if (!formData.name || !formData.price || isNaN(Number(formData.price)) || Number(formData.price) <= 0) {
-      alert('Please fill in all fields correctly.');
+    if (
+      !formData.name ||
+      !formData.category ||
+      formData.price == null || isNaN(Number(formData.price)) || Number(formData.price) <= 0 ||
+      formData.cost == null || isNaN(Number(formData.cost)) || Number(formData.cost) < 0
+    ) {
+      alert('Please fill in all required fields: name, category, price (>0), and cost (>=0).');
       return;
     }
-  
-    const updatedFormData = {
-      ...formData,
-      price: Number(formData.price),
-      category: formData.category?.toLowerCase(), // Convert category to lowercase
-    };
+
+    // إذا كانت الصورة من نوع File، استخدم FormData
+    let resultItem;
+    // TypeScript strict: Use a safe runtime check for File
+    if (
+      formData.image &&
+      typeof formData.image === 'object' &&
+      formData.image !== null &&
+      'name' in formData.image &&
+      'type' in formData.image &&
+      typeof (formData.image as { name?: unknown; type?: unknown }).name === 'string' &&
+      typeof (formData.image as { name?: unknown; type?: unknown }).type === 'string'
+    ) {
+      const fd = new FormData();
+      fd.append('name', formData.name);
+      fd.append('category', formData.category);
+      fd.append('price', String(formData.price));
+      fd.append('cost', String(formData.cost));
+      fd.append('is_available', String(formData.is_available));
+      fd.append('description', formData.description || '');
+      fd.append('image', formData.image);
+      if (editItem) {
+        resultItem = await updateMenuItem(editItem.id, fd); // يفترض أن الدالة تدعم FormData
+      } else {
+        resultItem = await createMenuItem(fd); // يفترض أن الدالة تدعم FormData
+      }
+    } else {
+      const updatedFormData = {
+        ...formData,
+        price: Number(formData.price),
+        cost: Number(formData.cost),
+        category: formData.category?.toLowerCase(),
+      };
+      if (editItem) {
+        resultItem = await updateMenuItem(editItem.id, updatedFormData);
+      } else {
+        resultItem = await createMenuItem({ ...updatedFormData, id: Date.now() });
+      }
+    }
 
     if (editItem) {
-      await updateMenuItem(editItem.id, updatedFormData);
       setItems(items.map((item) => (
         item.id === editItem.id
           ? {
               id: editItem.id,
-              name: updatedFormData.name,
-              category: updatedFormData.category,
-              price: Number(updatedFormData.price),
-              available: updatedFormData.available,
-              description: updatedFormData.description,
-              specialOffer: updatedFormData.specialOffer,
+              name: formData.name,
+              category: formData.category,
+              price: Number(formData.price),
+              cost: Number(formData.cost),
+              is_available: formData.is_available,
+              description: formData.description,
+              image: formData.image,
             }
           : item
       )));
-    } else {
-      const newItem = await createMenuItem({ ...updatedFormData, id: Date.now() });
-      // Ensure newItem has all MenuItem properties and correct types
-      if (
-        newItem &&
-        typeof newItem.id === 'number' &&
-        typeof newItem.name === 'string' &&
-        typeof newItem.category === 'string' &&
-        typeof newItem.price === 'number' &&
-        typeof newItem.available === 'boolean' &&
-        typeof newItem.description === 'string' &&
-        typeof newItem.specialOffer === 'boolean'
-      ) {
-        setItems([
-          ...items,
-          {
-            id: newItem.id,
-            name: newItem.name,
-            category: newItem.category,
-            price: newItem.price,
-            available: newItem.available,
-            description: newItem.description,
-            specialOffer: newItem.specialOffer,
-          },
-        ]);
-      }
+    } else if (resultItem && resultItem.id) {
+      setItems([
+        ...items,
+        {
+          id: resultItem.id,
+          name: resultItem.name,
+          category: resultItem.category,
+          price: typeof resultItem.price === 'number' ? resultItem.price : Number(resultItem.price),
+          cost: typeof resultItem.cost === 'number' ? resultItem.cost : Number(resultItem.cost),
+          is_available: resultItem.is_available,
+          description: resultItem.description,
+          image: resultItem.image,
+        },
+      ]);
     }
     setShowModal(false);
-  }, []);
+  }, [editItem, formData, items]);
 
-  const handleChange = React.useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value, type } = e.target;
-    setFormData({ ...formData, [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value });
-  }, []);
+  const handleChange = React.useCallback(
+    (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+      const { name, value, type } = e.target;
+
+      if (type === 'file' && e.target instanceof HTMLInputElement && e.target.files && e.target.files[0]) {
+        const file = e.target.files[0];
+        setFormData((prev) => ({ ...prev, image: file }));
+        return;
+      }
+      if (type === 'checkbox' && e.target instanceof HTMLInputElement) {
+        setFormData((prev) => ({ ...prev, [name]: (e.target as HTMLInputElement).checked }));
+        return;
+      }
+      setFormData((prev) => {
+        if (name === 'price' || name === 'cost') {
+          return { ...prev, [name]: value === '' ? '' : Number(value) };
+        }
+        return { ...prev, [name]: value };
+      });
+    },
+    []
+  );
 
   const columns = [
+    {
+      title: 'Image',
+      dataIndex: 'image',
+      key: 'image',
+      width: 64,
+      render: (image: string | null) =>
+        image ? (
+          <img src={image} alt="item" style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 6 }} />
+        ) : null,
+    },
     {
       title: 'Name',
       dataIndex: 'name',
@@ -146,34 +211,20 @@ const MenuManagement = () => {
     },
     {
       title: 'Availability',
-      dataIndex: 'available',
-      key: 'available',
-      render: (available: boolean) => (
-        <Tag color={available ? 'green' : 'red'}>
-          {available ? 'Available' : 'Not Available'}
+      dataIndex: 'is_available',
+      key: 'is_available',
+      render: (is_available: boolean) => (
+        <Tag color={is_available ? 'green' : 'red'}>
+          {is_available ? 'Available' : 'Not Available'}
         </Tag>
       ),
       filters: [
         { text: 'Available', value: true },
         { text: 'Not Available', value: false },
       ],
-      onFilter: (value: boolean | Key, record: MenuItem) => typeof value === 'boolean' ? record.available === value : false,
+      onFilter: (value: boolean | Key, record: MenuItem) => typeof value === 'boolean' ? record.is_available === value : false,
     },
-    {
-      title: 'Special Offer',
-      dataIndex: 'specialOffer',
-      key: 'specialOffer',
-      render: (specialOffer: boolean) => (
-        <Tag color={specialOffer ? 'gold' : 'default'}>
-          {specialOffer ? 'Yes' : 'No'}
-        </Tag>
-      ),
-      filters: [
-        { text: 'Yes', value: true },
-        { text: 'No', value: false },
-      ],
-      onFilter: (value: boolean | Key, record: MenuItem) => typeof value === 'boolean' ? record.specialOffer === value : false,
-    },
+
     {
       title: 'Actions',
       key: 'actions',
@@ -202,13 +253,17 @@ const MenuManagement = () => {
           <Spin size="large" />
         </div>
       ) : (
-        <Tabs activeKey={activeTab} onChange={(k) => setActiveTab(k || 'Food')}>
-          {categories.map((cat) => {
+        <Tabs
+          activeKey={activeTab}
+          onChange={(k) => setActiveTab(k || 'Food')}
+          items={categories.map((cat) => {
             const categoryItems = items.filter(item => 
               item.category?.toLowerCase() === cat?.toLowerCase()
             );
-            return (
-              <Tabs.TabPane tab={cat} key={cat}>
+            return {
+              key: cat,
+              label: cat,
+              children: (
                 <Table<MenuItem>
                   columns={columns}
                   dataSource={categoryItems}
@@ -216,15 +271,15 @@ const MenuManagement = () => {
                   bordered
                   size="middle"
                 />
-              </Tabs.TabPane>
-            );
+              ),
+            };
           })}
-        </Tabs>
+        />
       )}
 
       <Modal
         title={editItem ? 'Edit Item' : 'Add Item'}
-        visible={showModal}
+        open={showModal}
         onCancel={() => setShowModal(false)}
         footer={[
           <Button key="back" onClick={() => setShowModal(false)}>
@@ -235,62 +290,116 @@ const MenuManagement = () => {
           </Button>,
         ]}
       >
-        <div style={{ padding: 24 }}>
-          <div style={{ marginBottom: 16 }}>
-            <Input
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              placeholder="Name"
-            />
-          </div>
-          <div style={{ marginBottom: 16 }}>
-            <Input
-              name="category"
-              value={formData.category}
-              onChange={handleChange}
-              placeholder="Category"
-            />
-          </div>
-          <div style={{ marginBottom: 16 }}>
-            <Input
-              name="price"
-              type="number"
-              value={formData.price}
-              onChange={handleChange}
-              placeholder="Price"
-            />
-          </div>
-          <div style={{ marginBottom: 16 }}>
-            <Input
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              placeholder="Description"
-            />
-          </div>
-          <div style={{ marginBottom: 16 }}>
-            <Input
-              name="available"
-              type="checkbox"
-              checked={formData.available}
-              onChange={handleChange}
-              placeholder="Available"
-            />
-          </div>
-          <div style={{ marginBottom: 16 }}>
-            <Input
-              name="specialOffer"
-              type="checkbox"
-              checked={formData.specialOffer}
-              onChange={handleChange}
-              placeholder="Special Offer"
-            />
-          </div>
+        <div style={{ padding: 0 }}>
+  <div style={{ marginBottom: 16 }}>
+    <label style={{ fontWeight: 500 }}>Name</label>
+    <Input
+      name="name"
+      value={formData.name}
+      onChange={handleChange}
+      placeholder="Name"
+      style={{ marginTop: 4 }}
+    />
+  </div>
+  <div style={{ marginBottom: 16 }}>
+    <label style={{ fontWeight: 500, display: 'block' }}>Image</label>
+    <Upload
+      name="image"
+      listType="picture-card"
+      showUploadList={false}
+      accept="image/*"
+      beforeUpload={file => {
+        const isImage = file.type.startsWith('image/');
+        if (!isImage) {
+          message.error('يرجى اختيار صورة فقط');
+          return Upload.LIST_IGNORE;
+        }
+        // احفظ الملف نفسه في formData.image
+        setFormData(prev => ({ ...prev, image: file }));
+        return false; // لا ترفع تلقائياً
+      }}
+    >
+      {formData.image ? (
+        <img
+          src={typeof formData.image === 'object' && formData.image !== null && 'type' in formData.image ? URL.createObjectURL(formData.image as File) : (formData.image as string)}
+          alt="preview"
+          style={{ width: '100%', height: 80, objectFit: 'cover', borderRadius: 6 }}
+        />
+      ) : (
+        <div>
+          <PlusOutlined />
+          <div style={{ marginTop: 8 }}>رفع صورة</div>
         </div>
+      )}
+    </Upload>
+  </div>
+  <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
+    <div style={{ flex: 1 }}>
+      <label style={{ fontWeight: 500 }}>Category</label>
+      <select
+        name="category"
+        value={formData.category}
+        onChange={handleChange}
+        style={{ width: '100%', marginTop: 4, height: 32, borderRadius: 4, border: '1px solid #d9d9d9' }}
+      >
+        {categories.map((cat) => (
+          <option key={cat} value={cat}>{cat}</option>
+        ))}
+      </select>
+    </div>
+    <div style={{ flex: 1 }}>
+      <label style={{ fontWeight: 500 }}>Price (EGP)</label>
+      <Input
+        name="price"
+        type="number"
+        value={formData.price}
+        onChange={handleChange}
+        placeholder="Price"
+        style={{ marginTop: 4 }}
+      />
+    </div>
+    <div style={{ flex: 1 }}>
+      <label style={{ fontWeight: 500 }}>Cost</label>
+      <Input
+        name="cost"
+        type="number"
+        value={formData.cost}
+        onChange={handleChange}
+        placeholder="Cost"
+        style={{ marginTop: 4 }}
+      />
+    </div>
+  </div>
+  <div style={{ marginBottom: 8 }}>
+    <label style={{ fontWeight: 500 }}>
+      <span>Available</span>
+      <span style={{ marginLeft: 8 }}>
+        <input
+          type="checkbox"
+          name="is_available"
+          checked={formData.is_available}
+          onChange={handleChange}
+          style={{ verticalAlign: 'middle' }}
+        />
+      </span>
+    </label>
+  </div>
+  <div style={{ marginBottom: 16 }}>
+    <label style={{ fontWeight: 500 }}>Description</label>
+    <Input.TextArea
+      name="description"
+      value={formData.description}
+      onChange={handleChange}
+      placeholder="Description"
+      autoSize={{ minRows: 3, maxRows: 5 }}
+      style={{ marginTop: 4 }}
+    />
+  </div>
+
+</div>
       </Modal>
     </div>
   );
-};
+}
 
 export default MenuManagement;
