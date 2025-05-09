@@ -81,11 +81,20 @@ class OrderSerializer(serializers.ModelSerializer):
     order_items = OrderItemSerializer(many=True, read_only=True)
     waiter = serializers.PrimaryKeyRelatedField(queryset=Employee.objects.filter(role="waiter"), allow_null=True, required=False)
     profit = serializers.SerializerMethodField()
+    order_type = serializers.ChoiceField(
+        choices=Order.ORDER_TYPE_CHOICES,
+        default="in_house",
+        help_text="Set to 'delivery' only for delivery orders. Default is 'in_house'."
+    )
 
     class Meta:
         model = Order
-        fields = ["id", "system", "customer_name", "table_number", "waiter", "total_price", "profit", "status", "order_items", "created_at", "updated_at" ]
-        read_only_fields = ["id", "total_price" , "created_at", "updated_at", "system" ]
+        fields = [
+            "id", "system", "customer_name", "table_number", "waiter", 
+            "total_price", "profit", "status", "order_type", "order_items", 
+            "created_at", "updated_at"
+        ]
+        read_only_fields = ["id", "total_price", "created_at", "updated_at", "system"]
 
     def create(self, validated_data):
         request = self.context["request"]
@@ -102,6 +111,25 @@ class OrderSerializer(serializers.ModelSerializer):
         user = request.user
         system_id = self.context["view"].kwargs.get("system_id")
         system = get_object_or_404(System, id=system_id)
+
+        # Validate order type specific requirements
+        order_type = data.get('order_type', 'in_house')
+        if order_type == 'delivery':
+            if not data.get('customer_name'):
+                raise serializers.ValidationError({
+                    "customer_name": "Customer name is required for delivery orders"
+                })
+            # Clear table number for delivery orders
+            data['table_number'] = None
+        else:  # in_house
+            if not data.get('table_number'):
+                raise serializers.ValidationError({
+                    "table_number": "Table number is required for in-house orders"
+                })
+            # Clear customer name for in-house orders if not provided
+            if not data.get('customer_name'):
+                data['customer_name'] = None
+
         try:
             employee = Employee.objects.get(system=system, user=user)
             if employee.role == 'waiter':

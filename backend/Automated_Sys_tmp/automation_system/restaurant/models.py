@@ -40,12 +40,22 @@ class MenuItem(BaseMultiTenantModel):
 # The whole receipt (one per customer).
 
 class Order(models.Model):
-    system = models.ForeignKey(System, on_delete=models.CASCADE)  # Restaurant branch
-    customer_name = models.CharField(max_length=100, blank=True, null=True)  # Optional customer name
-    table_number = models.CharField(max_length=10, blank=True, null=True)  # Table for dine-in
-    # waiter = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)  # The waiter taking the order
-    waiter = models.ForeignKey(Employee, on_delete=models.SET_NULL, null=True)  # Waiter taking the order
+    system = models.ForeignKey(System, on_delete=models.CASCADE)
+    customer_name = models.CharField(max_length=100, blank=True, null=True)
+    table_number = models.CharField(max_length=10, blank=True, null=True)
+    waiter = models.ForeignKey(Employee, on_delete=models.SET_NULL, null=True)
     total_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+
+    ORDER_TYPE_CHOICES = [
+        ("in_house", "In-House"),  # Default option
+        ("delivery", "Delivery")
+    ]
+    order_type = models.CharField(
+        max_length=20, 
+        choices=ORDER_TYPE_CHOICES, 
+        default="in_house",  # Explicitly set default
+        help_text="Type of order. Default is in-house. Set to delivery only for delivery orders."
+    )
 
     STATUS_CHOICES = [
         ("pending", "Pending"),
