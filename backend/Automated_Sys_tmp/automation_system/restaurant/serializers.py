@@ -73,7 +73,7 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
 class OrderSerializer(serializers.ModelSerializer):
     order_items = OrderItemSerializer(many=True, read_only=True)
-    waiter = serializers.PrimaryKeyRelatedField(queryset=Employee.objects.filter(role="waiter"), allow_null=True)
+    waiter = serializers.PrimaryKeyRelatedField(queryset=Employee.objects.filter(role="waiter"), allow_null=True, required=False)
     profit = serializers.SerializerMethodField()
 
     class Meta:
@@ -85,32 +85,24 @@ class OrderSerializer(serializers.ModelSerializer):
         request = self.context["request"]
         system_id = self.context["view"].kwargs.get("system_id")
         system = get_object_or_404(System, id=system_id)
-
         validated_data["system"] = system
         return super().create(validated_data)
     
     def get_profit(self, obj):
         return obj.calculate_profit()
 
-    # def validate_waiter(self, value):
-    #     """Ensure the selected user is a waiter and restrict waiters to assigning themselves."""
-    #     request = self.context["request"]
-    #     system_id = self.context["view"].kwargs.get("system_id")
-    #     system = get_object_or_404(System, id=system_id)
-
-    #     if value:
-    #         if value.role != "waiter":
-    #             raise serializers.ValidationError("Selected user is not a waiter.")
-    #         # If the user is a waiter, they can only assign themselves
-    #         if system.owner != request.user:
-    #             try:
-    #                 employee = Employee.objects.get(system=system, user=request.user)
-    #                 if employee.role == 'waiter' and value != employee:
-    #                     raise serializers.ValidationError("Waiters can only assign themselves to orders.")
-    #             except Employee.DoesNotExist:
-    #                 raise PermissionDenied("You do not have permission to assign waiters.")
-    #     return value
-
+    def validate(self, data):
+        request = self.context["request"]
+        user = request.user
+        system_id = self.context["view"].kwargs.get("system_id")
+        system = get_object_or_404(System, id=system_id)
+        try:
+            employee = Employee.objects.get(system=system, user=user)
+            if employee.role == 'waiter':
+                data['waiter'] = employee
+        except Employee.DoesNotExist:
+            pass
+        return data
 
 class InventoryItemSerializer(serializers.ModelSerializer):
     class Meta:
