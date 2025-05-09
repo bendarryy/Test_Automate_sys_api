@@ -146,3 +146,17 @@ class InventoryItemSerializer(serializers.ModelSerializer):
             'unit': {'required': False, 'allow_null': True},
             'min_threshold': {'required': False, 'allow_null': True},
         }
+
+
+
+
+
+
+
+
+
+
+class PublicMenuItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MenuItem
+        fields = ['id', 'name', 'description', 'price', 'is_available', 'category', 'image', 'created_at', 'updated_at']

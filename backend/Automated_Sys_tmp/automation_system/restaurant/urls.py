@@ -10,7 +10,9 @@ router.register(r'(?P<system_id>\d+)/menu-items', MenuItemViewSet, basename="men
 router.register(r"(?P<system_id>\d+)/orders", OrderViewSet, basename="order")
 router.register(r"(?P<system_id>\d+)/orders/(?P<order_id>\d+)/items", OrderItemViewSet, basename="order-item")
 router.register(r'(?P<system_id>\d+)/kitchen/orders', KitchenOrderViewSet, basename='kitchen-orders')
-urlpatterns = [
+
+# API URLs
+api_urlpatterns = [
     path('', include(router.urls)),
     path('<int:system_id>/inventory/', InventoryItemViewSet.as_view({
         'get': 'list',
@@ -29,3 +31,10 @@ urlpatterns = [
     #path('<int:system_id>/orders/analytics/waiters/', WaiterStatsView.as_view(), name='waiter-stats'),
 ]
 
+# Public URLs - these will be handled by the subdomain middleware
+public_urlpatterns = [
+    path('menu/', public_view, name='public-view'),  # Changed from '' to 'menu/'
+]
+
+# Combine both URL patterns
+urlpatterns = api_urlpatterns + public_urlpatterns

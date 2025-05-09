@@ -20,6 +20,8 @@ from django.urls import path, include
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
+from django.conf import settings
+from django.conf.urls.static import static
 
 
 schema_view = get_schema_view(
@@ -36,16 +38,10 @@ schema_view = get_schema_view(
 urlpatterns = [
     path("admin/", admin.site.urls),  # Admin panel URL
     path("api/accounts/", include("django.contrib.auth.urls")),  # Authentication URLs
-    path(
-        "api/core/", include("core.urls")
-    ),  # URLs for the core app (e.g., user management)
-    path("api/restaurant/", include("restaurant.urls")),  # URLs for the restaurant app
-    # path("api/inventory/", include("inventory.urls")),
-    # path("api/cafe/", include("cafe.urls")),  # URLs for the cafe app
-    path(
-        "api/supermarket/", include("supermarket.urls")
-    ),  # URLs for the supermarket app
-    # path("api/workshop/", include("workshop.urls")),  # URLs for the workshop app
+    path("api/core/", include("core.urls")),  # Core app URLs
+    path("api/restaurant/", include("restaurant.urls")),  # Restaurant app URLs
+    path("api/supermarket/", include("supermarket.urls")),  # Supermarket app URLs
+    # path("api/cafe/", include("cafe.urls")),  # Cafe app URLs
     # Swagger & Redoc
     path(
         "swagger/",
@@ -54,7 +50,13 @@ urlpatterns = [
     ),
     path("redoc/", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc"),
 ]
-from django.conf import settings
-from django.conf.urls.static import static
 
-urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+# Add subdomain handling only in DEBUG mode
+if settings.DEBUG:
+    # This will only handle requests from subdomains
+    urlpatterns = [
+        path('', include('restaurant.urls')),  # This will handle the public view for subdomains
+    ] + urlpatterns  # Add all other URLs after
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

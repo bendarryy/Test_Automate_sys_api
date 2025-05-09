@@ -18,7 +18,11 @@ from core.permissions import IsSystemOwner  , IsEmployeeRolePermission
 
 from rest_framework.permissions import OR
 from decimal import Decimal
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view
+from django.http import HttpResponseNotFound
+import logging
+
+logger = logging.getLogger(__name__)
 
 class MenuItemViewSet(viewsets.ModelViewSet):
     serializer_class = MenuItemSerializer
@@ -473,3 +477,49 @@ class WaiterStatsView(APIView):
         ]
         
         return Response(response_data)
+
+
+from .serializers import PublicMenuItemSerializer
+
+@api_view(['GET'])
+def public_view(request):
+    """
+    Public view for accessing restaurant systems via subdomain.
+    Returns menu items as JSON data.
+    """
+    subdomain = getattr(request, 'subdomain', None)
+    
+    if not subdomain:
+        return Response(
+            {"error": "Subdomain not found"},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    try:
+        system = System.objects.get(subdomain=subdomain)
+        menu_items = MenuItem.objects.filter(
+            system=system,
+            is_available=True
+        ).order_by('category', 'name')
+        
+        # Group menu items by category
+        menu_by_category = {}
+        for item in menu_items:
+            if item.category not in menu_by_category:
+                menu_by_category[item.category] = []
+            menu_by_category[item.category].append(PublicMenuItemSerializer(item).data)
+
+        return Response({
+            'system': {
+                'name': system.name,
+                'description': system.description,
+                'category': system.category
+            },
+            'menu': menu_by_category
+        })
+        
+    except System.DoesNotExist:
+        return Response(
+            {"error": "System not found"},
+            status=status.HTTP_404_NOT_FOUND
+        )
