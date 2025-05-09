@@ -20,3 +20,9 @@ class StockUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = ["stock_quantity"]
+
+
+class ProductSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = "__all__"

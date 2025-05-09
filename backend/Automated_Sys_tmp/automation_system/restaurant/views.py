@@ -18,6 +18,7 @@ from core.permissions import IsSystemOwner  , IsEmployeeRolePermission
 
 from rest_framework.permissions import OR
 from decimal import Decimal
+from rest_framework.decorators import action
 
 class MenuItemViewSet(viewsets.ModelViewSet):
     serializer_class = MenuItemSerializer
@@ -31,10 +32,17 @@ class MenuItemViewSet(viewsets.ModelViewSet):
 
         category = self.request.query_params.get("category")
         if category:
-            if category in MenuItemSerializer.VALID_CATEGORIES:
-                queryset = queryset.filter(category=category)
+            queryset = queryset.filter(category=category)
 
         return queryset
+
+    @action(detail=False, methods=['get'])
+    def categories(self, request, *args, **kwargs):
+        """Get all categories used in this system"""
+        system_id = self.kwargs.get("system_id")
+        system = get_object_or_404(System, id=system_id)
+        categories = MenuItem.objects.filter(system=system).values_list('category', flat=True).distinct()
+        return Response(list(filter(None, categories)))  # Filter out None values
 
     def get_permissions(self):
         """

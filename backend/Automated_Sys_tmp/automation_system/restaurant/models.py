@@ -7,38 +7,55 @@ from core.models import Employee
 
 class MenuItem(BaseMultiTenantModel):
     """Menu for restaurants and cafes"""
+    DEFAULT_CATEGORIES = [
+        ("food", "Food"),
+        ("drink", "Drink"),
+        ("dessert", "Dessert"),
+        ("soups", "Soups")
+    ]
+
     system = models.ForeignKey(System, on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
-    description = models.TextField(blank=True, null=True)  # Optional description
+    description = models.TextField(blank=True, null=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    cost = models.DecimalField(max_digits=10 , decimal_places=2, default=0)
+    cost = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     is_available = models.BooleanField(default=True)
-    category = models.CharField(max_length=50, choices=[  
-        ("food", "Food"),  
-        ("drink", "Drink"),  
-        ("dessert", "Dessert"), 
-        ("soups", "Soups") 
-    ],  null=True)  # Categorize items
-    image = models.ImageField(upload_to="menu_images/", blank=True, null=True)  # Optional image
-    created_at = models.DateTimeField(auto_now_add=True, null=True)  # Timestamp when added
-    updated_at = models.DateTimeField(auto_now=True)  # Timestamp when modified
+    category = models.CharField(max_length=50, null=True)  # Remove choices to allow any category
+    image = models.ImageField(upload_to="menu_images/", blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.name
     # def __str__(self):
     #     return f"{self.name} - {self.price} {('✅' if self.is_available else '❌')}"
 
+    @classmethod
+    def get_categories_for_system(cls, system):
+        """Get all categories used in a specific system"""
+        return cls.objects.filter(system=system).values_list('category', flat=True).distinct()
+
 
 
 # The whole receipt (one per customer).
 
 class Order(models.Model):
-    system = models.ForeignKey(System, on_delete=models.CASCADE)  # Restaurant branch
-    customer_name = models.CharField(max_length=100, blank=True, null=True)  # Optional customer name
-    table_number = models.CharField(max_length=10, blank=True, null=True)  # Table for dine-in
-    # waiter = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)  # The waiter taking the order
-    waiter = models.ForeignKey(Employee, on_delete=models.SET_NULL, null=True)  # Waiter taking the order
+    system = models.ForeignKey(System, on_delete=models.CASCADE)
+    customer_name = models.CharField(max_length=100, blank=True, null=True)
+    table_number = models.CharField(max_length=10, blank=True, null=True)
+    waiter = models.ForeignKey(Employee, on_delete=models.SET_NULL, null=True)
     total_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+
+    ORDER_TYPE_CHOICES = [
+        ("in_house", "In-House"),  # Default option
+        ("delivery", "Delivery")
+    ]
+    order_type = models.CharField(
+        max_length=20, 
+        choices=ORDER_TYPE_CHOICES, 
+        default="in_house",  # Explicitly set default
+        help_text="Type of order. Default is in-house. Set to delivery only for delivery orders."
+    )
 
     STATUS_CHOICES = [
         ("pending", "Pending"),
