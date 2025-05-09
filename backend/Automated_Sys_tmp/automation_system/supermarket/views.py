@@ -9,7 +9,7 @@ from .models import System
 
 
 from django.utils import timezone
-from datetime import timedelta
+from datetime import date, timedelta
 
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -19,7 +19,8 @@ from django.shortcuts import get_object_or_404
 from rest_framework import status
 from .serializers import StockUpdateSerializer
 from rest_framework.response import Response
-from .serializers import StockChangeSerializer
+from .serializers import StockChangeSerializer, ProductSerializer
+from datetime import timedelta
 
 
 class InventoryItemViewSet(viewsets.ModelViewSet):
@@ -78,17 +79,28 @@ class InventoryItemViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(products, many=True)
         return Response(serializer.data)
 
-    @action(detail=False, methods=["get"])
+    @action(detail=False, methods=["get"], url_path="expiring-soon")
     def expiring_soon(self, request, system_id=None):
-        system = self._get_system_or_403(system_id)
-        days = int(request.query_params.get("days", 7))
-        today = timezone.now().date()
-        cutoff = today + timedelta(days=days)
-        products = Product.objects.filter(
-            system=system, expiry_date__isnull=False, expiry_date__lte=cutoff
+
+        try:
+            system = System.objects.get(id=system_id, owner=request.user)
+        except System.DoesNotExist:
+            return Response(
+                {"detail": "System not found."}, status=status.HTTP_403_FORBIDDEN
+            )
+
+        days_ahead = int(request.query_params.get("days", 7))
+        today = date.today()
+        soon = today + timedelta(days=days_ahead)
+
+        expiring_products = Product.objects.filter(
+            system=system, expiry_date__gte=today, expiry_date__lte=soon
         )
-        serializer = self.get_serializer(products, many=True)
-        return Response(serializer.data)
+
+        serializer = ProductSerializer(
+            expiring_products, many=True, context={"request": request}
+        )
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=["get"], url_path="stock-history")
     def stock_history(self, request, system_id=None):
@@ -129,3 +141,20 @@ class InventoryItemViewSet(viewsets.ModelViewSet):
             return System.objects.get(id=system_id, owner=self.request.user)
         except System.DoesNotExist:
             raise PermissionDenied("You do not have permission for this system.")
+
+    @action(detail=False, methods=["get"], url_path="expired")
+    def expired_products(self, request, system_id=None):
+        try:
+            system = System.objects.get(id=system_id, owner=request.user)
+        except System.DoesNotExist:
+            return Response(
+                {"detail": "System not found or not owned by you."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        today = date.today()
+        expired_products = Product.objects.filter(system=system, expiry_date__lt=today)
+        serializer = ProductSerializer(
+            expired_products, many=True, context={"request": request}
+        )
+        return Response(serializer.data, status=status.HTTP_200_OK)
