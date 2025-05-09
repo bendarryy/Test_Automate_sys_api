@@ -1,24 +1,32 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useApi } from '../../hooks/useApi';
-
-import Spinner from 'react-bootstrap/Spinner';
-import Alert from 'react-bootstrap/Alert';
-import Card from 'react-bootstrap/Card';
-import Button from 'react-bootstrap/Button';
-import Row from 'react-bootstrap/Row';
-import Col from 'react-bootstrap/Col';
-import Badge from 'react-bootstrap/Badge';
-import { FaUser, FaChair, FaUserTie, FaCheckCircle, FaArrowLeft } from 'react-icons/fa';
-import icon from '../../assets/icon.png';
+import { UserOutlined, TableOutlined, ClockCircleOutlined, CheckCircleOutlined } from '@ant-design/icons';
+import { Card, Descriptions, List, Typography, Tag, Divider, Space, Alert, Spin } from 'antd';
 import './KdsOrderDetails.css';
+
+const { Title, Text } = Typography;
+
+interface OrderItem {
+  id: number;
+  menu_item: number;
+  menu_item_name: string;
+  quantity: number;
+  notes?: string;
+}
 
 interface KitchenOrder {
   id: number;
+  system: number;
   customer_name: string;
   table_number: string;
   waiter?: string | null;
+  total_price: string;
+  profit: number;
   status: string;
+  order_items: OrderItem[];
+  created_at: string;
+  updated_at: string;
 }
 
 const KdsOrderDetails: React.FC = () => {
@@ -26,44 +34,104 @@ const KdsOrderDetails: React.FC = () => {
   const systemId = localStorage.getItem('selectedSystemId') || '5';
   const { callApi, loading, error } = useApi();
   const [order, setOrder] = useState<KitchenOrder | null>(null);
-  const navigate = useNavigate();
-  const [show, setShow] = useState(false);
+
 
   useEffect(() => {
     if (!orderId) return;
     callApi('get', `/restaurant/${systemId}/kitchen/orders/${orderId}/`)
-      .then((data) => {
-        setOrder(data);
-        setTimeout(() => setShow(true), 200);
-      })
+      .then((data) => setOrder(data))
       .catch(() => {});
   }, [orderId, systemId]);
 
-  if (loading) return <div className="text-center my-5"><Spinner animation="border" /></div>;
-  if (error) return <Alert variant="danger">{error}</Alert>;
-  if (!order) return <div className="text-center">No order found.</div>;
+  if (loading) return <Spin size="large" className="center-spinner" />;
+  if (error) return <Alert message={error} type="error" showIcon />;
+  if (!order) return <Alert message="No order found" type="warning" showIcon />;
+
+  const statusColor = order.status === 'completed' ? 'green' : 'orange';
+  const statusText = order.status === 'preparing' ? 'Preparing' : 
+                     order.status === 'completed' ? 'Completed' : order.status;
 
   return (
-    <div className={`kds-order-details-page ${show ? 'fade-in' : ''}`}>  
-      <div className="text-start mb-3">
-  <Button variant="outline-dark" className="back-btn" onClick={() => navigate(-1)}>
-    <FaArrowLeft style={{ marginBottom: 3 }} /> Back
-  </Button>
-</div>
-      <Card className="shadow-lg kds-order-card mx-auto animate__animated animate__fadeInUp" style={{ maxWidth: 420, background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)', borderRadius: 24 }}>
-        <Card.Img variant="top" src={icon} style={{ width: 90, height: 90, objectFit: 'contain', margin: '32px auto 0', borderRadius: 20, boxShadow: '0 4px 24px #0001' }} />
-        <Card.Body>
-          <Card.Title className="mb-4" style={{ fontWeight: 700, fontSize: 28, color: '#2a5298', letterSpacing: 1 }}>تفاصيل الطلب</Card.Title>
-          <Row className="mb-3">
-            <Col xs={4} className="text-center"><FaCheckCircle className="order-icon" style={{ color: '#2a5298' }} /><div className="order-label">رقم الطلب</div><div className="order-value">{order.id}</div></Col>
-            <Col xs={4} className="text-center"><FaUser className="order-icon" style={{ color: '#1e3c72' }} /><div className="order-label">العميل</div><div className="order-value">{order.customer_name}</div></Col>
-            <Col xs={4} className="text-center"><FaChair className="order-icon" style={{ color: '#1e3c72' }} /><div className="order-label">الطاولة</div><div className="order-value">{order.table_number}</div></Col>
-          </Row>
-          <Row className="mb-3">
-            <Col xs={6} className="text-center"><FaUserTie className="order-icon" style={{ color: '#1e3c72' }} /><div className="order-label">النادل</div><div className="order-value">{order.waiter || <Badge bg="secondary">غير محدد</Badge>}</div></Col>
-            <Col xs={6} className="text-center"><span className="order-icon"><Badge bg={order.status === 'completed' ? 'success' : 'warning'}>{order.status}</Badge></span><div className="order-label">الحالة</div></Col>
-          </Row>
-        </Card.Body>
+    <div className="order-details-container">
+      <Card 
+        title={
+          <Space align="center">
+            <Title level={4} style={{ margin: 0 }}>Order #{order.id}</Title>
+          </Space>
+        }
+        className="order-card"
+        extra={
+          <Tag color={statusColor} icon={statusColor === 'green' ? 
+               <CheckCircleOutlined /> : <ClockCircleOutlined />}>
+            {statusText}
+          </Tag>
+        }
+      >
+        <Descriptions 
+          bordered 
+          column={1} 
+          size="middle"
+          className="order-info"
+        >
+          <Descriptions.Item label="Customer Name">
+            <Space>
+              <UserOutlined />
+              <Text>{order.customer_name || 'Not specified'}</Text>
+            </Space>
+          </Descriptions.Item>
+          
+          <Descriptions.Item label="Table Number">
+            <Space>
+              <TableOutlined />
+              <Text>{order.table_number}</Text>
+            </Space>
+          </Descriptions.Item>
+          
+          <Descriptions.Item label="Waiter">
+            <Text>{order.waiter || 'Not specified'}</Text>
+          </Descriptions.Item>
+          
+          <Descriptions.Item label="Order Date">
+            <Text>{new Date(order.created_at).toLocaleString('en-US')}</Text>
+          </Descriptions.Item>
+          
+          <Descriptions.Item label="Total Price">
+            <Text strong>{order.total_price} SAR</Text>
+          </Descriptions.Item>
+        </Descriptions>
+
+        <Divider orientation="left">Order Items</Divider>
+        
+        {order.order_items.length > 0 ? (
+          <List
+            itemLayout="horizontal"
+            dataSource={order.order_items}
+            renderItem={(item) => (
+              <List.Item
+                actions={[
+                  <Text key="quantity">{item.quantity}</Text>
+                ]}
+              >
+                <List.Item.Meta
+                  title={<Text strong>{item.menu_item_name}</Text>}
+                  description={item.notes && (
+                    <Space>
+                      <Text type="secondary">Notes:</Text>
+                      <Text>{item.notes}</Text>
+                    </Space>
+                  )}
+                />
+              </List.Item>
+            )}
+          />
+        ) : (
+          <Alert 
+            message="No order items" 
+            type="info" 
+            showIcon 
+            className="empty-alert"
+          />
+        )}
       </Card>
     </div>
   );

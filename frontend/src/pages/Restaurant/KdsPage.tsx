@@ -1,62 +1,70 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useApi } from '../../hooks/useApi';
 import { useParams, Link } from 'react-router-dom';
-
-import Spinner from 'react-bootstrap/Spinner';
-import Alert from 'react-bootstrap/Alert';
+import { Table, Tag, Button, Space, Card, Typography, Alert, Spin, Modal } from 'antd';
+import { 
+  EyeOutlined, 
+  HourglassOutlined, 
+  CheckCircleOutlined,
+  DashboardOutlined 
+} from '@ant-design/icons';
 import KdsOrderDetails from './KdsOrderDetails';
+
+const { Title, Text } = Typography;
 
 interface KitchenOrder {
   id: number;
   status: 'pending' | 'preparing' | 'ready' | 'completed' | 'canceled';
-  // Add other relevant fields as needed
+  customer_name?: string;
+  table_number?: string;
+  created_at?: string;
 }
 
+const statusColors = {
+  pending: 'orange',
+  preparing: 'blue',
+  ready: 'green',
+  completed: 'gray',
+  canceled: 'red'
+};
+
+const statusLabels = {
+  pending: 'Pending',
+  preparing: 'Preparing',
+  ready: 'Ready',
+  completed: 'Completed',
+  canceled: 'Canceled'
+};
+
 const KdsPage: React.FC = () => {
-  // Use dynamic systemId from URL if present
   const params = useParams<{ systemId?: string; orderId?: string }>();
-  // Prefer systemId from URL, else from localStorage, else fallback to '5'
-  const systemId = params.systemId || localStorage.getItem('selectedSystemId');
-  const { /* data, */ loading, error, callApi } = useApi<KitchenOrder[]>();
+  const systemId = params.systemId || localStorage.getItem('selectedSystemId') || '5';
+  const { loading, error, callApi } = useApi<KitchenOrder[]>();
   const [orders, setOrders] = useState<KitchenOrder[]>([]);
   const [updating, setUpdating] = useState<number | null>(null);
-
-  // تفاصيل الطلب في حالة وجود orderId في الرابط
   const [orderDetails, setOrderDetails] = useState<KitchenOrder | null>(null);
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [detailsError, setDetailsError] = useState<string | null>(null);
 
-  // Status options for orders
-  const STATUS_OPTIONS = [
-    { value: 'pending', label: 'Pending' },
-    { value: 'preparing', label: 'Preparing' },
-    { value: 'ready', label: 'Ready' },
-    { value: 'completed', label: 'Completed' },
-    { value: 'canceled', label: 'Canceled' },
-  ];
-
-  // Helper to refetch orders
-  const fetchOrders = () => {
+  const fetchOrders = useCallback(() => {
     if (systemId) {
       callApi('get', `/restaurant/${systemId}/kitchen/orders/`)
         .then(setOrders)
         .catch(() => {});
     }
-  };
+  }, [systemId]);
 
   useEffect(() => {
     fetchOrders();
-    // eslint-disable-next-line
-  }, [systemId]);
+  }, [fetchOrders]);
 
-  // إذا كان هناك orderId في الرابط، اجلب تفاصيل الطلب
   useEffect(() => {
     if (!params.orderId) return;
     setDetailsLoading(true);
     setDetailsError(null);
     callApi('get', `/restaurant/${systemId}/kitchen/orders/${params.orderId}/`)
       .then((data) => setOrderDetails(data))
-      .catch((err) => setDetailsError(err?.message || 'Error loading order details'))
+      .catch((err) => setDetailsError(err?.message || 'Error loading details'))
       .finally(() => setDetailsLoading(false));
   }, [params.orderId, systemId]);
 
@@ -65,107 +73,115 @@ const KdsPage: React.FC = () => {
     setUpdating(id);
     try {
       await callApi('patch', `/restaurant/${systemId}/kitchen/orders/${id}/`, { status });
-      fetchOrders(); // Refetch after status update
+      fetchOrders();
     } finally {
       setUpdating(null);
     }
   };
 
-  // إذا كان هناك orderId في الرابط، اعرض تفاصيل الطلب فقط
-  // if (params.orderId) {
-  //   return (
-  //     <div className="container py-4">
-  //       <button className="btn btn-link mb-3" onClick={() => window.history.back()}>
-  //         <i className="bi bi-arrow-left"></i> Back to Orders
-  //       </button>
-  //       {detailsLoading && <div className="text-center my-5"><Spinner animation="border" /></div>}
-  //       {detailsError && <Alert variant="danger">{detailsError}</Alert>}
-  //       {orderDetails && <KitchenOrderDetails {...orderDetails} />}
-  //     </div>
-  //   );
-  // }
+  const columns = [
+    {
+      title: 'Order Number',
+      dataIndex: 'id',
+      key: 'id',
+      render: (id: number) => <Text strong>{id}</Text>
+    },
+    {
+      title: 'Status',
+      dataIndex: 'status',
+      key: 'status',
+      render: (status: keyof typeof statusLabels) => (
+        <Tag color={statusColors[status]}>
+          {statusLabels[status]}
+        </Tag>
+      )
+    },
+    {
+      title: 'Actions',
+      key: 'actions',
+      render: (_: unknown, record: KitchenOrder) => (
+        <Space size="middle">
+          <Link to={`/kds/order/${record.id}`}>
+            <Button icon={<EyeOutlined />} size="small">
+              Details
+            </Button>
+          </Link>
+          
+          {record.status === 'pending' && (
+            <Button 
+              type="primary" 
+              icon={<HourglassOutlined />} 
+              size="small"
+              loading={updating === record.id}
+              onClick={() => handleStatusUpdate(record.id, 'preparing')}
+            >
+              Start Preparing
+            </Button>
+          )}
+          
+          {record.status === 'preparing' && (
+            <Button 
+              type="primary" 
+              icon={<CheckCircleOutlined />} 
+              size="small"
+              loading={updating === record.id}
+              onClick={() => handleStatusUpdate(record.id, 'ready')}
+            >
+              Mark as Ready
+            </Button>
+          )}
+          
+          {record.status === 'ready' && (
+            <Tag icon={<CheckCircleOutlined />} color="success">
+              Ready to Serve
+            </Tag>
+          )}
+        </Space>
+      )
+    }
+  ];
 
-  // الوضع الافتراضي: عرض جدول الطلبات
+
+
   return (
-    <div className="container py-4">
-      <h2 className="mb-4 fw-bold text-primary display-5">
-        <i className="bi bi-display"></i> Kitchen Display System <span className="text-dark">(KDS)</span>
-      </h2>
-      {loading && <div className="alert alert-info">Loading orders, please wait...</div>}
-      {error && <div className="alert alert-danger">{error}</div>}
-      <div className="table-responsive">
-        <table className="table table-bordered table-hover align-middle text-center shadow rounded">
-          <thead className="table-primary">
-            <tr>
-              <th className="fs-5">Order #</th>
-              <th className="fs-5">Status</th>
-              <th className="fs-5">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {orders.length === 0 && !loading && (
-              <tr>
-                <td colSpan={3} className="text-muted py-4 fs-4">No kitchen orders found.</td>
-              </tr>
-            )}
-            {orders.map(order => (
-              <tr key={order.id}>
-                <td className="fw-bold">{order.id}</td>
-                <td>
-                  <span className={
-                    order.status === 'pending' ? 'badge bg-warning text-dark fs-6 px-3 py-2' :
-                    order.status === 'preparing' ? 'badge bg-info text-dark fs-6 px-3 py-2' :
-                    order.status === 'ready' ? 'badge bg-success fs-6 px-3 py-2' :
-                    order.status === 'completed' ? 'badge bg-secondary fs-6 px-3 py-2' :
-                    order.status === 'canceled' ? 'badge bg-danger fs-6 px-3 py-2' :
-                    'badge bg-light text-dark fs-6 px-3 py-2'
-                  }>
-                    {STATUS_OPTIONS.find(opt => opt.value === order.status)?.label || order.status}
-                  </span>
-                </td>
-                <td>
-                  <div className="d-flex flex-wrap justify-content-center gap-2">
-                    <Link
-                      className="btn btn-outline-primary btn-sm"
-                      to={`/kds/order/${order.id}`}
-                      title="View Order Details"
-                    >
-                      <i className="bi bi-eye"></i> Details
-                    </Link>
-                    {order.status === 'pending' && (
-                      <button
-                        className="btn btn-sm btn-info fw-bold text-white shadow"
-                        onClick={() => handleStatusUpdate(order.id, 'preparing')}
-                        disabled={updating === order.id}
-                      >
-                        <i className="bi bi-hourglass-split me-1"></i> Start Preparing
-                      </button>
-                    )}
-                    {order.status === 'preparing' && (
-                      <button
-                        className="btn btn-sm btn-success fw-bold shadow"
-                        onClick={() => handleStatusUpdate(order.id, 'ready')}
-                        disabled={updating === order.id}
-                      >
-                        <i className="bi bi-check2-circle me-1"></i> Mark as Ready
-                      </button>
-                    )}
-                    {order.status === 'ready' && <span className="text-success fw-bold fs-5"><i className="bi bi-check-circle"></i> Ready</span>}
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      {params.orderId && 
-      <>
-        {detailsLoading && <div className="text-center my-5"><Spinner animation="border" /></div>}
-        {detailsError && <Alert variant="danger">{detailsError}</Alert>}
-        {orderDetails && <KdsOrderDetails />}
-      </>
+    <>
+    <Card 
+      title={
+        <Space>
+          <DashboardOutlined />
+          <Title level={4} style={{ margin: 0 }}>Kitchen Display System</Title>
+        </Space>
       }
-    </div>
+      style={{ margin: 24 }}
+    >
+      {loading && <Spin size="large" className="center-spinner" />}
+      {error && <Alert message={error} type="error" showIcon />}
+      
+      <Table 
+        columns={columns} 
+        dataSource={orders} 
+        rowKey="id"
+        locale={{ emptyText: 'No orders found' }}
+      />
+    </Card>
+    {params.orderId && (
+      <Modal
+        title="Order Details"
+        open={true}
+        onCancel={() => window.history.back()}
+        footer={[
+          <Button key="back" onClick={() => window.history.back()}>
+            Back to Orders
+          </Button>
+        ]}
+        width={800}
+      >
+        {detailsLoading && <Spin size="large" className="center-spinner" />}
+        {detailsError && <Alert message={detailsError} type="error" showIcon />}
+        {orderDetails && <KdsOrderDetails />}
+      </Modal>
+    )}
+    </>
   );
 };
 
