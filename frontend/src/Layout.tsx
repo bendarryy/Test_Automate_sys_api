@@ -1,14 +1,23 @@
-import { Outlet } from "react-router-dom"
+import { Navigate, Outlet } from "react-router-dom"
 import Navbar from "./components/Navbar"
 import { Sidebar } from "./components/Sidebar"
 import BottomNavBar from "./components/BottomNavBar"
-import RedirectIfNoSystemId from "./components/RedirectIfNoSystemId";
+import { useNavigate } from "react-router-dom"
+import { useEffect } from "react"
+
+
 
 
 const Layout = () => {
-  return (
+  const systemId = localStorage.getItem('selectedSystemId');
+  if (!systemId) {
+    return <Navigate to="/systems" replace />;
+  }
+  else{
+    return (
+    
     <>
-      <RedirectIfNoSystemId />
+      
       <div style={{ display: 'flex', height: '100vh', width: '100vw' }}>
         <Sidebar />
         <div style={{ flex: 1, height: '100vh', overflow: 'hidden', position: 'relative' }}>
@@ -21,5 +30,6 @@ const Layout = () => {
       </div>
     </>
   )
+  }
 }
 export default Layout
