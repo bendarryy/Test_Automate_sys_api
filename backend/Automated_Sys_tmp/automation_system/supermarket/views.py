@@ -173,3 +173,6 @@ class InventoryItemViewSet(viewsets.ModelViewSet):
             ]
 
         return [IsAuthenticated(), OR(IsSystemOwner(), IsEmployeeRolePermission())]
+    
+
+    
