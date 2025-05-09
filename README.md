@@ -22,6 +22,11 @@ completed → Customer received And pay
 
 Summary : pending → preparing → ready → out_for_delivery → completed
 
+![2025-05-09_15-36](https://github.com/user-attachments/assets/719f0f65-d436-49b1-ad88-b38224b8c401)
+
+----
+----
+----
 
 To run the React server   navigate to /frontend then  `npm run dev`
 
