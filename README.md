@@ -1,3 +1,28 @@
+# Applicatoin Logic 
+
+### Order Status Flow 
+✅ Kitchen Display System (KDS)
+pending → Order created, waiting to be handled.
+preparing → Chef is working on it.
+ready → Chef has finished. Job done for kitchen here.
+
+Summary : pending → preparing → ready
+
+🍽️ In-House (Dine-In) Orders
+ready (from kitchen) → seen by waiter.
+served → Waiter delivered the food to the table.
+completed → After customer finishes, pays, and leaves.
+
+Summary : pending → preparing → ready → served → completed
+
+🛵 Delivery Orders
+ready (from kitchen) → seen by delivery guy or dispatch screen.
+out_for_delivery → Delivery person took the order.
+completed → Customer received And pay 
+
+Summary : pending → preparing → ready → out_for_delivery → completed
+
+
 To run the React server   navigate to /frontend then  `npm run dev`
 
 ## Authentication
