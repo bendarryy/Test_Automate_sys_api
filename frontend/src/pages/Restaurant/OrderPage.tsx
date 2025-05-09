@@ -1,9 +1,10 @@
 import React from 'react';
-import { Table, Button, Select, notification, Input, Space, Tag } from 'antd';
-import type { ColumnsType } from 'antd/es/table';
-import { SearchOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Button, Select, notification, Space, Input, Tag } from 'antd';
+import { DeleteOutlined, SearchOutlined } from '@ant-design/icons';
 import { useOrders } from '../../hooks/useOrders';
 import { useNavigate } from 'react-router-dom';
+import { ReusableTable } from '../../components/ReusableTable';
+import type { ColumnsType } from 'antd/es/table';
 
 type OrderStatus = 'pending' | 'preparing' | 'ready' | 'completed' | 'canceled';
 
@@ -38,14 +39,7 @@ const OrderPage: React.FC = () => {
   const systemId = localStorage.getItem('selectedSystemId') || '';
   const { data: orders = [], loading, getOrders, updateOrderStatus, deleteOrder } = useOrders(systemId);
   const navigate = useNavigate();
-  const [searchText, setSearchText] = React.useState('');
-  const [statusFilter, setStatusFilter] = React.useState<OrderStatus[]>([]);
   const [selectedRowKeys, setSelectedRowKeys] = React.useState<string[]>([]);
-
-  const rowSelection = {
-    selectedRowKeys,
-    onChange: (keys: React.Key[]) => setSelectedRowKeys(keys as string[]),
-  };
 
   const handleBulkDelete = async () => {
     try {
@@ -78,17 +72,6 @@ const OrderPage: React.FC = () => {
       notification.error({ message: 'Failed to update order status', description: error.message });
     }
   };
-
-  const filteredOrders = (Array.isArray(orders) ? orders : []).filter((order: Order) => {
-    const matchesSearch = 
-      order.customer_name.toLowerCase().includes(searchText.toLowerCase()) ||
-      order.table_number.includes(searchText) ||
-      order.id.toString().includes(searchText);
-    
-    const matchesStatus = statusFilter.length === 0 || statusFilter.includes(order.status);
-    
-    return matchesSearch && matchesStatus;
-  });
 
   const columns: ColumnsType<Order> = [
     {
@@ -200,75 +183,33 @@ const OrderPage: React.FC = () => {
               }
             }}
           >
-            Delete
+            <DeleteOutlined />
           </Button>
         </Space>
       ),
     },
   ];
 
+  const extraActions = selectedRowKeys.length > 0 && (
+    <Button 
+      danger 
+      onClick={handleBulkDelete}
+      style={{ marginLeft: 8 }}
+    >
+      Delete Selected
+    </Button>
+  );
+
   return (
-    <div style={{ padding: '24px' }}>
-      {selectedRowKeys.length > 0 && (
-        <div style={{ 
-          marginBottom: 16, 
-          padding: 12,
-          background: '#fafafa',
-          border: '1px solid #d9d9d9',
-          borderRadius: 4,
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center'
-        }}>
-          <span>
-            <Tag color="blue">{selectedRowKeys.length}</Tag> orders selected
-          </span>
-          <Button 
-            danger 
-            icon={<DeleteOutlined />}
-            onClick={handleBulkDelete}
-          >
-            Delete Selected
-          </Button>
-        </div>
-      )}
-      <div style={{ marginBottom: 16 }}>
-        <Input
-          placeholder="Search orders (ID, Customer, Table)"
-          prefix={<SearchOutlined />}
-          value={searchText}
-          onChange={e => setSearchText(e.target.value)}
-          style={{ width: 300, marginRight: 16 }}
-        />
-        <Select
-          mode="multiple"
-          placeholder="Filter by status"
-          value={statusFilter}
-          onChange={setStatusFilter}
-          style={{ width: 300 }}
-          allowClear
-        >
-          {Object.entries(statusColors).map(([status, color]) => (
-            <Select.Option key={status} value={status}>
-              <Tag color={color}>{status.charAt(0).toUpperCase() + status.slice(1)}</Tag>
-            </Select.Option>
-          ))}
-        </Select>
-      </div>
-      
-      <Table
-        rowSelection={{
-          type: 'checkbox',
-          ...rowSelection,
-        }}
-        columns={columns}
-        dataSource={filteredOrders}
-        loading={loading}
-        rowKey="id"
-        pagination={{ pageSize: 8 }}
-        bordered
-      />
-    </div>
+    <ReusableTable<Order>
+      data={orders as Order[]}
+      loading={loading}
+      columns={columns}
+      rowKey="id"
+      onRowSelectionChange={(keys: React.Key[]) => setSelectedRowKeys(keys as string[])}
+      selectedRowKeys={selectedRowKeys}
+      extraActions={extraActions}
+    />
   );
 };
 

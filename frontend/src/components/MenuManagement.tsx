@@ -1,20 +1,17 @@
 import React, { useState, useEffect } from 'react';
-// تم تحسين الاستيراد لتقليل حجم الباندل:
-import Button from 'react-bootstrap/Button';
-import Modal from 'react-bootstrap/Modal';
-import Tab from 'react-bootstrap/Tab';
-import Tabs from 'react-bootstrap/Tabs';
-import Table from 'react-bootstrap/Table';
-import Form from 'react-bootstrap/Form';
-import Spinner from 'react-bootstrap/Spinner';
+import { Button, Modal, Tabs, Input, Space, Tag, Spin, Table } from 'antd';
+import { Key } from 'antd/es/table/interface';
 import { useGetMenu } from '../hooks/useGetMenu';
 import { useSelectedSystemId } from '../hooks/useSelectedSystemId';
+import type { MenuItem } from '../types';
+
 const categories = ['Food', 'Drink', 'Soups', 'Dessert'];
 
-const initialItem = {
+const initialItem: MenuItem = {
+  id: 0,
   name: '',
   category: 'Food',
-  price: '',
+  price: 0,
   available: true,
   description: '',
   specialOffer: false,
@@ -22,19 +19,9 @@ const initialItem = {
 
 const MenuManagement = () => {
 
-const [selectedSystemId] = useSelectedSystemId();
-  const { getMenu, createMenuItem, updateMenuItem, deleteMenuItem, loading, error } = useGetMenu(Number(selectedSystemId));
+  const [selectedSystemId] = useSelectedSystemId();
+  const { getMenu, createMenuItem, updateMenuItem, deleteMenuItem, loading } = useGetMenu(Number(selectedSystemId));
 
-  interface MenuItem {
-    id: number;
-    name: string;
-    category: string;
-    price: number;
-    available: boolean;
-    description: string;
-    specialOffer: boolean;
-  }
-  
   const [items, setItems] = useState<MenuItem[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState(initialItem);
@@ -65,7 +52,7 @@ const [selectedSystemId] = useSelectedSystemId();
   }, []);
 
   const handleEditClick = React.useCallback((item: MenuItem) => {
-    setFormData({ ...item, price: item.price.toString() });
+    setFormData({ ...item });
     setEditItem(item);
     setShowModal(true);
   }, []);
@@ -84,7 +71,7 @@ const [selectedSystemId] = useSelectedSystemId();
     const updatedFormData = {
       ...formData,
       price: Number(formData.price),
-      category: formData.category.toLowerCase(), // Convert category to lowercase
+      category: formData.category?.toLowerCase(), // Convert category to lowercase
     };
 
     if (editItem) {
@@ -137,124 +124,170 @@ const [selectedSystemId] = useSelectedSystemId();
     setFormData({ ...formData, [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value });
   }, []);
 
+  const columns = [
+    {
+      title: 'Name',
+      dataIndex: 'name',
+      key: 'name',
+      sorter: (a: MenuItem, b: MenuItem) => a.name.localeCompare(b.name),
+      filterSearch: true,
+    },
+    {
+      title: 'Description',
+      dataIndex: 'description',
+      key: 'description',
+    },
+    {
+      title: 'Price',
+      dataIndex: 'price',
+      key: 'price',
+      render: (price: number) => `${price} EGP`,
+      sorter: (a: MenuItem, b: MenuItem) => a.price - b.price,
+    },
+    {
+      title: 'Availability',
+      dataIndex: 'available',
+      key: 'available',
+      render: (available: boolean) => (
+        <Tag color={available ? 'green' : 'red'}>
+          {available ? 'Available' : 'Not Available'}
+        </Tag>
+      ),
+      filters: [
+        { text: 'Available', value: true },
+        { text: 'Not Available', value: false },
+      ],
+      onFilter: (value: boolean | Key, record: MenuItem) => typeof value === 'boolean' ? record.available === value : false,
+    },
+    {
+      title: 'Special Offer',
+      dataIndex: 'specialOffer',
+      key: 'specialOffer',
+      render: (specialOffer: boolean) => (
+        <Tag color={specialOffer ? 'gold' : 'default'}>
+          {specialOffer ? 'Yes' : 'No'}
+        </Tag>
+      ),
+      filters: [
+        { text: 'Yes', value: true },
+        { text: 'No', value: false },
+      ],
+      onFilter: (value: boolean | Key, record: MenuItem) => typeof value === 'boolean' ? record.specialOffer === value : false,
+    },
+    {
+      title: 'Actions',
+      key: 'actions',
+      render: (_: Text, record: MenuItem) => (
+        <Space>
+          <Button type="primary" onClick={() => handleEditClick(record)}>
+            Edit
+          </Button>
+          <Button danger onClick={() => handleDeleteClick(record)}>
+            Delete
+          </Button>
+        </Space>
+      ),
+    },
+  ];
+
   return (
-    <div className="container mt-5">
+    <div style={{ padding: 24 }}>
       <h2>Management Menu</h2>
-      <Button className="my-3" onClick={handleAddClick}>
-        Add New Item
+      <Button type="primary" onClick={handleAddClick} style={{ marginBottom: 16 }}>
+        Add Item
       </Button>
 
       {loading ? (
-        <Spinner animation="border" />
-      ) : error ? (
-        <p>Error loading menu: {error}</p>
+        <div style={{ textAlign: 'center', padding: 24 }}>
+          <Spin size="large" />
+        </div>
       ) : (
-        <Tabs activeKey={activeTab} onSelect={(k) => setActiveTab(k || 'Food')} className="mb-3">
-          {categories.map((cat) => (
-            <Tab eventKey={cat} title={cat} key={cat}>
-              <Table striped bordered hover>
-                <thead>
-                  <tr>
-                    <th>Name</th>
-                    <th>Description</th>
-                    <th>Price</th>
-                    <th>Availability</th>
-                    <th>Special Offer</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {items
-                    .map((item, index) => (
-                      <tr key={index}>
-                        <td>{item.name}</td>
-                        <td>{item.description}</td>
-                        <td>{item.price} EGP</td>
-                        <td>{item.available ? 'Available' : 'Not Available'}</td>
-                        <td>{item.specialOffer || '-'}</td>
-                        <td>
-                          <Button variant="warning" size="sm" onClick={() => handleEditClick(item)}>
-                            Edit
-                          </Button>{' '}
-                          <Button variant="danger" size="sm" onClick={() => handleDeleteClick(item)}>
-                            Delete
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
-                </tbody>
-              </Table>
-            </Tab>
-          ))}
+        <Tabs activeKey={activeTab} onChange={(k) => setActiveTab(k || 'Food')}>
+          {categories.map((cat) => {
+            const categoryItems = items.filter(item => 
+              item.category?.toLowerCase() === cat?.toLowerCase()
+            );
+            return (
+              <Tabs.TabPane tab={cat} key={cat}>
+                <Table<MenuItem>
+                  columns={columns}
+                  dataSource={categoryItems}
+                  rowKey="id"
+                  bordered
+                  size="middle"
+                />
+              </Tabs.TabPane>
+            );
+          })}
         </Tabs>
       )}
 
-      <Modal show={showModal} onHide={() => setShowModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>{editItem ? 'Edit Item' : 'Add Item'}</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form>
-            <Form.Group>
-              <Form.Label>Name</Form.Label>
-              <Form.Control name="name" value={formData.name} onChange={handleChange} />
-            </Form.Group>
-            <div className="d-flex justify-content-between">
-              <Form.Group className="w-50 me-2">
-                <Form.Label>Category</Form.Label>
-                <Form.Select name="category" value={formData.category} onChange={handleChange}>
-                  {categories.map((cat) => (
-                    <option key={cat}>{cat}</option>
-                  ))}
-                </Form.Select>
-              </Form.Group>
-              <Form.Group className="w-50">
-                <Form.Label>Price (EGP)</Form.Label>
-                <Form.Control
-                  name="price"
-                  type="number"
-                  value={formData.price}
-                  onChange={handleChange}
-                />
-              </Form.Group>
-            </div>
-            <Form.Group className="mt-2">
-              <Form.Check
-                type="switch"
-                label="Available"
-                name="available"
-                checked={formData.available}
-                onChange={handleChange}
-              />
-            </Form.Group>
-            <Form.Group>
-              <Form.Label>Description</Form.Label>
-              <Form.Control
-                as="textarea"
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-              />
-            </Form.Group>
-            <Form.Group className="mt-2">
-              <Form.Check
-                type="switch"
-                label="Special Offer"
-                name="specialOffer"
-                checked={formData.specialOffer}
-                onChange={handleChange}
-              />
-            </Form.Group>
-          </Form>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowModal(false)}>
+      <Modal
+        title={editItem ? 'Edit Item' : 'Add Item'}
+        visible={showModal}
+        onCancel={() => setShowModal(false)}
+        footer={[
+          <Button key="back" onClick={() => setShowModal(false)}>
             Cancel
-          </Button>
-          <Button variant="success" onClick={handleSave}>
+          </Button>,
+          <Button key="submit" type="primary" onClick={handleSave}>
             Save
-          </Button>
-        </Modal.Footer>
+          </Button>,
+        ]}
+      >
+        <div style={{ padding: 24 }}>
+          <div style={{ marginBottom: 16 }}>
+            <Input
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              placeholder="Name"
+            />
+          </div>
+          <div style={{ marginBottom: 16 }}>
+            <Input
+              name="category"
+              value={formData.category}
+              onChange={handleChange}
+              placeholder="Category"
+            />
+          </div>
+          <div style={{ marginBottom: 16 }}>
+            <Input
+              name="price"
+              type="number"
+              value={formData.price}
+              onChange={handleChange}
+              placeholder="Price"
+            />
+          </div>
+          <div style={{ marginBottom: 16 }}>
+            <Input
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              placeholder="Description"
+            />
+          </div>
+          <div style={{ marginBottom: 16 }}>
+            <Input
+              name="available"
+              type="checkbox"
+              checked={formData.available}
+              onChange={handleChange}
+              placeholder="Available"
+            />
+          </div>
+          <div style={{ marginBottom: 16 }}>
+            <Input
+              name="specialOffer"
+              type="checkbox"
+              checked={formData.specialOffer}
+              onChange={handleChange}
+              placeholder="Special Offer"
+            />
+          </div>
+        </div>
       </Modal>
     </div>
   );
