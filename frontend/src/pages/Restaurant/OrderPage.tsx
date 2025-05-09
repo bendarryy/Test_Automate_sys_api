@@ -25,6 +25,7 @@ interface Order {
   }[];
   created_at: string;
   updated_at: string;
+  [key: string]: unknown;
 }
 
 const statusColors: Record<OrderStatus, string> = {
