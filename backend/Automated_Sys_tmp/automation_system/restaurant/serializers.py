@@ -55,6 +55,12 @@ class MenuItemSerializer(serializers.ModelSerializer):
 
         return attrs
 
+    def validate_category(self, value):
+        """Validate that the category is not empty if provided"""
+        if value and not value.strip():
+            raise serializers.ValidationError("Category cannot be empty")
+        return value
+
 class OrderItemSerializer(serializers.ModelSerializer):
     menu_item_name = serializers.ReadOnlyField(source="menu_item.name")
     menu_item = serializers.PrimaryKeyRelatedField(
