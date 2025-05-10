@@ -570,3 +570,94 @@ def public_view(request):
             {"error": "System not found"},
             status=status.HTTP_404_NOT_FOUND
         )
+
+# waiter display By Ali
+class WaiterDisplayViewSet(viewsets.ModelViewSet):
+    serializer_class = OrderSerializer
+    permission_classes = [IsAuthenticated]
+    http_method_names = ["get", "patch", "head", "options"]
+
+    def get_permissions(self):
+        """
+        Only allow system owners, waiters, or managers to access this view.
+        """
+        if self.action in ["partial_update", "get"]:
+            return [
+                IsAuthenticated(),
+                OR(IsSystemOwner(), IsEmployeeRolePermission("waiter", "manager")),
+            ]
+        return [
+            IsAuthenticated(),
+            OR(IsSystemOwner(), IsEmployeeRolePermission("waiter", "manager")),
+        ]
+
+    def get_queryset(self):
+        system_id = self.kwargs.get("system_id")
+        system = get_object_or_404(System, id=system_id)
+        user = self.request.user
+        
+        # Get the employee (waiter) for this user and system
+        try:
+            employee = Employee.objects.get(system=system, user=user)
+            # If user is a waiter, only show their orders
+            if employee.role == "waiter":
+                return Order.objects.filter(
+                    system=system,
+                    waiter=employee,
+                    status__in=["ready", "pending"]
+                ).order_by("-created_at")
+        except Employee.DoesNotExist:
+            pass
+
+        # For managers and system owners, show all orders
+        return Order.objects.filter(
+            system=system,
+            status__in=["ready", "pending"]
+        ).order_by("-created_at")
+
+    @action(detail=False, methods=["get"])
+    def tables(self, request, *args, **kwargs):
+        """Get all tables with their current orders"""
+        system_id = self.kwargs.get("system_id")
+        system = get_object_or_404(System, id=system_id)
+        
+        # Get all active orders with table numbers
+        orders = Order.objects.filter(
+            system=system,
+            table_number__isnull=False,
+            status__in=["pending", "preparing", "ready"]
+        ).order_by("table_number")
+        
+        # Group orders by table
+        tables = {}
+        for order in orders:
+            if order.table_number not in tables:
+                tables[order.table_number] = {
+                    "table_number": order.table_number,
+                    "orders": [],
+                    "total_amount": 0
+                }
+            tables[order.table_number]["orders"].append({
+                "id": order.id,
+                "status": order.status,
+                "created_at": order.created_at,
+                "total_price": order.total_price
+            })
+            tables[order.table_number]["total_amount"] += order.total_price
+        
+        return Response(list(tables.values()))
+
+    def partial_update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        new_status = request.data.get("status")
+
+        if new_status not in ["served", "completed"]:
+            return Response(
+                {"error": "Invalid status for waiter display."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        instance.status = new_status
+        instance.save()
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data, status=status.HTTP_200_OK)

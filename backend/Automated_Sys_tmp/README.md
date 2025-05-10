@@ -1,10 +1,7 @@
 # Automated_Sys_tmp
 
-
-
 ## API_Documentation
 #graduatoin
-
 
 ### Account Managment 
 #### Owner 
@@ -189,7 +186,7 @@ Login as Employee
 | `DELETE`    | Cancel or delete an order.                               | `/api/restaurant/{system_id}/orders/{order_id}/`                 |
 | `GET`       | List items in an order.                                  | `/api/restaurant/{system_id}/orders/{order_id}/items/`           |
 | `POST`      | Add a menu item to an order.                             | `/api/restaurant/{system_id}/orders/{order_id}/items/`           |
-| `DELETE`    | Remove a menu item from an order.                        | `/api/restaurant/{system_id}/orders/{order_id}/items/{item_id}
+| `DELETE`    | Remove a menu item from an order.                        | `/api/restaurant/{system_id}/orders/{order_id}/items/{item_id}`
 
 
  **Create Order (POST)** 
@@ -298,7 +295,7 @@ GET /api/restaurant/5/orders/6/
 
 `PATCH /api/restaurant/{system-id}/kitchen/orders/{id}/	`
 
-Description: تحديث حالة الطلب لـ preparing أو ready.
+Description: Update order status to preparing or ready.
 
 Example Request Body:
 
@@ -328,12 +325,12 @@ json
   "month_change": -2.4
 }
 
-- *day_profit*: أرباح اليوم الحالي.
-- *day_change*: نسبة التغير مقارنة بأرباح أمس.
-- *week_profit*: أرباح هذا الأسبوع.
-- *week_change*: نسبة التغير مقارنة بالأسبوع الماضي.
-- *month_profit*: أرباح هذا الشهر.
-- *month_change*: نسبة التغير مقارنة بالشهر الماضي.
+- *day_profit*: Current day's profit.
+- *day_change*: Change percentage compared to yesterday.
+- *week_profit*: This week's profit.
+- *week_change*: Change percentage compared to last week.
+- *month_profit*: This month's profit.
+- *month_change*: Change percentage compared to last month.
 
 ---
 
@@ -343,8 +340,8 @@ json
 GET /api/restaurant/<system_id>/orders/analytics/profit-trend/?view=daily
 GET /api/restaurant/<system_id>/orders/analytics/profit-trend/?view=monthly
 
-- *view=daily*: أرباح كل يوم لآخر 30 يوم (افتراضي).
-- *view=monthly*: أرباح كل شهر لآخر 12 شهر.
+- *view=daily*: Daily profits for last 30 days (default).
+- *view=monthly*: Monthly profits for last 12 months.
 
 ### Response Example
 json
@@ -371,12 +368,12 @@ json
   "month_change": 5.7
 }
 
-- *today_orders*: عدد الطلبات اليوم.
-- *today_change*: نسبة التغير مقارنة بأمس.
-- *week_orders*: عدد الطلبات هذا الأسبوع.
-- *week_change*: نسبة التغير مقارنة بالأسبوع الماضي.
-- *month_orders*: عدد الطلبات هذا الشهر.
-- *month_change*: نسبة التغير مقارنة بالشهر الماضي.
+- *today_orders*: Number of orders today.
+- *today_change*: Change percentage compared to yesterday.
+- *week_orders*: Number of orders this week.
+- *week_change*: Change percentage compared to last week.
+- *month_orders*: Number of orders this month.
+- *month_change*: Change percentage compared to last month.
 
 ---
 
@@ -387,7 +384,7 @@ GET /api/restaurant/<system_id>/orders/analytics/waiters/?range=day
 GET /api/restaurant/<system_id>/orders/analytics/waiters/?range=week
 GET /api/restaurant/<system_id>/orders/analytics/waiters/?range=month
 
-- *range*: فلترة حسب اليوم أو الأسبوع أو الشهر (day, week, month).
+- *range*: Filter by day, week, or month (day, week, month).
 
 ### Response Example
 json
@@ -399,11 +396,176 @@ json
 ---
 
 # 🔒 Permissions
-- جميع الـ Endpoints تتطلب مصادقة (Authentication).
-- الصلاحيات: مالك النظام (owner)، المدير (manager)، الكاشير (cashier).
+- All endpoints require authentication.
+- Roles: System Owner (owner), Manager (manager), Cashier (cashier).
 
 ---
 
 # ⚡ Notes
-- جميع القيم المالية تعتمد فقط على الطلبات المكتملة (status='completed').
-- إذا لم تظهر بيانات في بعض الفترات، تأكد من وجود طلبات مكتملة في تلك الفترة.
+- All financial values are based only on completed orders (status='completed').
+- If no data appears for certain periods, ensure there are completed orders in those periods.
+
+## 👨‍🍳 Waiter Display System (WDS)
+
+---
+
+### 🔹 Retrieve Active Orders
+**GET** `/api/restaurant/{system_id}/waiter/orders/`
+
+- **Description:**  
+  Returns all active orders for a specific restaurant system.
+
+- **Sample Response:**
+```json
+[
+  {
+    "id": 12,
+    "table_number": 5,
+    "customer_name": "John Doe",
+    "status": "pending",
+    "order_items": [
+      {
+        "id": 1,
+        "menu_item_name": "Pizza",
+        "quantity": 2,
+        "price": 15.99
+      }
+    ],
+    "total_price": 31.98,
+    "created_at": "2025-04-27T14:00:00Z"
+  }
+]
+```
+
+### 🔹 Get Table Status
+**GET** `/api/restaurant/{system_id}/waiter/orders/tables/`
+
+- **Description:**  
+  Returns the status of all tables in the restaurant.
+
+- **Sample Response:**
+```json
+[
+  {
+    "table_number": "1",
+    "status": "occupied",
+    "current_order": {
+      "id": 12,
+      "customer_name": "John Doe",
+      "status": "pending"
+    }
+  },
+  {
+    "table_number": "2",
+    "status": "available",
+    "current_order": null
+  }
+]
+```
+
+### 🔹 Update Order Status
+**PATCH** `/api/restaurant/{system_id}/waiter/orders/{order_id}/`
+
+- **Description:**  
+  Update the status of a specific order.
+
+- **Request Body:**
+```json
+{
+  "status": "served"
+}
+```
+
+- **Available Statuses:**
+  - `pending`: Order is waiting to be prepared
+  - `preparing`: Order is being prepared
+  - `ready`: Order is ready to be served
+  - `served`: Order has been served
+  - `completed`: Order is completed
+  - `canceled`: Order has been canceled
+
+### 🔹 Get Order Details
+**GET** `/api/restaurant/{system_id}/waiter/orders/{order_id}/`
+
+- **Description:**  
+  Get detailed information about a specific order.
+
+- **Sample Response:**
+```json
+{
+  "id": 12,
+  "table_number": "5",
+  "customer_name": "John Doe",
+  "waiter": {
+    "id": 3,
+    "name": "Sarah Smith"
+  },
+  "status": "pending",
+  "order_items": [
+    {
+      "id": 1,
+      "menu_item_name": "Pizza",
+      "quantity": 2,
+      "price": 15.99,
+      "notes": "Extra cheese"
+    }
+  ],
+  "total_price": 31.98,
+  "created_at": "2025-04-27T14:00:00Z",
+  "updated_at": "2025-04-27T14:05:00Z"
+}
+```
+
+### 🔹 Create New Order
+**POST** `/api/restaurant/{system_id}/waiter/orders/`
+
+- **Description:**  
+  Create a new order.
+
+- **Request Body:**
+```json
+{
+  "table_number": "5",
+  "customer_name": "John Doe",
+  "order_items": [
+    {
+      "menu_item": 1,
+      "quantity": 2,
+      "notes": "Extra cheese"
+    }
+  ]
+}
+```
+
+### 🔹 Add Items to Order
+**POST** `/api/restaurant/{system_id}/waiter/orders/{order_id}/items/`
+
+- **Description:**  
+  Add items to an existing order.
+
+- **Request Body:**
+```json
+{
+  "menu_item": 2,
+  "quantity": 1,
+  "notes": "No onions"
+}
+```
+
+### 🔹 Remove Items from Order
+**DELETE** `/api/restaurant/{system_id}/waiter/orders/{order_id}/items/{item_id}/`
+
+- **Description:**  
+  Remove an item from an order.
+
+### 🔹 Cancel Order
+**DELETE** `/api/restaurant/{system_id}/waiter/orders/{order_id}/`
+
+- **Description:**  
+  Cancel an entire order.
+
+---
+
+# 🔒 Permissions
+- All endpoints require authentication.
+- Roles: System Owner (owner), Manager (manager), Cashier (cashier).

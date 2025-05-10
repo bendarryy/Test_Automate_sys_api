@@ -10,6 +10,8 @@ router.register(r'(?P<system_id>\d+)/menu-items', MenuItemViewSet, basename="men
 router.register(r"(?P<system_id>\d+)/orders", OrderViewSet, basename="order")
 router.register(r"(?P<system_id>\d+)/orders/(?P<order_id>\d+)/items", OrderItemViewSet, basename="order-item")
 router.register(r'(?P<system_id>\d+)/kitchen/orders', KitchenOrderViewSet, basename='kitchen-orders')
+# Register Waiter Display System routes
+router.register(r'(?P<system_id>\d+)/waiter/orders', WaiterDisplayViewSet, basename='waiter-orders')
 
 # API URLs
 api_urlpatterns = [
