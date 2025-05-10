@@ -220,11 +220,11 @@ class KitchenOrderViewSet(viewsets.ModelViewSet):
         if self.action in ["partial_update", "get"]:
             return [
                 IsAuthenticated(),
-                OR(IsSystemOwner(), IsEmployeeRolePermission("chef", "manager")),
+                OR(IsSystemOwner(), IsEmployeeRolePermission("chef" , "head chef", "manager")),
             ]
         return [
             IsAuthenticated(),
-            OR(IsSystemOwner(), IsEmployeeRolePermission("chef", "manager")),
+            OR(IsSystemOwner(), IsEmployeeRolePermission("chef", "head chef", "manager")),
         ]
 
     def get_queryset(self):
@@ -275,11 +275,11 @@ class InventoryItemViewSet(viewsets.ModelViewSet):
         if self.action in ["create", "update", "partial_update", "destroy"]:
             return [
                 IsAuthenticated(),
-                OR(IsSystemOwner(), IsEmployeeRolePermission("manager")),
+                OR(IsSystemOwner(), IsEmployeeRolePermission("manager", "inventory_manager")),
             ]
         return [
             IsAuthenticated(),
-            OR(IsSystemOwner(), IsEmployeeRolePermission("manager", "chef")),
+            OR(IsSystemOwner(), IsEmployeeRolePermission("manager", "inventory_manager", "chef")),
         ]
 
 
