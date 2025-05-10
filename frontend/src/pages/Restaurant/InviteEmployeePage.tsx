@@ -77,8 +77,12 @@ const InviteEmployeePage: React.FC = () => {
             >
               <option value="">Select Role</option>
               <option value="waiter">Waiter</option>
+              <option value="delivery">Delivery</option>
               <option value="chef">Chef</option>
+              <option value="head chef">Head Chef</option>
+              <option value="cashier">Cashier</option> 
               <option value="manager">Manager</option>
+              <option value="inventory_manager">Inventory Manager</option>
             </select>
           </div>
           <div className="mb-3">
