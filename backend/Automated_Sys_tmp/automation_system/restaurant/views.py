@@ -3,7 +3,7 @@ from django.shortcuts import render, get_object_or_404
 from .models import *
 from rest_framework import viewsets, status
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, OR
 from .models import MenuItem
 from .serializers import MenuItemSerializer, OrderSerializer, OrderItemSerializer
 from rest_framework.exceptions import PermissionDenied, MethodNotAllowed
@@ -14,8 +14,6 @@ from .models import System
 from core.models import Employee
 from core.permissions import IsSystemOwner, IsEmployeeRolePermission
 
-
-from rest_framework.permissions import OR
 from decimal import Decimal
 from rest_framework.decorators import action, api_view
 from django.http import HttpResponseNotFound
@@ -220,11 +218,11 @@ class KitchenOrderViewSet(viewsets.ModelViewSet):
         if self.action in ["partial_update", "get"]:
             return [
                 IsAuthenticated(),
-                OR(IsSystemOwner(), IsEmployeeRolePermission("chef" , "head chef", "manager")),
+                OR(IsSystemOwner(), IsEmployeeRolePermission("chef", "manager")),
             ]
         return [
             IsAuthenticated(),
-            OR(IsSystemOwner(), IsEmployeeRolePermission("chef", "head chef", "manager")),
+            OR(IsSystemOwner(), IsEmployeeRolePermission("chef", "manager")),
         ]
 
     def get_queryset(self):
@@ -275,11 +273,11 @@ class InventoryItemViewSet(viewsets.ModelViewSet):
         if self.action in ["create", "update", "partial_update", "destroy"]:
             return [
                 IsAuthenticated(),
-                OR(IsSystemOwner(), IsEmployeeRolePermission("manager", "inventory_manager")),
+                OR(IsSystemOwner(), IsEmployeeRolePermission("manager")),
             ]
         return [
             IsAuthenticated(),
-            OR(IsSystemOwner(), IsEmployeeRolePermission("manager", "inventory_manager", "chef")),
+            OR(IsSystemOwner(), IsEmployeeRolePermission("manager", "chef")),
         ]
 
 
@@ -571,6 +569,7 @@ def public_view(request):
             status=status.HTTP_404_NOT_FOUND
         )
 
+
 # waiter display By Ali
 class WaiterDisplayViewSet(viewsets.ModelViewSet):
     serializer_class = OrderSerializer
@@ -579,85 +578,176 @@ class WaiterDisplayViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         """
-        Only allow system owners, waiters, or managers to access this view.
+        Access control for Waiter Display System:
+        - Owner, Waiter, Cashier, Manager: Full access
+        - Others: Read-only access
         """
-        if self.action in ["partial_update", "get"]:
+        editable_roles = ["waiter", "cashier", "manager"]
+        if self.action in ["update", "partial_update"]:
             return [
                 IsAuthenticated(),
-                OR(IsSystemOwner(), IsEmployeeRolePermission("waiter", "manager")),
+                OR(IsSystemOwner(), IsEmployeeRolePermission(*editable_roles)),
             ]
-        return [
-            IsAuthenticated(),
-            OR(IsSystemOwner(), IsEmployeeRolePermission("waiter", "manager")),
-        ]
+        return [IsAuthenticated(), OR(IsSystemOwner(), IsEmployeeRolePermission())]
 
     def get_queryset(self):
+        """Filter orders by system and ready/served status"""
         system_id = self.kwargs.get("system_id")
         system = get_object_or_404(System, id=system_id)
-        user = self.request.user
-        
-        # Get the employee (waiter) for this user and system
-        try:
-            employee = Employee.objects.get(system=system, user=user)
-            # If user is a waiter, only show their orders
-            if employee.role == "waiter":
-                return Order.objects.filter(
-                    system=system,
-                    waiter=employee,
-                    status__in=["ready", "pending"]
-                ).order_by("-created_at")
-        except Employee.DoesNotExist:
-            pass
-
-        # For managers and system owners, show all orders
         return Order.objects.filter(
             system=system,
-            status__in=["ready", "pending"]
-        ).order_by("-created_at")
+            order_type="in_house",
+            status__in=["ready", "served"]
+        ).select_related("waiter").prefetch_related("order_items__menu_item")
+
+    @action(detail=False, methods=["get"])
+    def in_house(self, request, *args, **kwargs):
+        """Get all ready and served in-house orders"""
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
     @action(detail=False, methods=["get"])
     def tables(self, request, *args, **kwargs):
-        """Get all tables with their current orders"""
+        """Get status of all tables"""
         system_id = self.kwargs.get("system_id")
         system = get_object_or_404(System, id=system_id)
         
-        # Get all active orders with table numbers
-        orders = Order.objects.filter(
+        # Get all ready and served in-house orders
+        active_orders = Order.objects.filter(
             system=system,
-            table_number__isnull=False,
-            status__in=["pending", "preparing", "ready"]
-        ).order_by("table_number")
-        
-        # Group orders by table
-        tables = {}
-        for order in orders:
-            if order.table_number not in tables:
-                tables[order.table_number] = {
-                    "table_number": order.table_number,
-                    "orders": [],
-                    "total_amount": 0
+            order_type="in_house",
+            status__in=["ready", "served"]
+        ).select_related("waiter")
+
+        # Create a dictionary of table statuses
+        table_status = {}
+        for order in active_orders:
+            if order.table_number:
+                table_status[order.table_number] = {
+                    "status": order.status,
+                    "current_order": {
+                        "id": order.id,
+                        "customer_name": order.customer_name,
+                        "status": order.status
+                    }
                 }
-            tables[order.table_number]["orders"].append({
-                "id": order.id,
-                "status": order.status,
-                "created_at": order.created_at,
-                "total_price": order.total_price
-            })
-            tables[order.table_number]["total_amount"] += order.total_price
-        
-        return Response(list(tables.values()))
+
+        return Response(table_status)
 
     def partial_update(self, request, *args, **kwargs):
+        """Update order status with validation"""
         instance = self.get_object()
         new_status = request.data.get("status")
 
-        if new_status not in ["served", "completed"]:
+        if not new_status:
             return Response(
-                {"error": "Invalid status for waiter display."},
-                status=status.HTTP_400_BAD_REQUEST,
+                {"error": "Status is required"}, 
+                status=status.HTTP_400_BAD_REQUEST
             )
 
-        instance.status = new_status
-        instance.save()
-        serializer = self.get_serializer(instance)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        # Validate status transition for in-house orders
+        valid_statuses = ["pending", "preparing", "ready", "served", "completed", "canceled"]
+        if new_status not in valid_statuses:
+            return Response(
+                {"error": "Invalid status for in-house order"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+# delivery By Ali
+class DeliveryViewSet(viewsets.ModelViewSet):
+    serializer_class = OrderSerializer
+    permission_classes = [IsAuthenticated]
+    http_method_names = ["get", "post", "patch", "delete", "head", "options"]
+
+    def get_permissions(self):
+        """
+        Access control for Delivery System:
+        - Owner, Delivery Driver, Manager: Full access
+        - Others: Read-only access
+        """
+        editable_roles = ["delivery_driver", "manager"]
+        if self.action in ["create", "update", "partial_update", "destroy"]:
+            return [
+                IsAuthenticated(),
+                OR(IsSystemOwner(), IsEmployeeRolePermission(*editable_roles)),
+            ]
+        return [IsAuthenticated(), OR(IsSystemOwner(), IsEmployeeRolePermission())]
+
+    def get_queryset(self):
+        """Filter delivery orders by system and ready/out_for_delivery status"""
+        system_id = self.kwargs.get("system_id")
+        system = get_object_or_404(System, id=system_id)
+        return Order.objects.filter(
+            system=system,
+            order_type="delivery",
+            status__in=["ready", "out_for_delivery"]
+        ).select_related("waiter").prefetch_related("order_items__menu_item")
+
+    def perform_create(self, serializer):
+        """Create a new delivery order"""
+        system_id = self.kwargs.get("system_id")
+        system = get_object_or_404(System, id=system_id)
+        serializer.save(system=system, order_type="delivery")
+
+    def partial_update(self, request, *args, **kwargs):
+        """Update delivery order status with validation"""
+        instance = self.get_object()
+        new_status = request.data.get("status")
+
+        if not new_status:
+            return Response(
+                {"error": "Status is required"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        valid_statuses = ["pending", "preparing", "ready", "out_for_delivery", "completed", "canceled"]
+        if new_status not in valid_statuses:
+            return Response(
+                {"error": "Invalid status for delivery order"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+    @action(detail=False, methods=["get"])
+    def active(self, request, *args, **kwargs):
+        """Get all ready and out_for_delivery orders"""
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=["get"])
+    def completed(self, request, *args, **kwargs):
+        """Get all completed delivery orders"""
+        system_id = self.kwargs.get("system_id")
+        system = get_object_or_404(System, id=system_id)
+        queryset = Order.objects.filter(
+            system=system,
+            order_type="delivery",
+            status="completed"
+        ).select_related("waiter").prefetch_related("order_items__menu_item")
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=["get"])
+    def canceled(self, request, *args, **kwargs):
+        """Get all canceled delivery orders"""
+        system_id = self.kwargs.get("system_id")
+        system = get_object_or_404(System, id=system_id)
+        queryset = Order.objects.filter(
+            system=system,
+            order_type="delivery",
+            status="canceled"
+        ).select_related("waiter").prefetch_related("order_items__menu_item")
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
