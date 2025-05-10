@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from datetime import timedelta
 from pathlib import Path
+from corsheaders.defaults import default_headers
 # import renderers
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -41,6 +42,8 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
      'rest_framework',
+    'rest_framework.authtoken',
+    'corsheaders',
     # Core app (handles admin and shared models)
     'core',
 
@@ -48,16 +51,20 @@ INSTALLED_APPS = [
     'restaurant',
     'cafe',
     'supermarket',
-    'corsheaders',
+    'workshop',
     'drf_yasg',
 ]
 
 CORS_ALLOWED_ORIGINS = [
-    "http://127.0.0.1:5173",  # Allow requests from your frontend
+    "http://127.0.0.1:5173",  # React development server
+    "http://localhost:5173",  # React development server alternative
 ]
 
-CORS_ALLOW_CREDENTIALS = True  # Allow cookies to be sent with requests
+CORS_ALLOW_CREDENTIALS = True
 
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    'x-subdomain',  # Allow subdomain header
+]
 
 CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1:5173",  # Trust frontend for CSRF
@@ -74,6 +81,7 @@ CSRF_TRUSTED_ORIGINS = [
 
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',

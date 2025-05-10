@@ -30,7 +30,6 @@ api_urlpatterns = [
     path('<int:system_id>/orders/analytics/order-summary/', OrderSummaryView.as_view(), name='order-summary'),
     #path('<int:system_id>/orders/analytics/waiters/', WaiterStatsView.as_view(), name='waiter-stats'),
 ]
-
 # Public URLs - these will be handled by the subdomain middleware
 public_urlpatterns = [
     path('menu/', public_view, name='public-view'),  # Changed from '' to 'menu/'
@@ -38,3 +37,4 @@ public_urlpatterns = [
 
 # Combine both URL patterns
 urlpatterns = api_urlpatterns + public_urlpatterns
+
