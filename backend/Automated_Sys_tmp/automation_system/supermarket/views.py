@@ -1,28 +1,24 @@
-from .models import *
-from rest_framework import viewsets
-
+from django.shortcuts import get_object_or_404, render
+from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.exceptions import PermissionDenied, MethodNotAllowed
-
-from .serializers import InventorysupItemSerializer
-from .models import System
-
-
-from django.utils import timezone
-from datetime import date, timedelta
-
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.db.models import F
+from datetime import date, timedelta
 
-from django.shortcuts import get_object_or_404
-from rest_framework import status
-from .serializers import StockUpdateSerializer
-from rest_framework.response import Response
-from .serializers import StockChangeSerializer, ProductSerializer
-from datetime import timedelta
-from rest_framework.permissions import OR
+from .models import System, Product, StockChange, Sale, SaleItem, Discount, Employee
+from .serializers import (
+    InventorysupItemSerializer,
+    StockUpdateSerializer,
+    StockChangeSerializer,
+    ProductSerializer,
+    SaleSerializer,
+    SaleCreateSerializer,
+    ApplyDiscountSerializer,
+)
 from core.permissions import IsSystemOwner, IsEmployeeRolePermission
+from rest_framework.permissions import OR
 
 
 class InventoryItemViewSet(viewsets.ModelViewSet):
@@ -76,7 +72,7 @@ class InventoryItemViewSet(viewsets.ModelViewSet):
     def low_stock(self, request, system_id=None):
         system = self._get_system_or_403(system_id)
         products = Product.objects.filter(
-            system=system, stock_quantity__lt=models.F("minimum_stock")
+            system=system, stock_quantity__lt=F("minimum_stock")
         )
         serializer = self.get_serializer(products, many=True)
         return Response(serializer.data)
@@ -173,6 +169,106 @@ class InventoryItemViewSet(viewsets.ModelViewSet):
             ]
 
         return [IsAuthenticated(), OR(IsSystemOwner(), IsEmployeeRolePermission())]
-    
 
-    
+
+class SaleViewSet(viewsets.ModelViewSet):
+    serializer_class = SaleSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        system_id = self.kwargs.get("system_id")
+        user = self.request.user
+
+        # Make sure the system belongs to the authenticated user
+        try:
+            system = System.objects.get(id=system_id, owner=user)
+        except System.DoesNotExist:
+            raise PermissionDenied(
+                "You do not have permission to access this system's sales."
+            )
+
+        return Sale.objects.filter(system=system).order_by("-created_at")
+
+    def get_serializer_class(self):
+        if self.action == "create":
+            return SaleCreateSerializer
+        return SaleSerializer
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context["system_id"] = self.kwargs.get("system_id")
+        user = self.request.user
+
+        # Try to get the cashier (employee) making the sale
+        try:
+            context["cashier"] = Employee.objects.get(user=user)
+        except Employee.DoesNotExist:
+            # If user is not an employee but is the owner, proceed without cashier
+            try:
+                System.objects.get(id=context["system_id"], owner=user)
+                context["cashier"] = None
+            except System.DoesNotExist:
+                context["cashier"] = None
+
+        return context
+
+    def perform_create(self, serializer):
+        system_id = self.kwargs.get("system_id")
+        user = self.request.user
+
+        try:
+            system = System.objects.get(id=system_id, owner=user)
+        except System.DoesNotExist:
+            raise PermissionDenied(
+                "You do not have permission to create sales in this system."
+            )
+
+        # Get cashier from context
+        cashier = serializer.context.get("cashier")
+
+        # If no cashier and user is not the owner, deny permission
+        if not cashier and system.owner != user:
+            raise PermissionDenied("Only employees or system owners can create sales.")
+
+        # Create the sale without passing cashier (it's already in the context)
+        serializer.save(system=system)
+
+    @action(detail=True, methods=["get"])
+    def receipt(self, request, system_id=None, pk=None):
+        sale = self.get_object()
+
+        # Render the receipt template
+        context = {
+            "sale": sale,
+            "items": sale.items.all(),
+            "store_name": sale.system.name,
+            "date": sale.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+        }
+
+        # Return HTML response
+        return render(request, "supermarket/receipt.html", context)
+
+    @action(detail=True, methods=["patch"])
+    def apply_discount(self, request, system_id=None, pk=None):
+        sale = self.get_object()
+        serializer = ApplyDiscountSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        discount = Discount.objects.get(id=serializer.validated_data["discount_id"])
+
+        if discount.discount_type == "product":
+            # Apply discount to specific products
+            for item in sale.items.filter(product=discount.product):
+                item.discount_amount = (
+                    item.unit_price * item.quantity * (discount.percentage / 100)
+                )
+                item.save()
+        else:
+            # Apply discount to entire sale
+            sale.discount_amount = sale.total_price * (discount.percentage / 100)
+            sale.save()
+
+        # Recalculate total
+        sale.calculate_total()
+
+        return Response(SaleSerializer(sale).data)

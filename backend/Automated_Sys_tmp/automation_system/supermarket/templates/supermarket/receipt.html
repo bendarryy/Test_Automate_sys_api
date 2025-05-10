@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Receipt #{{ sale.receipt_number }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            font-size: 12px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .store-name {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .receipt-info {
+            margin-bottom: 20px;
+        }
+        .items {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        .items th, .items td {
+            padding: 5px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        .items th {
+            background-color: #f5f5f5;
+        }
+        .total-section {
+            text-align: right;
+            margin-top: 20px;
+        }
+        .total-line {
+            margin: 5px 0;
+        }
+        .total {
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 10px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="store-name">{{ store_name }}</div>
+        <div>Receipt #{{ sale.receipt_number }}</div>
+        <div>{{ date }}</div>
+    </div>
+
+    <div class="receipt-info">
+        <div>Cashier: {{ sale.cashier.user.get_full_name }}</div>
+        <div>Payment Method: {{ sale.get_payment_type_display }}</div>
+    </div>
+
+    <table class="items">
+        <thead>
+            <tr>
+                <th>Item</th>
+                <th>Qty</th>
+                <th>Price</th>
+                <th>Discount</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr>
+                <td>{{ item.product.name }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>${{ item.unit_price }}</td>
+                <td>${{ item.discount_amount }}</td>
+                <td>${{ item.total_price }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="total-section">
+        <div class="total-line">Subtotal: ${{ sale.total_price }}</div>
+        {% if sale.discount_amount > 0 %}
+        <div class="total-line">Discount: -${{ sale.discount_amount }}</div>
+        {% endif %}
+        <div class="total-line">VAT ({{ sale.vat_rate }}%): ${{ sale.vat_amount }}</div>
+        <div class="total-line total">Total: ${{ sale.total_price }}</div>
+    </div>
+
+    <div class="footer">
+        Thank you for your purchase!<br>
+        Please keep this receipt for your records.
+    </div>
+</body>
+</html> 
