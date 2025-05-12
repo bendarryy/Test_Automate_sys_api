@@ -1,7 +1,6 @@
 import { Navigate, Outlet } from "react-router-dom"
 import Navbar from "./components/Navbar"
 import { Sidebar } from "./components/Sidebar"
-import BottomNavBar from "./components/BottomNavBar"
 
 
 
@@ -24,7 +23,6 @@ const Layout = () => {
           <main style={{ height: 'calc(100vh - 64px)', overflow: 'auto', background: 'white' }}>
             <Outlet />
           </main>
-          <BottomNavBar />
         </div>
       </div>
     </>

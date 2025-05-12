@@ -25,6 +25,7 @@ interface Order {
   }[];
   created_at: string;
   updated_at: string;
+  order_type?: 'in_house' | 'delivery'; // Order type: 'in_house' (default) or 'delivery'
   [key: string]: unknown;
 }
 
@@ -75,6 +76,20 @@ const OrderPage: React.FC = () => {
   };
 
   const columns: ColumnsType<Order> = [
+    {
+      title: 'Order type',
+      dataIndex: 'order_type',
+      key: 'order_type',
+      render: (order_type: Order['order_type']) => (order_type === 'delivery' ? 'delivery' : 'in_house'),
+      filters: [
+        { text: 'In House', value: 'in_house' },
+        { text: 'Delivery', value: 'delivery' },
+      ],
+      onFilter: (value: boolean | React.Key, record: Order) => {
+        if (typeof value === 'boolean') return value;
+        return (record.order_type || 'in_house') === String(value);
+      },
+    },
     {
       title: 'Order ID',
       dataIndex: 'id',

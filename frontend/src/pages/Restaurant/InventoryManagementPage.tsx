@@ -1,15 +1,12 @@
 // InventoryManagementPage.tsx
 import React, { useState, useEffect } from 'react';
-// تم حذف استيراد bootstrap الجماعي. استخدم الاستيراد المنفرد فقط للمكونات المطلوبة.
-import Table from 'react-bootstrap/Table';
-import Form from 'react-bootstrap/Form';
-import ProgressBar from 'react-bootstrap/ProgressBar';
-import Button from 'react-bootstrap/Button';
-import Modal from 'react-bootstrap/Modal';
+import { Table, Input, Button, Modal, Form, Progress, Space, Tag } from 'antd';
+import { SearchOutlined, PlusCircleOutlined, EditOutlined, SaveOutlined, DeleteOutlined } from '@ant-design/icons';
 import styles from '../../styles/InventoryManagementPage.module.css';
 import { useInventory, InventoryItem } from '../../hooks/useInventory';
 import { useSelectedSystemId } from '../../hooks/useSelectedSystemId';
 import { useNavigate } from 'react-router-dom';
+import type { ColumnsType } from 'antd/es/table';
 
 // Helper to calculate status and availability
 function computeStatusAndAvailability(item: InventoryItem) {
@@ -27,21 +24,20 @@ function computeStatusAndAvailability(item: InventoryItem) {
 const InventoryManagementPage: React.FC = () => {
   const navigate = useNavigate();
   const [selectedSystemId] = useSelectedSystemId();
-  const [searchTerm, setSearchTerm] = useState('');
+  const [editingKey, setEditingKey] = useState<string | null>(null);
   const [newItem, setNewItem] = useState<Omit<InventoryItem, 'id'>>({
     name: '',
     quantity: null,
     unit: '',
     min_threshold: null,
   });
-  const { inventory, loading, error, fetchInventory, addInventoryItem } = useInventory();
+  const { inventory, loading, error, fetchInventory, addInventoryItem, updateInventoryItem, deleteInventoryItem } = useInventory();
   const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     if (selectedSystemId) {
       fetchInventory(selectedSystemId);
     }
-    // eslint-disable-next-line
   }, [selectedSystemId]);
 
   const handleOpenModal = () => setShowModal(true);
@@ -53,160 +49,311 @@ const InventoryManagementPage: React.FC = () => {
     fetchInventory(selectedSystemId);
     setNewItem({ name: '', quantity: null, unit: '', min_threshold: null });
     handleCloseModal();
-    setNewItem({ name: '', quantity: null, unit: '', min_threshold: null });
-    handleCloseModal();
   };
 
-  // Use backend data, but keep original UI logic
-  const filteredItems = (inventory || []).filter(item =>
-    item.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const isEditing = (record: InventoryItem) => record.id === editingKey;
+
+  const edit = (record: InventoryItem) => {
+    setEditingKey(record.id);
+  };
+
+  const cancel = () => {
+    setEditingKey(null);
+  };
+
+  const save = async (id: string) => {
+    try {
+      const row = await (inventory || []).find(item => item.id === id);
+      if (!row || !selectedSystemId) return;
+      await updateInventoryItem(selectedSystemId, id, row);
+      setEditingKey(null);
+    } catch (errInfo) {
+      console.log('Validate Failed:', errInfo);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!selectedSystemId) return;
+    try {
+      await deleteInventoryItem(selectedSystemId, id);
+      fetchInventory(selectedSystemId);
+    } catch (err) {
+      console.log('Delete Failed:', err);
+    }
+  };
+
+  const columns: ColumnsType<InventoryItem> = [
+    {
+      title: 'Item Name',
+      dataIndex: 'name',
+      key: 'name',
+      render: (text: string, record: InventoryItem) => {
+        const editable = isEditing(record);
+        return editable ? (
+          <Input
+            value={text}
+            onChange={e => {
+              const newData = inventory?.map(item => 
+                item.id === record.id ? { ...item, name: e.target.value } : item
+              );
+              if (newData) inventory.splice(0, inventory.length, ...newData);
+            }}
+          />
+        ) : (
+          <span>{text}</span>
+        );
+      },
+      sorter: (a, b) => a.name.localeCompare(b.name),
+      filterSearch: true,
+      filterIcon: (filtered) => (
+        <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />
+      ),
+      filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
+        <div style={{ padding: 8 }}>
+          <Input
+            placeholder="Search name"
+            value={selectedKeys[0]}
+            onChange={e => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+            onPressEnter={() => confirm({ closeDropdown: true })}
+            style={{ width: 188, marginBottom: 8, display: 'block' }}
+            prefix={<SearchOutlined />}
+          />
+          <Space>
+            <Button
+              type="primary"
+              onClick={() => confirm({ closeDropdown: true })}
+              size="small"
+            >
+              Search
+            </Button>
+            <Button
+              onClick={() => {
+                clearFilters?.();
+                confirm({ closeDropdown: true });
+              }}
+              size="small"
+            >
+              Reset
+            </Button>
+          </Space>
+        </div>
+      ),
+      onFilter: (value, record) =>
+        record.name.toString().toLowerCase().includes((value as string).toLowerCase()),
+    },
+    {
+      title: 'Current Quantity',
+      dataIndex: 'quantity',
+      key: 'quantity',
+      render: (quantity: number | null, record: InventoryItem) => {
+        const editable = isEditing(record);
+        return editable ? (
+          <Input
+            type="number"
+            value={quantity ?? ''}
+            onChange={e => {
+              const newData = inventory?.map(item => 
+                item.id === record.id ? { ...item, quantity: e.target.value === '' ? null : Number(e.target.value) } : item
+              );
+              if (newData) inventory.splice(0, inventory.length, ...newData);
+            }}
+          />
+        ) : (
+          <span>{quantity}</span>
+        );
+      },
+      sorter: (a, b) => (a.quantity || 0) - (b.quantity || 0),
+    },
+    {
+      title: 'Unit',
+      dataIndex: 'unit',
+      key: 'unit',
+      render: (text: string, record: InventoryItem) => {
+        const editable = isEditing(record);
+        return editable ? (
+          <Input
+            value={text}
+            onChange={e => {
+              const newData = inventory?.map(item => 
+                item.id === record.id ? { ...item, unit: e.target.value } : item
+              );
+              if (newData) inventory.splice(0, inventory.length, ...newData);
+            }}
+          />
+        ) : (
+          <span>{text}</span>
+        );
+      },
+      filters: Array.from(new Set(inventory?.map(item => item.unit) || [])).map(unit => ({
+        text: unit,
+        value: unit
+      })),
+      onFilter: (value, record) => record.unit === value,
+    },
+    {
+      title: 'Status',
+      key: 'status',
+      render: (_, record) => {
+        const { status } = computeStatusAndAvailability(record);
+        return (
+          <Tag color={status === 'LOW' ? 'error' : 'success'}>
+            {status}
+          </Tag>
+        );
+      },
+      filters: [
+        { text: 'Sufficient', value: 'Sufficient' },
+        { text: 'LOW', value: 'LOW' }
+      ],
+      onFilter: (value, record) => {
+        const { status } = computeStatusAndAvailability(record);
+        return status === value;
+      }
+    },
+    {
+      title: 'Availability',
+      key: 'availability',
+      render: (_, record) => {
+        const { availability, status } = computeStatusAndAvailability(record);
+        return (
+          <Progress
+            percent={availability}
+            status={status === 'LOW' ? 'exception' : 'success'}
+            size="small"
+            format={percent => `${percent}%`}
+          />
+        );
+      },
+      sorter: (a, b) => {
+        const availabilityA = computeStatusAndAvailability(a).availability;
+        const availabilityB = computeStatusAndAvailability(b).availability;
+        return availabilityA - availabilityB;
+      }
+    },
+    {
+      title: 'Actions',
+      key: 'actions',
+      render: (_, record) => {
+        const editable = isEditing(record);
+        return editable ? (
+          <Space>
+            <Button
+              type="primary"
+              size="small"
+              icon={<SaveOutlined />}
+              onClick={() => save(record.id)}
+            >
+              Save
+            </Button>
+            <Button
+              size="small"
+              onClick={cancel}
+            >
+              Cancel
+            </Button>
+          </Space>
+        ) : (
+          <Space>
+            <Button
+              type="primary"
+              size="small"
+              icon={<EditOutlined />}
+              onClick={() => edit(record)}
+              disabled={editingKey !== null}
+            >
+              Edit
+            </Button>
+            <Button
+              type="primary"
+              danger
+              size="small"
+              icon={<DeleteOutlined />}
+              onClick={() => handleDelete(record.id)}
+              disabled={editingKey !== null}
+            >
+              Delete
+            </Button>
+          </Space>
+        );
+      }
+    }
+  ];
 
   return (
     <div className={`container py-4 ${styles.customContainer}`}>
       <h1 className="text-center mb-4 text-primary">Stock Management</h1>
       {error && <div className="alert alert-danger">{error}</div>}
-      {/* شريط البحث */}
-      <div className="d-flex justify-content-center mb-4">
-        <div className="input-group shadow rounded-pill" style={{ maxWidth: 400, width: '100%', background: '#fff' }}>
-          <span className="input-group-text bg-white border-0 rounded-pill ps-3" id="search-addon">
-            <i className="bi bi-search" style={{ fontSize: '1.3rem', color: '#0d6efd' }}></i>
-          </span>
-          <Form.Control
-            type="search"
-            placeholder="Search for ingredients..."
-            className="border-0 rounded-pill ps-2 py-2 fs-5"
-            style={{ boxShadow: 'none', background: 'transparent' }}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            aria-label="Search Ingredients"
-            aria-describedby="search-addon"
-          />
-        </div>
-      </div>
-
-      {/* جدول البيانات */}
-      <Table striped bordered hover className={`rounded-3 overflow-hidden shadow ${styles.table}`}>
-        <thead className="bg-primary text-white">
-          <tr>
-            <th ><i className="bi bi-box-seam me-2"></i>Item Name</th>
-            <th><i className="bi bi-123 me-2"></i>Current Quantity</th>
-            <th><i className="bi bi-cup-straw me-2"></i>Unit</th>
-            <th><i className="bi bi-exclamation-circle me-2"></i>Status</th>
-            <th><i className="bi bi-graph-up-arrow me-2"></i>Availability</th>
-            <th><i className="bi bi-gear me-2"></i>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredItems.map((item, index) => {
-            const { status, availability } = computeStatusAndAvailability(item);
-            return (
-              <tr key={index}>
-                <td>{item.name}</td>
-                <td>{item.quantity}</td>
-                <td>{item.unit}</td>
-                <td>
-                  <span
-                    className={`badge ${status === 'LOW' ? 'bg-danger' : 'bg-success'} rounded-pill d-flex align-items-center gap-1`}
-                  >
-                    <i className={`bi ${status === 'LOW' ? 'bi-arrow-down-circle-fill' : 'bi-check-circle-fill'} me-1`}></i>
-                    {status}
-                  </span>
-                </td>
-                <td>
-                  <ProgressBar
-                    now={availability}
-                    className="rounded-pill"
-                    variant={status === 'LOW' ? 'danger' : 'success'}
-                    label={`${availability}%`}
-                  />
-                </td>
-                <td>
-                  <Button
-                    variant="info"
-                    size="sm"
-                    className="rounded-pill d-flex align-items-center gap-1"
-                    onClick={() => navigate(`/inventory/${item.id}`)} 
-                    disabled={!selectedSystemId}
-                  >
-                    <i className="bi bi-eye-fill"></i>
-                    View
-                  </Button>
-                </td>
-              </tr>
-            );
-          })}
-          {loading && (
-            <tr><td colSpan={6} className="text-center">Loading...</td></tr>
-          )}
-        </tbody>
-      </Table>
-
-      {/* إضافة عنصر جديد */}
+      
       <div className="d-flex justify-content-end mb-3">
-        <Button variant="success" className="rounded-pill px-4 py-2 fw-bold shadow d-flex align-items-center gap-2" onClick={handleOpenModal}>
-          <i className="bi bi-plus-circle-fill fs-5"></i>
+        <Button
+          type="primary"
+          icon={<PlusCircleOutlined />}
+          onClick={handleOpenModal}
+          size="large"
+        >
           Add New Ingredient
         </Button>
       </div>
-      <Modal show={showModal} onHide={handleCloseModal} centered backdrop="static" keyboard={false}>
-        <Modal.Header closeButton className="bg-success text-white">
-          <Modal.Title>Add New Ingredient</Modal.Title>
-        </Modal.Header>
-        <Modal.Body className="bg-light">
-          <Form>
-            <Form.Group className="mb-3">
-              <Form.Label className="fw-bold">Item Name</Form.Label>
-              <Form.Control
-                type="text"
-                placeholder="Item Name"
-                value={newItem.name}
-                onChange={e => setNewItem({ ...newItem, name: e.target.value })}
-                autoFocus
-              />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label className="fw-bold">Quantity</Form.Label>
-              <Form.Control
-                type="number"
-                placeholder="Quantity"
-                value={newItem.quantity ?? ''}
-                onChange={e => setNewItem({ ...newItem, quantity: e.target.value === '' ? null : Number(e.target.value) })}
-              />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label className="fw-bold">Unit (e.g. kg, liter)</Form.Label>
-              <Form.Control
-                type="text"
-                placeholder="Unit (e.g. kg, liter)"
-                value={newItem.unit}
-                onChange={e => setNewItem({ ...newItem, unit: e.target.value })}
-              />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label className="fw-bold">Min Threshold</Form.Label>
-              <Form.Control
-                type="number"
-                placeholder="Min Threshold"
-                value={newItem.min_threshold ?? ''}
-                onChange={e => setNewItem({ ...newItem, min_threshold: e.target.value === '' ? null : Number(e.target.value) })}
-              />
-            </Form.Group>
-          </Form>
-        </Modal.Body>
-        <Modal.Footer className="bg-light">
-          <Button variant="secondary" onClick={handleCloseModal} className="rounded-pill px-3">
+
+      <Table
+        columns={columns}
+        dataSource={inventory || []}
+        loading={loading}
+        rowKey="id"
+        pagination={{ pageSize: 10 }}
+        scroll={{ x: 'max-content' }}
+      />
+
+      <Modal
+        title="Add New Ingredient"
+        open={showModal}
+        onCancel={handleCloseModal}
+        footer={[
+          <Button key="cancel" onClick={handleCloseModal}>
             Cancel
-          </Button>
+          </Button>,
           <Button
-            variant="success"
-            className="rounded-pill px-4 fw-bold shadow"
+            key="submit"
+            type="primary"
             onClick={handleAddNewIngredient}
-            disabled={loading}
+            loading={loading}
           >
             Add Ingredient
           </Button>
-        </Modal.Footer>
+        ]}
+      >
+        <Form layout="vertical">
+          <Form.Item label="Item Name" required>
+            <Input
+              value={newItem.name}
+              onChange={e => setNewItem({ ...newItem, name: e.target.value })}
+              placeholder="Enter item name"
+            />
+          </Form.Item>
+          <Form.Item label="Quantity" required>
+            <Input
+              type="number"
+              value={newItem.quantity ?? ''}
+              onChange={e => setNewItem({ ...newItem, quantity: e.target.value === '' ? null : Number(e.target.value) })}
+              placeholder="Enter quantity"
+            />
+          </Form.Item>
+          <Form.Item label="Unit" required>
+            <Input
+              value={newItem.unit}
+              onChange={e => setNewItem({ ...newItem, unit: e.target.value })}
+              placeholder="Enter unit (e.g. kg, liter)"
+            />
+          </Form.Item>
+          <Form.Item label="Min Threshold">
+            <Input
+              type="number"
+              value={newItem.min_threshold ?? ''}
+              onChange={e => setNewItem({ ...newItem, min_threshold: e.target.value === '' ? null : Number(e.target.value) })}
+              placeholder="Enter minimum threshold"
+            />
+          </Form.Item>
+        </Form>
       </Modal>
     </div>
   );

@@ -34,6 +34,7 @@ interface Order {
   }[];
   created_at: string;
   updated_at: string;
+  order_type?: 'in_house' | 'delivery'; // Order type: 'in_house' (default) or 'delivery'
 }
 
 
@@ -138,6 +139,9 @@ const OrderDetailsPage: React.FC = () => {
         headStyle={{ borderBottom: 0 }}
       >
         <Descriptions bordered column={1}>
+          <Descriptions.Item label="Order type">
+            {order?.order_type === 'delivery' ? 'delivery' : 'in_house'}
+          </Descriptions.Item>
           <Descriptions.Item label="Customer">
             {isEditing ? (
               <Input 

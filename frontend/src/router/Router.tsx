@@ -20,7 +20,6 @@ const EmployeeLogin = lazy(() => import("../pages/EmployeeLogin"));
 const OwnerLogin = lazy(() => import("../pages/OwnerLogin"));
 const Systems = lazy(() => import("../pages/Systems"));
 const KdsPage = lazy(() => import("../pages/Restaurant/KdsPage"));
-const InviteEmployeePage = lazy(() => import("../pages/Restaurant/InviteEmployeePage"));
 const EmployeesPage = lazy(() => import("../pages/Restaurant/EmployeesPage"));
 const Financesdashboards = lazy(() => import("../pages/Restaurant/financesdashboards"));
 
@@ -93,10 +92,6 @@ const router = createBrowserRouter([
       {
         path: "/kds/order/:orderId",
         element: <ProtectLogin><KdsPage /></ProtectLogin>,
-      },
-      {
-        path: "/invite-employee",
-        element: <ProtectLogin><InviteEmployeePage /></ProtectLogin>,
       },
       {
         path: "/employees",

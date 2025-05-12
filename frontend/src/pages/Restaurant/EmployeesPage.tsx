@@ -1,16 +1,32 @@
 import React, { useEffect, useState } from 'react';
 import { useApi } from '../../hooks/useApi';
 import { useEmployeeApi } from '../../hooks/useEmployeeApi';
-// تم حذف استيراد bootstrap الجماعي. استخدم الاستيراد المنفرد فقط للمكونات المطلوبة.
-import Card from 'react-bootstrap/Card';
-import Container from 'react-bootstrap/Container';
-import Spinner from 'react-bootstrap/Spinner';
-import Alert from 'react-bootstrap/Alert';
-import Table from 'react-bootstrap/Table';
-import Button from 'react-bootstrap/Button';
-import Modal from 'react-bootstrap/Modal';
-import Form from 'react-bootstrap/Form';
-import { FiUsers, FiEye, FiEdit2, FiTrash2, FiSave, FiXCircle } from 'react-icons/fi';
+import {
+  Table,
+  Button,
+  Modal,
+  Form,
+  Input,
+  Select,
+  Space,
+  Typography,
+  Card,
+  message,
+  Popconfirm,
+  Tag,
+  Divider
+} from 'antd';
+import {
+  UserAddOutlined,
+  EyeOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  SaveOutlined,
+  CloseOutlined
+} from '@ant-design/icons';
+
+const { Title } = Typography;
+const { Option } = Select;
 
 interface Employee {
   id: number;
@@ -20,16 +36,40 @@ interface Employee {
   email: string;
 }
 
+interface EmployeeFormData extends Omit<Employee, 'id'> {
+  password?: string;
+}
+
+const roleColors: Record<string, string> = {
+  waiter: 'blue',
+  delivery: 'green',
+  chef: 'orange',
+  'head chef': 'red',
+  cashier: 'purple',
+  manager: 'cyan',
+  inventory_manager: 'geekblue'
+};
+
+const roleOptions = [
+  { value: 'waiter', label: 'Waiter' },
+  { value: 'delivery', label: 'Delivery' },
+  { value: 'chef', label: 'Chef' },
+  { value: 'head chef', label: 'Head Chef' },
+  { value: 'cashier', label: 'Cashier' },
+  { value: 'manager', label: 'Manager' },
+  { value: 'inventory_manager', label: 'Inventory Manager' },
+];
+
 const EmployeesPage: React.FC = () => {
-  const { data, loading, error, callApi } = useApi<Employee[]>();
+  const { data, loading, callApi } = useApi<Employee[]>();
   const employeeApi = useEmployeeApi();
-  const [showModal, setShowModal] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
   const [modalMode, setModalMode] = useState<'view' | 'edit'>('view');
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
-  const [editForm, setEditForm] = useState<Partial<Employee>>({});
+  const [viewForm] = Form.useForm<Employee>();
+  const [inviteForm] = Form.useForm<EmployeeFormData>();
   const [modalLoading, setModalLoading] = useState(false);
-  const [modalError, setModalError] = useState<string | null>(null);
-  const [deleteLoading, setDeleteLoading] = useState(false);
 
   // Fetch employees
   const fetchEmployees = () => callApi('get', '/core/5/employees/');
@@ -37,16 +77,15 @@ const EmployeesPage: React.FC = () => {
 
   // Open modal and fetch details
   const handleView = async (emp: Employee) => {
-    setShowModal(true);
+    setShowViewModal(true);
     setModalMode('view');
     setModalLoading(true);
-    setModalError(null);
     try {
       const details = await employeeApi.getEmployee(emp.id);
       setSelectedEmployee(details);
-      setEditForm(details);
-    } catch (e: unknown) {
-      setModalError(e instanceof Error ? e.message : 'Error loading employee');
+      viewForm.setFieldsValue(details);
+    } catch (error) {
+      message.error('Error loading employee details');
     } finally {
       setModalLoading(false);
     }
@@ -54,24 +93,21 @@ const EmployeesPage: React.FC = () => {
 
   const handleEdit = () => {
     setModalMode('edit');
-    setEditForm(selectedEmployee || {});
-  };
-
-  const handleEditChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setEditForm({ ...editForm, [e.target.name]: e.target.value });
   };
 
   const handleSave = async () => {
-    if (!selectedEmployee) return;
-    setModalLoading(true);
-    setModalError(null);
     try {
-      const updated = await employeeApi.updateEmployee(selectedEmployee.id, editForm);
+      const values = await viewForm.validateFields();
+      if (!selectedEmployee) return;
+      
+      setModalLoading(true);
+      const updated = await employeeApi.updateEmployee(selectedEmployee.id, values);
       setSelectedEmployee(updated);
       setModalMode('view');
       fetchEmployees();
-    } catch (e: unknown) {
-      setModalError(e instanceof Error ? e.message : 'Error updating employee');
+      message.success('Employee updated successfully');
+    } catch (error) {
+      message.error('Error updating employee');
     } finally {
       setModalLoading(false);
     }
@@ -79,130 +115,307 @@ const EmployeesPage: React.FC = () => {
 
   const handleDelete = async () => {
     if (!selectedEmployee) return;
-    setDeleteLoading(true);
-    setModalError(null);
     try {
       await employeeApi.deleteEmployee(selectedEmployee.id);
-      setShowModal(false);
+      setShowViewModal(false);
       fetchEmployees();
-    } catch (e: unknown) {
-      setModalError(e instanceof Error ? e.message : 'Error deleting employee');
-    } finally {
-      setDeleteLoading(false);
+      message.success('Employee deleted successfully');
+    } catch (error) {
+      message.error('Error deleting employee');
     }
   };
 
+  const handleInvite = async (values: EmployeeFormData) => {
+    try {
+      setModalLoading(true);
+      await callApi('post', '/core/5/invite/', values);
+      message.success('Employee invited successfully!');
+      inviteForm.resetFields();
+      setShowInviteModal(false);
+      fetchEmployees();
+    } catch (error) {
+      message.error('Failed to invite employee. Please try again.');
+    } finally {
+      setModalLoading(false);
+    }
+  };
+
+  const columns = [
+    {
+      title: '#',
+      dataIndex: 'id',
+      key: 'id',
+      width: 60,
+    },
+    {
+      title: 'Name',
+      dataIndex: 'name',
+      key: 'name',
+    },
+    {
+      title: 'Role',
+      dataIndex: 'role',
+      key: 'role',
+      render: (role: string) => (
+        <Tag color={roleColors[role] || 'default'}>
+          {role.charAt(0).toUpperCase() + role.slice(1).replace('_', ' ')}
+        </Tag>
+      ),
+    },
+    {
+      title: 'Phone',
+      dataIndex: 'phone',
+      key: 'phone',
+    },
+    {
+      title: 'Email',
+      dataIndex: 'email',
+      key: 'email',
+    },
+    {
+      title: 'Actions',
+      key: 'actions',
+      width: 100,
+      render: (_: any, record: Employee) => (
+        <Button
+          type="text"
+          icon={<EyeOutlined />}
+          onClick={() => handleView(record)}
+        />
+      ),
+    },
+  ];
+
   return (
-    <Container className="py-5">
-      <Card className="shadow mb-4">
-        <Card.Body>
-          <div className="d-flex align-items-center mb-3">
-            <span className="bg-primary text-white rounded-circle p-2 me-2"><FiUsers size={24} /></span>
-            <h3 className="mb-0 fw-bold">Employees List</h3>
+    <div style={{ padding: '24px' }}>
+      <Card>
+        <Space direction="vertical" size="large" style={{ width: '100%' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Title level={2} style={{ margin: 0 }}>Employees</Title>
+            <Button
+              type="primary"
+              icon={<UserAddOutlined />}
+              onClick={() => setShowInviteModal(true)}
+            >
+              Add Employee
+            </Button>
           </div>
-          {loading && <div className="text-center my-4"><Spinner animation="border" /></div>}
-          {error && <Alert variant="danger">{error}</Alert>}
-          {!loading && !error && data && Array.isArray(data) && (
-            <Table responsive bordered hover className="align-middle mt-3">
-              <thead className="table-light">
-                <tr>
-                  <th>#</th>
-                  <th>Name</th>
-                  <th>Role</th>
-                  <th>Phone</th>
-                  <th>Email</th>
-                  <th>Options</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.length === 0 && (
-                  <tr><td colSpan={6} className="text-center">No employees found.</td></tr>
-                )}
-                {data.map((emp: Employee, idx: number) => (
-                  <tr key={emp.id || idx}>
-                    <td>{idx + 1}</td>
-                    <td>{emp.name}</td>
-                    <td>{emp.role}</td>
-                    <td>{emp.phone}</td>
-                    <td>{emp.email}</td>
-                    <td>
-                      <Button variant="outline-primary" size="sm" className="me-1" title="View" onClick={() => handleView(emp)}><FiEye /></Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </Table>
-          )}
-        </Card.Body>
+
+          <Table
+            columns={columns}
+            dataSource={data}
+            loading={loading}
+            rowKey="id"
+            pagination={{ pageSize: 10 }}
+          />
+        </Space>
       </Card>
-      {/* Modal for view/edit */}
-      <Modal show={showModal} onHide={() => setShowModal(false)} centered>
-        <Modal.Header closeButton>
-          <Modal.Title>
-            {modalMode === 'view' ? 'Employee Details' : 'Edit Employee'}
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {modalLoading ? (
-            <div className="text-center my-3"><Spinner animation="border" /></div>
-          ) : modalError ? (
-            <Alert variant="danger">{modalError}</Alert>
-          ) : selectedEmployee ? (
-            <>
-              {modalMode === 'view' ? (
-                <div>
-                  <p><b>Name:</b> {selectedEmployee.name}</p>
-                  <p><b>Role:</b> {selectedEmployee.role}</p>
-                  <p><b>Phone:</b> {selectedEmployee.phone}</p>
-                  <p><b>Email:</b> {selectedEmployee.email}</p>
-                </div>
-              ) : (
-                <Form>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Name</Form.Label>
-                    <Form.Control name="name" value={editForm.name || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleEditChange(e)} />
-                  </Form.Group>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Role</Form.Label>
-                    <Form.Select name="role" value={editForm.role || ''} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => handleEditChange(e)}>
-                      <option value="">Select Role</option>
-                      <option value="waiter">Waiter</option>
-                      <option value="chef">Chef</option>
-                      <option value="manager">Manager</option>
-                    </Form.Select>
-                  </Form.Group>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Phone</Form.Label>
-                    <Form.Control name="phone" value={editForm.phone || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleEditChange(e)} />
-                  </Form.Group>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Email</Form.Label>
-                    <Form.Control name="email" value={editForm.email || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleEditChange(e)} />
-                  </Form.Group>
-                </Form>
-              )}
-            </>
-          ) : null}
-        </Modal.Body>
-        <Modal.Footer>
-          {modalMode === 'view' && (
-            <>
-              <Button variant="outline-success" onClick={handleEdit} className="me-2"><FiEdit2 className="me-1" />Edit</Button>
-              <Button variant="outline-danger" onClick={handleDelete} disabled={deleteLoading}>
-                {deleteLoading ? <Spinner animation="border" size="sm" className="me-1" /> : <FiTrash2 className="me-1" />}
-                Delete
-              </Button>
-            </>
-          )}
-          {modalMode === 'edit' && (
-            <>
-              <Button variant="success" onClick={handleSave}><FiSave className="me-1" />Save</Button>
-              <Button variant="secondary" onClick={() => setModalMode('view')}><FiXCircle className="me-1" />Cancel</Button>
-            </>
-          )}
-        </Modal.Footer>
+
+      {/* View/Edit Modal */}
+      <Modal
+        title={modalMode === 'view' ? 'Employee Details' : 'Edit Employee'}
+        open={showViewModal}
+        onCancel={() => setShowViewModal(false)}
+        footer={null}
+        width={600}
+      >
+        {modalLoading ? (
+          <div style={{ textAlign: 'center', padding: '24px' }}>Loading...</div>
+        ) : (
+          <Form
+            form={viewForm}
+            layout="vertical"
+            disabled={modalMode === 'view'}
+          >
+            <Form.Item
+              name="name"
+              label="Name"
+              rules={[{ required: true, message: 'Please enter the name' }]}
+            >
+              <Input />
+            </Form.Item>
+
+            <Form.Item
+              name="role"
+              label="Role"
+              rules={[{ required: true, message: 'Please select a role' }]}
+            >
+              <Select>
+                {roleOptions.map(role => (
+                  <Option key={role.value} value={role.value}>
+                    {role.label}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
+
+            <Form.Item
+              name="phone"
+              label="Phone"
+              rules={[
+                { required: true, message: 'Please enter the phone number' },
+                { pattern: /^[0-9]{11}$/, message: 'Please enter a valid 11-digit phone number' }
+              ]}
+            >
+              <Input />
+            </Form.Item>
+
+            <Form.Item
+              name="email"
+              label="Email"
+              rules={[
+                { required: true, message: 'Please enter the email' },
+                { type: 'email', message: 'Please enter a valid email' }
+              ]}
+            >
+              <Input />
+            </Form.Item>
+
+            <Form.Item>
+              <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
+                {modalMode === 'view' ? (
+                  <>
+                    <Button
+                      type="primary"
+                      icon={<EditOutlined />}
+                      onClick={handleEdit}
+                    >
+                      Edit
+                    </Button>
+                    <Popconfirm
+                      title="Are you sure you want to delete this employee?"
+                      onConfirm={handleDelete}
+                      okText="Yes"
+                      cancelText="No"
+                    >
+                      <Button
+                        danger
+                        icon={<DeleteOutlined />}
+                      >
+                        Delete
+                      </Button>
+                    </Popconfirm>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      icon={<CloseOutlined />}
+                      onClick={() => setModalMode('view')}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="primary"
+                      icon={<SaveOutlined />}
+                      onClick={handleSave}
+                      loading={modalLoading}
+                    >
+                      Save
+                    </Button>
+                  </>
+                )}
+              </Space>
+            </Form.Item>
+          </Form>
+        )}
       </Modal>
-    </Container>
+
+      {/* Invite Modal */}
+      <Modal
+        title="Invite New Employee"
+        open={showInviteModal}
+        onCancel={() => {
+          setShowInviteModal(false);
+          inviteForm.resetFields();
+        }}
+        footer={null}
+        width={600}
+      >
+        <Form
+          form={inviteForm}
+          layout="vertical"
+          onFinish={handleInvite}
+          requiredMark={false}
+          autoComplete="off"
+        >
+          <Form.Item
+            name="name"
+            label="Full Name"
+            rules={[{ required: true, message: 'Please enter the full name' }]}
+          >
+            <Input placeholder="e.g. Mohamed Ali" />
+          </Form.Item>
+
+          <Form.Item
+            name="role"
+            label="Role"
+            rules={[{ required: true, message: 'Please select a role' }]}
+          >
+            <Select placeholder="Select Role">
+              {roleOptions.map(option => (
+                <Option key={option.value} value={option.value}>
+                  {option.label}
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
+
+          <Form.Item
+            name="phone"
+            label="Phone Number"
+            rules={[
+              { required: true, message: 'Please enter the phone number' },
+              { pattern: /^[0-9]{11}$/, message: 'Please enter a valid 11-digit phone number' }
+            ]}
+          >
+            <Input placeholder="e.g. 01012345678" />
+          </Form.Item>
+
+          <Form.Item
+            name="email"
+            label="Email Address"
+            rules={[
+              { required: true, message: 'Please enter the email address' },
+              { type: 'email', message: 'Please enter a valid email address' }
+            ]}
+          >
+            <Input placeholder="e.g. mohamed@restaurant.com" />
+          </Form.Item>
+
+          <Form.Item
+            name="password"
+            label="Password"
+            rules={[
+              { required: true, message: 'Please enter a password' },
+              { min: 8, message: 'Password must be at least 8 characters long' }
+            ]}
+          >
+            <Input.Password placeholder="Choose a strong password" />
+          </Form.Item>
+
+          <Form.Item>
+            <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
+              <Button
+                onClick={() => {
+                  setShowInviteModal(false);
+                  inviteForm.resetFields();
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={modalLoading}
+                icon={<UserAddOutlined />}
+              >
+                {modalLoading ? 'Inviting...' : 'Invite Employee'}
+              </Button>
+            </Space>
+          </Form.Item>
+        </Form>
+      </Modal>
+    </div>
   );
 };
 
