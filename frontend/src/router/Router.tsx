@@ -11,7 +11,6 @@ const RegisterPage = lazy(() => import("../pages/RegisterPage"));
 const OrdersPage = lazy(() => import("../pages/Restaurant/OrderPage"));
 const OrderDetailsPage = lazy(() => import("../pages/Restaurant/OrderDetailsPage"));
 const EditOrderPage = lazy(() => import("../pages/Restaurant/EditOrderPage"));
-const MenuPage = lazy(() => import("../pages/Restaurant/MenuPage"));
 const MenuManagement = lazy(() => import("../components/MenuManagement"));
 const InventoryManagementPage = lazy(() => import("../pages/Restaurant/InventoryManagementPage"));
 const InventoryManagementSMPage = lazy(() => import("../pages/supermarket/InventoryManagementPage"));
@@ -71,7 +70,7 @@ const router = createBrowserRouter([
       },
       {
         path: "/menu",
-        element: <ProtectLogin><MenuPage /></ProtectLogin>,
+        element: <ProtectLogin><MenuManagement EditPermition /></ProtectLogin>,
       },
       {
         path: "/menu-management",

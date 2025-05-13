@@ -2,13 +2,14 @@ import React, { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../store";
 import { removeItem, clearBill, addItem } from "../store/billSlice";
-// تم نقل استيراد bootstrap إلى نقطة دخول التطبيق (main.tsx أو index.tsx) لتحسين الأداء ومنع تكرار التحميل.
-import styles from "../styles/BillSection.module.css";
-import { IoMdAddCircleOutline } from "react-icons/io";
+import { PrinterOutlined, SendOutlined, DeleteOutlined } from "@ant-design/icons";
 import { useSendOrders } from "../hooks/useSendOrders";
 import { useSelectedSystemId } from '../hooks/useSelectedSystemId';
+import { Card, Input, Button, List, Typography, Space, Divider, Empty } from "antd";
 
-const BillSection = () => {
+const { Title, Text } = Typography;
+
+const OrdersSection = () => {
   const billItems = useSelector((state: RootState) => state.bill.items);
   const selectedTable = useSelector((state: RootState) => state.bill.selectedTable);
   const dispatch = useDispatch();
@@ -19,38 +20,34 @@ const BillSection = () => {
   const [selectedSystemId] = useSelectedSystemId();
   const { createOrder, addItemToOrder, loading: apiLoading } = useSendOrders(Number(selectedSystemId));
 
-  // حساب الإجمالي باستخدام useMemo
   const total = React.useMemo(() => billItems.reduce((total, item) => total + item.price, 0), [billItems]);
   const discountedTotal = React.useMemo(() => total - (total * discount) / 100, [total, discount]);
 
-  // استخدم useCallback لمنع إعادة إنشاء الدوال إلا عند الحاجة
   const handleSendBill = React.useCallback(async () => {
     setIsSending(true);
     try {
       const orderData = {
         customer_name: "John Doe",
-        table_number: "5", // Change to string to match the expected type
-        waiter: null, // Provide a default waiter ID
+        table_number: "5",
+        waiter: null,
       };
 
-      // Create a new order
       const orderResponse = await createOrder(orderData);
-
-      // Add items to the created order
       const orderId = orderResponse.id;
+      
       for (const item of billItems) {
         const payload = {
-          menu_item: Number(item.id), // Ensure item.id is converted to a number
+          menu_item: Number(item.id),
           quantity: item.quantity,
         };
-        await addItemToOrder(orderId, payload); // Send each item individually
+        await addItemToOrder(orderId, payload);
       }
 
-      alert("Bill sent successfully!");
+      alert("Order sent successfully!");
       dispatch(clearBill());
     } catch (err) {
       console.error(err);
-      alert("Failed to send the bill. Please try again.");
+      alert("Failed to send the order. Please try again.");
     } finally {
       setIsSending(false);
     }
@@ -61,98 +58,103 @@ const BillSection = () => {
   }, []);
 
   return (
-    <div className={`${styles.container} d-flex flex-column justify-content-between`}>
-      <h4 className={styles.title}>
-        {selectedTable ? `Bill for Table: ${selectedTable}` : "Bill for External Order"}
-      </h4>
-      <div className={styles.body}>
+    <Card 
+      style={{ height: '100%', display: 'flex', flexDirection: 'column' }}
+      bodyStyle={{ height: '100%', padding: '12px', display: 'flex', flexDirection: 'column' }}
+    >
+      <Title level={4}>
+        {selectedTable ? `Orders for Table: ${selectedTable}` : "External Orders"}
+      </Title>
+      
+      <div style={{ flex: 1, overflowY: 'auto'  , justifyContent: billItems.length === 0 ? 'center' : 'space-between' , flexDirection: "column", display: 'flex'}}>
         {billItems.length === 0 ? (
-          <div className={styles.emptyBill}>
-            <IoMdAddCircleOutline size={100} />
-            <h3>Add items to the bill</h3>
-          </div>
+          <Empty
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+            description="Add items to the order"
+          />
         ) : (
-          <ul className={`list-group ${styles.list}`}>
-            {billItems.map((item) => (
-              <li key={item.id} className={`list-group-item d-flex align-items-center justify-content-between ${styles.listItem}`}>
-                <div className={styles.listItemText}>
-                  <strong>{item.name}</strong>
-                  <div className="text-muted">Price: ${item.price.toFixed(2)}</div>
-                </div>
-                <input
-                  type="number"
-                  name="quantity"
-                  id={`quantity-${item.id}`}
-                  min={1}
-                  value={item.quantity}
-                  className={`form-control form-control-sm ${styles.quantityInput}`}
-                  style={{ width: "80px", marginRight: "10px" }}
-                  onChange={(e) => {
-                    const newQuantity = Number(e.target.value);
-                    if (newQuantity > 0) {
-                      dispatch(
-                        addItem({
-                          ...item,
-                          quantity: newQuantity - item.quantity,
-                        })
-                      );
-                    }
-                  }}
+          <List
+            dataSource={billItems}
+            renderItem={(item) => (
+              <List.Item
+                actions={[
+                  <Input
+                    type="number"
+                    min={1}
+                    value={item.quantity}
+                    style={{ width: 80 }}
+                    onChange={(e) => {
+                      const newQuantity = Number(e.target.value);
+                      if (newQuantity > 0) {
+                        dispatch(
+                          addItem({
+                            ...item,
+                            quantity: newQuantity - item.quantity,
+                          })
+                        );
+                      }
+                    }}
+                  />,
+                  <Button
+                    type="text"
+                    danger
+                    icon={<DeleteOutlined />}
+                    onClick={() => dispatch(removeItem(item.id))}
+                  />
+                ]}
+              >
+                <List.Item.Meta
+                  title={item.name}
+                  description={`$${item.price.toFixed(2)}`}
                 />
-                <button
-                  className={`btn btn-outline-danger btn-sm ${styles.removeButton}`}
-                  onClick={() => dispatch(removeItem(item.id))}
-                >
-                  Remove
-                </button>
-              </li>
-            ))}
-          </ul>
+              </List.Item>
+            )}
+          />
         )}
       </div>
 
-      <div className={styles.footer}>
-        <input
-          type="number"
-          id="discount"
-          min={0}
-          max={100}
-          value={discount}
-          onChange={(e) => setDiscount(Number(e.target.value))}
-          className={`form-control ${styles.discountInput}`}
-          placeholder="Discount (%)"
-        />
-        <h5 className={styles.total}>
-          Total: ${total.toFixed(2)}
-        </h5>
-        <h5 className={styles.discountedTotal}>
-          Total after Discount: ${discountedTotal.toFixed(2)}
-        </h5>
+      <div style={{ marginTop: 'auto' }}>
+        <Divider />
+        <Space direction="vertical" style={{ width: '100%' }}>
+          <Input
+            type="number"
+            min={0}
+            max={100}
+            value={discount}
+            onChange={(e) => setDiscount(Number(e.target.value))}
+            placeholder="Discount (%)"
+            addonAfter="%"
+          />
+          
+          <Text strong>Total: ${total.toFixed(2)}</Text>
+          <Text type="secondary">After Discount: ${discountedTotal.toFixed(2)}</Text>
 
-        <div className={styles.buttonContainer}>
-          <button
-            className={`btn btn-secondary ${styles.button} ${styles.clearButton} me-2`}
-            onClick={() => dispatch(clearBill())}
-          >
-            Clear Bill
-          </button>
-          <button
-            className={`btn btn-primary ${styles.button} ${styles.sendButton} me-2`}
-            onClick={handleSendBill}
-            disabled={isSending || apiLoading}
-          >
-            {isSending || apiLoading ? "Sending..." : "Send Bill"}
-          </button>
-          <button
-            className={`btn btn-outline-dark ${styles.button} ${styles.printButton}`}
-            onClick={handlePrintBill}
-          >
-            Print Bill
-          </button>
-        </div>
+          <Space>
+            <Button
+              icon={<DeleteOutlined />}
+              onClick={() => dispatch(clearBill())}
+            >
+              Clear
+            </Button>
+            <Button
+              type="primary"
+              icon={<SendOutlined />}
+              onClick={handleSendBill}
+              loading={isSending || apiLoading}
+            >
+              Send Order
+            </Button>
+            <Button
+              icon={<PrinterOutlined />}
+              onClick={handlePrintBill}
+            >
+              Print
+            </Button>
+          </Space>
+        </Space>
       </div>
-    </div>
+    </Card>
   );
 };
 
-export default BillSection;
+export default OrdersSection;

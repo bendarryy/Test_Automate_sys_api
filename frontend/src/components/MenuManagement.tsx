@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Modal, Tabs, Input, Space, Tag, Spin, Table, Upload, message } from 'antd';
+import { Button, Modal, Input, Space, Tag, Spin, Table, Upload, message, Select, Popover, Typography } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { Key } from 'antd/es/table/interface';
 import { useGetMenu } from '../hooks/useGetMenu';
 import { useSelectedSystemId } from '../hooks/useSelectedSystemId';
 import type { MenuItem } from '../types';
 
-const categories = ['Food', 'Drink', 'Soups', 'Dessert'];
+interface MenuManagementProps {
+  EditPermition?: boolean;
+}
 
 const initialItem: MenuItem = {
   id: 0,
   name: '',
-  category: 'Food',
+  category: '',
   price: 0,
   cost: 0,
   is_available: true,
@@ -19,20 +21,25 @@ const initialItem: MenuItem = {
   image: null,
 };
 
-const MenuManagement = () => {
+const MenuManagement: React.FC<MenuManagementProps> = ({ EditPermition }) => {
   const [selectedSystemId] = useSelectedSystemId();
-  const { getMenu, createMenuItem, updateMenuItem, deleteMenuItem, loading } = useGetMenu(Number(selectedSystemId));
+  const { getMenu, createMenuItem, updateMenuItem, deleteMenuItem, getCategories, loading } = useGetMenu(Number(selectedSystemId));
 
   const [items, setItems] = useState<MenuItem[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState(initialItem);
   const [editItem, setEditItem] = useState<MenuItem | null>(null);
-  const [activeTab, setActiveTab] = useState('Food');
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
 
   useEffect(() => {
-    const fetchMenu = async () => {
+    const fetchData = async () => {
       try {
-        const fetchedItems = await getMenu();
+        const [fetchedItems, fetchedCategories] = await Promise.all([
+          getMenu(),
+          getCategories()
+        ]);
+        
         setItems((fetchedItems || []).map((item: any) => ({
           id: item.id,
           name: item.name,
@@ -44,12 +51,15 @@ const MenuManagement = () => {
           image: item.image ?? null,
         })));
 
-        console.log('Fetched items:', items);
+        if (fetchedCategories && Array.isArray(fetchedCategories)) {
+          setCategories(fetchedCategories);
+        }
       } catch (error) {
-        console.error('Error fetching menu:', error);
+        console.error('Error fetching data:', error);
+        message.error('Failed to load menu data');
       }
     };
-    fetchMenu();
+    fetchData();
   }, []);
 
   useEffect(() => {
@@ -57,10 +67,10 @@ const MenuManagement = () => {
   }, [items]);
 
   const handleAddClick = React.useCallback(() => {
-    setFormData(initialItem);
+    setFormData({ ...initialItem, category: categories[0] || '' });
     setEditItem(null);
     setShowModal(true);
-  }, []);
+  }, [categories]);
 
   const handleEditClick = React.useCallback((item: MenuItem) => {
     setFormData({ ...item });
@@ -74,13 +84,18 @@ const MenuManagement = () => {
   }, []);
 
   const handleSave = React.useCallback(async () => {
+    console.log('formData:', formData, 'categories:', categories);
+    // Validation: name, category (non-empty and valid), price (>0), cost (>0 and < price)
     if (
       !formData.name ||
-      !formData.category ||
+      typeof formData.category !== 'string' ||
+      !formData.category.trim() ||
+      !categories.some(cat => cat.toLowerCase() === formData.category.toLowerCase()) ||
       formData.price == null || isNaN(Number(formData.price)) || Number(formData.price) <= 0 ||
-      formData.cost == null || isNaN(Number(formData.cost)) || Number(formData.cost) < 0
+      formData.cost == null || isNaN(Number(formData.cost)) || Number(formData.cost) <= 0 ||
+      Number(formData.cost) >= Number(formData.price)
     ) {
-      alert('Please fill in all required fields: name, category, price (>0), and cost (>=0).');
+      alert('Please fill in all required fields: name, valid category, price (>0), and cost (>0 and < price).');
       return;
     }
 
@@ -196,11 +211,40 @@ const MenuManagement = () => {
       key: 'name',
       sorter: (a: MenuItem, b: MenuItem) => a.name.localeCompare(b.name),
       filterSearch: true,
+      render: (text: string) => (
+        <Popover 
+          content={text} 
+          trigger="hover"
+          placement="topLeft"
+        >
+          <Typography.Text ellipsis style={{ maxWidth: 200 }}>
+            {text}
+          </Typography.Text>
+        </Popover>
+      ),
+    },
+    {
+      title: 'Category',
+      dataIndex: 'category',
+      key: 'category',
+      filters: categories.map(cat => ({ text: cat, value: cat })),
+      onFilter: (value: string | number | boolean, record: MenuItem) => record.category === value,
     },
     {
       title: 'Description',
       dataIndex: 'description',
       key: 'description',
+      render: (text: string) => (
+        <Popover 
+          content={text} 
+          trigger="hover"
+          placement="topLeft"
+        >
+          <Typography.Text ellipsis style={{ maxWidth: 200 }}>
+            {text}
+          </Typography.Text>
+        </Popover>
+      ),
     },
     {
       title: 'Price',
@@ -224,7 +268,6 @@ const MenuManagement = () => {
       ],
       onFilter: (value: boolean | Key, record: MenuItem) => typeof value === 'boolean' ? record.is_available === value : false,
     },
-
     {
       title: 'Actions',
       key: 'actions',
@@ -241,39 +284,41 @@ const MenuManagement = () => {
     },
   ];
 
+  const filteredItems = selectedCategories.length > 0
+    ? items.filter(item => selectedCategories.includes(item.category))
+    : items;
+
   return (
     <div style={{ padding: 24 }}>
-      <h2>Management Menu</h2>
-      <Button type="primary" onClick={handleAddClick} style={{ marginBottom: 16 }}>
-        Add Item
-      </Button>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <h2>Management Menu</h2>
+        <Space>
+          <Select
+            mode="multiple"
+            style={{ width: 300 }}
+            placeholder="Select Categories"
+            value={selectedCategories}
+            onChange={setSelectedCategories}
+            options={categories.map(cat => ({ label: cat, value: cat }))}
+            loading={loading}
+          />
+          <Button type="primary" onClick={handleAddClick}>
+            Add Item
+          </Button>
+        </Space>
+      </div>
 
       {loading ? (
         <div style={{ textAlign: 'center', padding: 24 }}>
           <Spin size="large" />
         </div>
       ) : (
-        <Tabs
-          activeKey={activeTab}
-          onChange={(k) => setActiveTab(k || 'Food')}
-          items={categories.map((cat) => {
-            const categoryItems = items.filter(item => 
-              item.category?.toLowerCase() === cat?.toLowerCase()
-            );
-            return {
-              key: cat,
-              label: cat,
-              children: (
-                <Table<MenuItem>
-                  columns={columns}
-                  dataSource={categoryItems}
-                  rowKey="id"
-                  bordered
-                  size="middle"
-                />
-              ),
-            };
-          })}
+        <Table<MenuItem>
+          columns={columns}
+          dataSource={filteredItems}
+          rowKey="id"
+          bordered
+          size="middle"
         />
       )}
 
