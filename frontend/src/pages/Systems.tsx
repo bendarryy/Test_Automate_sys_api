@@ -2,6 +2,11 @@ import React, { useEffect } from 'react';
 import { useApi } from '../hooks/useApi';
 import { useNavigate } from 'react-router-dom';
 import { useSelectedSystemId } from '../hooks/useSelectedSystemId';
+import { Layout, Button, Typography, Spin, Alert, Tag } from 'antd';
+import { UserOutlined, AppstoreOutlined } from '@ant-design/icons';
+
+const { Content } = Layout;
+const { Title, Paragraph, Text } = Typography;
 
 const Systems: React.FC = () => {
   interface System {
@@ -20,40 +25,56 @@ const Systems: React.FC = () => {
   }, []);
 
   return (
-    <div className="container py-4">
-      <h2 className="mb-4">قائمة الأنظمة</h2>
-      {loading && <div className="alert alert-info">جاري التحميل...</div>}
-      {error && <div className="alert alert-danger">{error}</div>}
-      <div className="row">
-        {data && Array.isArray(data) && data.length > 0 ? (
-          data.map((system: System) => (
-            <div className="col-md-4 mb-4" key={system.id}>
-              <div className="card h-100 shadow-sm">
-                <div className="card-body">
-                  <h5 className="card-title">{system.name || `System #${system.id}`}</h5>
-                  <p className="card-text">
-                    {system.description || 'لا يوجد وصف متاح.'}
-                  </p>
-                  <div className="badge bg-secondary mb-2">{system.category}</div>
-                  <button
-                    className="btn btn-primary mt-2"
-                    onClick={() => { 
+    <Layout style={{ minHeight: '100vh', background: '#f5f6fa' }}>
+      <Content style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
+        <div style={{ background: '#fff', borderRadius: 16, boxShadow: '0 4px 24px rgba(0,0,0,0.08)', padding: 36, minWidth: 350, maxWidth: 420, width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <AppstoreOutlined style={{ fontSize: 48, color: '#1677ff', marginBottom: 16 }} />
+          <Title level={3} style={{ color: '#222', textAlign: 'center', marginBottom: 32 }}>Select a System to Start</Title>
+          {loading && (
+            <div style={{ textAlign: 'center', margin: '20px 0' }}>
+              <Spin size="large" tip="Loading systems..." />
+            </div>
+          )}
+          {error && <Alert message="Error loading systems" description={error} type="error" showIcon style={{ marginBottom: '24px' }} />}
+          {!loading && !error && data && Array.isArray(data) && data.length > 0 ? (
+            <div style={{ width: '100%', maxHeight: 400, overflow: 'auto' }}>
+              {data.map((system: System) => (
+                <div key={system.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#f6f8fa', border: '1px solid #e4e7ed', borderRadius: 10, padding: 18, marginBottom: 18 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <UserOutlined style={{ fontSize: 28, color: '#bfbfbf' }} />
+                    <div>
+                      <Text strong style={{ fontSize: 18, color: '#222' }}>{system.name || `System #${system.id}`}</Text>
+                      <div>
+                        <Tag color="geekblue" style={{ fontSize: 13 }}>{system.category}</Tag>
+                      </div>
+                      <Paragraph style={{ color: '#666', margin: 0, fontSize: 13 }}>{system.description || 'No description available for this system.'}</Paragraph>
+                    </div>
+                  </div>
+                  <Button
+                    type="primary"
+                    style={{ borderRadius: 6, fontWeight: 'bold', height: 40 }}
+                    onClick={() => {
                       setSelectedSystemId(system.id.toString());
                       setSelectedCategory(system.category);
-                      navigate('/'); 
+                      navigate('/');
                     }}
                   >
-                    الانتقال إلى النظام
-                  </button>
+                    Select
+                  </Button>
                 </div>
-              </div>
+              ))}
             </div>
-          ))
-        ) : (
-          !loading && <div className="col-12"><div className="alert alert-warning">لا توجد أنظمة متاحة.</div></div>
-        )}
-      </div>
-    </div>
+          ) : (
+            !loading && !error && (
+              <Alert message="No systems available." type="info" showIcon />
+            )
+          )}
+          <Button type="default" style={{ marginTop: 24, width: '100%', height: 44, fontWeight: 'bold', borderRadius: 8 }}>
+            Cancel
+          </Button>
+        </div>
+      </Content>
+    </Layout>
   );
 };
 

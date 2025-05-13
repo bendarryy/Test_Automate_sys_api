@@ -1,9 +1,9 @@
 // تم تفعيل التحميل الكسول (React.lazy) لجميع الصفحات الثقيلة لتحسين الأداء.
 import React, { Suspense, lazy } from "react";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import Layout from "../Layout";
-import ProtectLogin from "../security/protectLogin";
-import SupermarketPage from "../pages/supermarket/HomePage";
+const Layout = lazy(() => import("../Layout"));
+const ProtectLogin = lazy(() => import("../security/protectLogin"));
+const SupermarketPage = lazy(() => import("../pages/supermarket/HomePage"));
 
 
 const HomePage = lazy(() => import("../pages/Restaurant/HomePage"));
@@ -46,59 +46,141 @@ const router = createBrowserRouter([
   // All main routes under systemId
   {
     path: "/",
-    element: <Layout />,
+    element: (
+      <Suspense fallback={<div>Loading...</div>}>
+        <Layout />
+      </Suspense>
+    ),
     children: [
       {
         path: "/",
-        element: <ProtectLogin><HomePage /></ProtectLogin>,
+        element: (
+          <Suspense fallback={<div>Loading...</div>}>
+            <ProtectLogin>
+              <HomePage />
+            </ProtectLogin>
+          </Suspense>
+        ),
       },
       {
         path: "/about",
-        element: <ProtectLogin><About /></ProtectLogin>,
+        element: (
+          <Suspense fallback={<div>Loading...</div>}>
+            <ProtectLogin>
+              <About />
+            </ProtectLogin>
+          </Suspense>
+        ),
       },
       {
         path: "/orders",
-        element: <ProtectLogin><OrdersPage /></ProtectLogin>,
+        element: (
+          <Suspense fallback={<div>Loading...</div>}>
+            <ProtectLogin>
+              <OrdersPage />
+            </ProtectLogin>
+          </Suspense>
+        ),
       },
       {
         path: "/orders/:orderId",
-        element: <ProtectLogin><OrderDetailsPage /></ProtectLogin>,
+        element: (
+          <Suspense fallback={<div>Loading...</div>}>
+            <ProtectLogin>
+              <OrderDetailsPage />
+            </ProtectLogin>
+          </Suspense>
+        ),
       },
       {
         path: "/orders/:orderId/edit",
-        element: <ProtectLogin><EditOrderPage /></ProtectLogin>,
+        element: (
+          <Suspense fallback={<div>Loading...</div>}>
+            <ProtectLogin>
+              <EditOrderPage />
+            </ProtectLogin>
+          </Suspense>
+        ),
       },
       {
         path: "/menu",
-        element: <ProtectLogin><MenuManagement EditPermition /></ProtectLogin>,
+        element: (
+          <Suspense fallback={<div>Loading...</div>}>
+            <ProtectLogin>
+              <MenuManagement EditPermition />
+            </ProtectLogin>
+          </Suspense>
+        ),
       },
       {
         path: "/menu-management",
-        element: <ProtectLogin><MenuManagement /></ProtectLogin>,
+        element: (
+          <Suspense fallback={<div>Loading...</div>}>
+            <ProtectLogin>
+              <MenuManagement />
+            </ProtectLogin>
+          </Suspense>
+        ),
       },
       {
         path: "/inventory",
-        element: <ProtectLogin><InventoryManagementPage /></ProtectLogin>,
+        element: (
+          <Suspense fallback={<div>Loading...</div>}>
+            <ProtectLogin>
+              <InventoryManagementPage />
+            </ProtectLogin>
+          </Suspense>
+        ),
       },
       {
         path: "/inventory/:itemId",
-        element: <ProtectLogin><InventoryItemViewPage /></ProtectLogin>,
+        element: (
+          <Suspense fallback={<div>Loading...</div>}>
+            <ProtectLogin>
+              <InventoryItemViewPage />
+            </ProtectLogin>
+          </Suspense>
+        ),
       },
       {
         path: "/kds",
-        element: <ProtectLogin><KdsPage /></ProtectLogin>,
+        element: (
+          <Suspense fallback={<div>Loading...</div>}>
+            <ProtectLogin>
+              <KdsPage />
+            </ProtectLogin>
+          </Suspense>
+        ),
       },
       {
         path: "/kds/order/:orderId",
-        element: <ProtectLogin><KdsPage /></ProtectLogin>,
+        element: (
+          <Suspense fallback={<div>Loading...</div>}>
+            <ProtectLogin>
+              <KdsPage />
+            </ProtectLogin>
+          </Suspense>
+        ),
       },
       {
         path: "/employees",
-        element: <ProtectLogin><EmployeesPage /></ProtectLogin>,
+        element: (
+          <Suspense fallback={<div>Loading...</div>}>
+            <ProtectLogin>
+              <EmployeesPage />
+            </ProtectLogin>
+          </Suspense>
+        ),
       },
        {
         path: "/financesdashboards",
-        element: <ProtectLogin><Financesdashboards /></ProtectLogin>,
+        element: (
+          <Suspense fallback={<div>Loading...</div>}>
+            <ProtectLogin>
+              <Financesdashboards />
+            </ProtectLogin>
+          </Suspense>
+        ),
       },
     ],
   },
@@ -125,15 +207,31 @@ const supermarketRouter = createBrowserRouter([
   
   {
     path: "/",
-    element: <Layout />,
+    element: (
+      <Suspense fallback={<div>Loading...</div>}>
+        <Layout />
+      </Suspense>
+    ),
     children: [
       {
         path: "/",
-        element: <ProtectLogin><SupermarketPage /></ProtectLogin>,
+        element: (
+          <Suspense fallback={<div>Loading...</div>}>
+            <ProtectLogin>
+              <SupermarketPage />
+            </ProtectLogin>
+          </Suspense>
+        ),
       },
       {
         path: "/inventory",
-        element: <ProtectLogin><InventoryManagementSMPage /></ProtectLogin>,
+        element: (
+          <Suspense fallback={<div>Loading...</div>}>
+            <ProtectLogin>
+              <InventoryManagementSMPage />
+            </ProtectLogin>
+          </Suspense>
+        ),
       },
     ],
   },

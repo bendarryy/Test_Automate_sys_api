@@ -2,93 +2,202 @@ import React, { useState } from "react";
 import { useApi } from "../hooks/useApi";
 import { MdNotifications, MdNotificationsActive, MdAccountCircle } from "react-icons/md"; // react-icons Material Design
 import { useNavigate } from "react-router-dom";
+import { Layout, Badge, Dropdown, Space, Button, theme } from 'antd';
+import type { MenuProps } from 'antd';
 
-
+const { Header } = Layout;
+const { useToken } = theme;
 
 const Navbar = () => {
   const [numOfNotification] = useState(2);
   const { callApi } = useApi();
-  const [showNotificationDropdown, setShowNotificationDropdown] = useState(false);
-  const [showAccountDropdown, setShowAccountDropdown] = useState(false);
   const navigate = useNavigate();
+  const { token } = useToken();
+
+  const [notificationHover, setNotificationHover] = useState(false);
+  const [accountHover, setAccountHover] = useState(false);
 
   const handleLogout = async () => {
-    setShowAccountDropdown(false);
     try {
       await callApi('get', '/core/logout/');
       navigate('/ownerlogin');
-    } catch (err) {
-      // معالجة الخطأ إذا لزم الأمر
+    } catch (error) {
+      console.error('Logout failed:', error);
     }
   };
 
+  const notificationItems: MenuProps['items'] = [
+    {
+      key: 'header',
+      label: 'الإشعارات',
+      type: 'group',
+      style: { 
+        fontSize: '14px',
+        fontWeight: 600,
+        color: token.colorTextHeading
+      }
+    },
+    {
+      type: 'divider',
+    },
+    ...(numOfNotification > 0
+      ? [1, 2].map((n) => ({
+          key: n,
+          label: `إشعار ${n}`,
+          style: {
+            padding: '8px 12px',
+            transition: 'all 0.3s'
+          }
+        }))
+      : [
+          {
+            key: 'no-notifications',
+            label: 'لا توجد إشعارات جديدة',
+            disabled: true,
+            style: {
+              color: token.colorTextDisabled,
+              padding: '8px 12px'
+            }
+          },
+        ]),
+  ];
+
+  const accountItems: MenuProps['items'] = [
+    {
+      key: 'my-system',
+      label: 'My System',
+      onClick: () => navigate('/systems'),
+      style: {
+        padding: '8px 12px',
+        transition: 'all 0.3s'
+      }
+    },
+    {
+      key: 'profile',
+      label: 'الملف الشخصي',
+      style: {
+        padding: '8px 12px',
+        transition: 'all 0.3s'
+      }
+    },
+    {
+      type: 'divider',
+    },
+    {
+      key: 'logout',
+      label: 'تسجيل الخروج',
+      danger: true,
+      onClick: handleLogout,
+      style: {
+        padding: '8px 12px',
+        transition: 'all 0.3s'
+      }
+    },
+  ];
+
+  const getIconButtonStyle = (isHovered: boolean) => ({
+    padding: '8px',
+    borderRadius: '50%',
+    transition: 'background-color 0.3s ease, color 0.3s ease',
+    backgroundColor: isHovered ? token.controlItemBgHover : 'transparent',
+    border: 'none',
+    outline: 'none',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
+  });
+
   return (
-    <nav className="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
-      <div className="container-fluid">
-        <div className="d-flex align-items-center ms-auto">
-          <div className="position-relative me-3">
-            <button
-              className="btn btn-link position-relative p-0"
-              onClick={() => setShowNotificationDropdown((v) => !v)}
-              style={{ boxShadow: 'none' }}
-            >
-              {numOfNotification > 0 ? (
-                <>
-                  <MdNotificationsActive size={24} />
-                  <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                    {numOfNotification}
-                  </span>
-                </>
-              ) : (
-                <MdNotifications size={24} />
-              )}
-            </button>
-            {showNotificationDropdown && (
-              <div className="dropdown-menu show mt-2" style={{ minWidth: 220, right: 0, left: 'auto' }}>
-                <h6 className="dropdown-header">الإشعارات</h6>
-                <div className="dropdown-divider"></div>
+    <Header style={{ 
+      background: token.colorBgContainer,
+      padding: '0 24px', 
+      display: 'flex', 
+      justifyContent: 'flex-end',
+      alignItems: 'center',
+      boxShadow: token.boxShadow,
+      height: '64px',
+      position: 'sticky',
+      top: 0,
+      zIndex: 1000
+    }}>
+      <Space size="middle">
+        <Dropdown
+          menu={{ 
+            items: notificationItems,
+            style: {
+              minWidth: '220px',
+              boxShadow: token.boxShadowSecondary,
+            }
+          }}
+          trigger={['click']}
+          placement="bottomRight"
+        >
+          <Button 
+            type="text" 
+            style={getIconButtonStyle(notificationHover)}
+            onMouseEnter={() => setNotificationHover(true)}
+            onMouseLeave={() => setNotificationHover(false)}
+            icon={
+              <Badge 
+                count={numOfNotification} 
+                size="small"
+                offset={[-2,2]} // Adjust badge position slightly
+                style={{
+                  color: token.colorTextLightSolid,
+                  backgroundColor: token.colorError,
+                }}
+              >
                 {numOfNotification > 0 ? (
-                  [1, 2].map((n) => (
-                    <button
-                      key={n}
-                      className="dropdown-item"
-                      onClick={() => setShowNotificationDropdown(false)}
-                    >
-                      إشعار {n}
-                    </button>
-                  ))
+                  <MdNotificationsActive 
+                    size={24} 
+                    style={{ 
+                      color: notificationHover ? token.colorPrimaryHover : token.colorPrimary,
+                      transition: 'color 0.3s ease'
+                    }} 
+                  />
                 ) : (
-                  <span className="dropdown-item text-muted">لا توجد إشعارات جديدة</span>
+                  <MdNotifications 
+                    size={24} 
+                    style={{ 
+                      color: notificationHover ? token.colorPrimaryHover : token.colorTextSecondary,
+                      transition: 'color 0.3s ease'
+                    }} 
+                  />
                 )}
-              </div>
-            )}
-          </div>
-          <div className="position-relative">
-            <button
-              className="btn btn-link p-0"
-              onClick={() => setShowAccountDropdown((v) => !v)}
-              style={{ boxShadow: 'none' }}
-            >
-              <MdAccountCircle size={32} />
-            </button>
-            {showAccountDropdown && (
-              <div className="dropdown-menu show mt-2" style={{ minWidth: 150, right: 0, left: 'auto' }}>
-                <button className="dropdown-item" onClick={() => { setShowAccountDropdown(false); navigate('/systems'); }}>
-                  My System
-                </button>
-                <button className="dropdown-item" onClick={() => setShowAccountDropdown(false)}>
-                  الملف الشخصي
-                </button>
-                <div className="dropdown-divider"></div>
-                <button className="dropdown-item text-danger" onClick={handleLogout}>
-                  تسجيل الخروج
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    </nav>
+              </Badge>
+            }
+          />
+        </Dropdown>
+
+        <Dropdown
+          menu={{ 
+            items: accountItems,
+            style: {
+              minWidth: '180px',
+              boxShadow: token.boxShadowSecondary
+            }
+          }}
+          trigger={['click']}
+          placement="bottomRight"
+        >
+          <Button 
+            type="text" 
+            style={getIconButtonStyle(accountHover)}
+            onMouseEnter={() => setAccountHover(true)}
+            onMouseLeave={() => setAccountHover(false)}
+            icon={
+              <MdAccountCircle 
+                size={32} 
+                style={{ 
+                  color: accountHover ? token.colorPrimaryHover : token.colorTextSecondary,
+                  transition: 'color 0.3s ease'
+                }} 
+              />
+            }
+          />
+        </Dropdown>
+      </Space>
+    </Header>
   );
 };
 
