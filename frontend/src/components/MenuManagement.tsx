@@ -99,18 +99,8 @@ const MenuManagement: React.FC<MenuManagementProps> = ({ EditPermition }) => {
       return;
     }
 
-    // إذا كانت الصورة من نوع File، استخدم FormData
     let resultItem;
-    // TypeScript strict: Use a safe runtime check for File
-    if (
-      formData.image &&
-      typeof formData.image === 'object' &&
-      formData.image !== null &&
-      'name' in formData.image &&
-      'type' in formData.image &&
-      typeof (formData.image as { name?: unknown; type?: unknown }).name === 'string' &&
-      typeof (formData.image as { name?: unknown; type?: unknown }).type === 'string'
-    ) {
+    if (formData.image && (formData.image instanceof File || (typeof formData.image === 'object' && formData.image !== null && 'type' in formData.image))) {
       const fd = new FormData();
       fd.append('name', formData.name);
       fd.append('category', formData.category);
@@ -120,9 +110,9 @@ const MenuManagement: React.FC<MenuManagementProps> = ({ EditPermition }) => {
       fd.append('description', formData.description || '');
       fd.append('image', formData.image);
       if (editItem) {
-        resultItem = await updateMenuItem(editItem.id, fd); // يفترض أن الدالة تدعم FormData
+        resultItem = await updateMenuItem(editItem.id, fd);
       } else {
-        resultItem = await createMenuItem(fd); // يفترض أن الدالة تدعم FormData
+        resultItem = await createMenuItem(fd);
       }
     } else {
       const updatedFormData = {
@@ -131,10 +121,13 @@ const MenuManagement: React.FC<MenuManagementProps> = ({ EditPermition }) => {
         cost: Number(formData.cost),
         category: formData.category?.toLowerCase(),
       };
+      if (typeof updatedFormData.image === 'string') {
+        delete updatedFormData.image;
+      }
       if (editItem) {
         resultItem = await updateMenuItem(editItem.id, updatedFormData);
       } else {
-        resultItem = await createMenuItem({ ...updatedFormData, id: Date.now() });
+        resultItem = await createMenuItem({ ...updatedFormData, id: Date.now(), image: null });
       }
     }
 
@@ -359,14 +352,15 @@ const MenuManagement: React.FC<MenuManagementProps> = ({ EditPermition }) => {
           message.error('يرجى اختيار صورة فقط');
           return Upload.LIST_IGNORE;
         }
-        // احفظ الملف نفسه في formData.image
         setFormData(prev => ({ ...prev, image: file }));
         return false; // لا ترفع تلقائياً
       }}
     >
       {formData.image ? (
         <img
-          src={typeof formData.image === 'object' && formData.image !== null && 'type' in formData.image ? URL.createObjectURL(formData.image as File) : (formData.image as string)}
+          src={typeof formData.image === 'object' && formData.image !== null && 'type' in formData.image
+            ? URL.createObjectURL(formData.image as File)
+            : (formData.image as string)}
           alt="preview"
           style={{ width: '100%', height: 80, objectFit: 'cover', borderRadius: 6 }}
         />

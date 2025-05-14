@@ -8,7 +8,7 @@ export interface MenuItem {
   category: string;
   is_available: boolean;
   description: string;
-  image?: string | null | File;
+  image?: string | null | File | RcFile;
 }
 
 // نوع طاولة المطعم
