@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../store";
 import { setSelectedTable } from "../store/billSlice";
-import { Card, Row, Col, Badge, Tooltip, Space, Typography, Tag, Drawer, Tabs, Input, Button, Select, Popover } from 'antd';
+import { Card, Row, Col, Badge, Tooltip, Space, Typography, Tag, Drawer, Tabs, Input, Button, Select, Popover, message } from 'antd';
 import { MdPeopleOutline, MdTableRestaurant, MdEventSeat, MdEventAvailable, MdSearch, MdFilterList, MdClose } from "react-icons/md";
 import { Table } from '../types';
 
@@ -113,9 +113,10 @@ const getStatusText = (status: string) => {
 
 interface TablesSectionProps {
   onClose: () => void;
+  orderType?: 'in_house' | 'delivery';
 }
 
-const TablesSection: React.FC<TablesSectionProps> = ({ onClose }) => {
+const TablesSection: React.FC<TablesSectionProps> = ({ onClose, orderType = 'in_house' }) => {
   const dispatch = useDispatch();
   const selectedTable = useSelector((state: RootState) => state.bill.selectedTable);
   const [hoveredTable, setHoveredTable] = useState<number | null>(null);
@@ -129,6 +130,10 @@ const TablesSection: React.FC<TablesSectionProps> = ({ onClose }) => {
   }, []);
 
   const handleTableClick = (id: number) => {
+    if (orderType === 'delivery') {
+      message.info('Table selection is not available for delivery orders');
+      return;
+    }
     dispatch(setSelectedTable(id === selectedTable ? null : id));
     setIsOpen(false);
     onClose();
@@ -178,12 +183,13 @@ const TablesSection: React.FC<TablesSectionProps> = ({ onClose }) => {
           hoverable
           onClick={() => handleTableClick(table.id)}
           style={{
-            cursor: 'pointer',
+            cursor: orderType === 'delivery' ? 'not-allowed' : 'pointer',
             border: selectedTable === table.id ? '2px solid #1890ff' : '1px solid #f0f0f0',
             transition: 'all 0.3s ease',
             transform: hoveredTable === table.id ? 'translateY(-4px)' : 'none',
             boxShadow: hoveredTable === table.id ? '0 4px 12px rgba(0,0,0,0.1)' : 'none',
             height: '100%',
+            opacity: orderType === 'delivery' ? 0.5 : 1,
           }}
           onMouseEnter={() => setHoveredTable(table.id)}
           onMouseLeave={() => setHoveredTable(null)}

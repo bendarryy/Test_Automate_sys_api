@@ -80,7 +80,11 @@ const MenuManagement: React.FC<MenuManagementProps> = ({ EditPermition }) => {
 
   const handleDeleteClick = React.useCallback(async (item: MenuItem) => {
     await deleteMenuItem(item.id);
-    setItems(items.filter((i) => i.id !== item.id));
+    console.log('item.id:', item.id);
+    setItems(prevItems => {
+      console.log('previous items:', prevItems);
+      return prevItems.filter((i) => i.id !== item.id);
+    });
   }, []);
 
   const handleSave = React.useCallback(async () => {
@@ -142,7 +146,7 @@ const MenuManagement: React.FC<MenuManagementProps> = ({ EditPermition }) => {
               cost: Number(formData.cost),
               is_available: formData.is_available,
               description: formData.description,
-              image: formData.image,
+              image: resultItem.image,
             }
           : item
       )));

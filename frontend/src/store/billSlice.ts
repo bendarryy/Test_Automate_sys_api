@@ -10,11 +10,13 @@ interface Product {
 interface BillState {
   items: Product[];
   selectedTable: number | null; // إضافة حالة الطاولة المحددة
+  orderType: 'in_house' | 'delivery';
 }
 
 const initialState: BillState = {
   items: [],
   selectedTable: null, // الطاولة الافتراضية غير محددة
+  orderType: 'in_house',
 };
 
 const billSlice = createSlice({
@@ -38,9 +40,12 @@ const billSlice = createSlice({
     setSelectedTable: (state, action: PayloadAction<number | null>) => {
       state.selectedTable = action.payload;
     },
+    setOrderType: (state, action: PayloadAction<'in_house' | 'delivery'>) => {
+      state.orderType = action.payload;
+    },
   },
 });
 
-export const { addItem, removeItem, clearBill, setSelectedTable } =
+export const { addItem, removeItem, clearBill, setSelectedTable, setOrderType } =
   billSlice.actions;
 export default billSlice.reducer;

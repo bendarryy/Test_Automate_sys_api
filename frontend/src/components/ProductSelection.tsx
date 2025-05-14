@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo } from "react";
 // import GridScrollX from "./GridScrollX"; // Removed unused import
 // import styles from "../styles/ProductsSection.module.css"; // Removed unused import
 import { useDispatch, useSelector } from "react-redux";
-import { addItem } from "../store/billSlice";
+import { addItem, setSelectedTable, setOrderType } from "../store/billSlice";
 import { useGetMenu, getCategoryIcon } from "../hooks/useGetMenu";
 // Import necessary Ant Design components
 import {
@@ -16,8 +16,9 @@ import {
   Typography,
   Popover,
   Button,
+  message,
 } from "antd";
-import { MdTableRestaurant } from "react-icons/md";
+import { MdTableRestaurant, MdDeliveryDining, MdStore } from "react-icons/md";
 import { RootState } from "../store";
 import TablesSection from "./TablesSection";
 import "../styles/ProductSelection.css";
@@ -46,6 +47,7 @@ const ProductSelection = () => {
   const selectedTable = useSelector(
     (state: RootState) => state.bill.selectedTable
   );
+  const orderType = useSelector((state: RootState) => state.bill.orderType);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortOrder, setSortOrder] = useState<SortOrder>("default");
@@ -190,7 +192,20 @@ const ProductSelection = () => {
   };
 
   const handleTableButtonClick = () => {
+    if (orderType === 'delivery') {
+      message.info('Table selection is not available for delivery orders');
+      return;
+    }
     setShowTables(true);
+  };
+
+  const handleOrderTypeClick = () => {
+    const newType = orderType === 'in_house' ? 'delivery' : 'in_house';
+    dispatch(setOrderType(newType));
+    if (newType === 'delivery' && selectedTable) {
+      dispatch(setSelectedTable(null));
+      message.info('Table selection cleared for delivery order');
+    }
   };
 
   return (
@@ -213,6 +228,31 @@ const ProductSelection = () => {
         }}
       >
         <Space>
+          <Popover
+            content={
+              <div style={{ padding: '4px 8px' }}>
+                {orderType === 'in_house' ? 'In House Order' : 'Delivery Order'}
+              </div>
+            }
+            trigger="hover"
+            placement="bottom"
+          >
+            <Button
+              type={orderType === 'in_house' ? 'primary' : 'default'}
+              icon={orderType === 'in_house' ? <MdStore size={20} /> : <MdDeliveryDining size={20} />}
+              onClick={handleOrderTypeClick}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '8px',
+                borderRadius: '8px',
+                minWidth: '40px',
+                height: '40px',
+                transition: 'all 0.3s ease',
+              }}
+            />
+          </Popover>
           <Button
             onClick={handleTableButtonClick}
             style={{
@@ -227,8 +267,10 @@ const ProductSelection = () => {
                 ? "0 2px 8px rgba(24,144,255,0.15)"
                 : "0 2px 4px rgba(0,0,0,0.05)",
               transition: "all 0.3s ease",
-              cursor: "pointer",
+              cursor: orderType === 'delivery' ? "not-allowed" : "pointer",
+              opacity: orderType === 'delivery' ? 0.5 : 1,
             }}
+            disabled={orderType === 'delivery'}
           >
             <div
               style={{

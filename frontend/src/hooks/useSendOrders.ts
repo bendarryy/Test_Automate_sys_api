@@ -6,9 +6,10 @@ interface OrderItem {
 }
 
 interface Order {
-  customer_name: string;
-  table_number: string;
+  customer_name: string | null;
+  table_number: string | null;
   waiter?: number | null;
+  order_type: 'in_house' | 'delivery';
   status?: string;
 }
 
