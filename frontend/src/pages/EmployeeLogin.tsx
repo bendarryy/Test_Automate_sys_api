@@ -1,19 +1,19 @@
 // src/pages/EmployeeLogin.tsx
 import React, { useState } from 'react';
-import { Form, Button, Card, Container, Alert, Spinner } from 'react-bootstrap';
+import { Form, Input, Button, Card, Alert, Typography } from 'antd';
 import { useApi } from '../hooks/useApi';
-import '../styles/Login.css'; // تأكد من المسار الصحيح
+import '../styles/Login.css';
+
+const { Title } = Typography;
 
 const EmployeeLogin: React.FC = () => {
-  const [email, setEmail] = useState<string>('');
-  const [password, setPassword] = useState<string>('');
   const { loading, error, callApi } = useApi();
   const [success, setSuccess] = useState(false);
+  const [form] = Form.useForm();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onFinish = async (values: { email: string; password: string }) => {
     try {
-      await callApi('post', '/core/employee/login/', { email, password });
+      await callApi('post', '/core/employee/login/', { email: values.email, password: values.password });
       setSuccess(true);
       // يمكنك التوجيه بعد النجاح إذا أردت
       // setTimeout(() => navigate('/employee-dashboard'), 1200);
@@ -23,44 +23,63 @@ const EmployeeLogin: React.FC = () => {
   };
 
   return (
-    <Container className="d-flex min-vh-100 justify-content-center align-items-center">
-      <Card className="login-card shadow employee-card">
-        <Card.Body>
-          <h2 className="text-center mb-4 logo-text">Employee Portal</h2>
-          <Form onSubmit={handleSubmit}>
-            {success && <Alert variant="success">Login successful! Welcome.</Alert>}
-            {error && <Alert variant="danger">{error}</Alert>}
-            <Form.Group controlId="formEmail" className="mb-3">
-              <Form.Label>Email</Form.Label>
-              <Form.Control
-                type="email"
-                placeholder="Enter company email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                autoFocus
-              />
-            </Form.Group>
+    <div
+      style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <Card className="login-card shadow employee-card" style={{ width: 400 }}>
+        <Title level={2} className="text-center mb-4 logo-text" style={{ textAlign: 'center', marginBottom: 24 }}>
+          Employee Portal
+        </Title>
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={onFinish}
+          noValidate
+        >
+          {success && (
+            <Form.Item>
+              <Alert message="Login successful! Welcome." type="success" showIcon style={{ marginBottom: 16 }} />
+            </Form.Item>
+          )}
+          {error && (
+            <Form.Item>
+              <Alert message={error} type="error" showIcon style={{ marginBottom: 16 }} />
+            </Form.Item>
+          )}
+          <Form.Item
+            label="Email"
+            name="email"
+            rules={[
+              { required: true, message: 'Email is required' },
+              { type: 'email', message: 'Invalid email' },
+            ]}
+          >
+            <Input type="email" placeholder="Enter company email" disabled={loading} autoFocus />
+          </Form.Item>
 
-            <Form.Group controlId="formPassword" className="mb-4">
-              <Form.Label>Password</Form.Label>
-              <Form.Control
-                type="password"
-                placeholder="Enter password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </Form.Group>
+          <Form.Item
+            label="Password"
+            name="password"
+            rules={[
+              { required: true, message: 'Password is required' },
+            ]}
+          >
+            <Input.Password placeholder="Enter password" disabled={loading} />
+          </Form.Item>
 
-            <Button variant="success" type="submit" className="w-100 custom-btn" disabled={loading}>
-              {loading ? <Spinner animation="border" size="sm" className="me-2" /> : null}
+          <Form.Item>
+            <Button type="primary" htmlType="submit" className="w-100 custom-btn" loading={loading} disabled={loading}>
               Login
             </Button>
-          </Form>
-        </Card.Body>
+          </Form.Item>
+        </Form>
       </Card>
-    </Container>
+    </div>
   );
 };
 
