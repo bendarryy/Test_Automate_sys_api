@@ -1,6 +1,7 @@
 // تم تفعيل التحميل الكسول (React.lazy) لجميع الصفحات الثقيلة لتحسين الأداء.
 import React, { Suspense, lazy } from "react";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import '../styles/error.css';
 const Layout = lazy(() => import("../Layout"));
 const ProtectLogin = lazy(() => import("../security/protectLogin"));
 const SupermarketPage = lazy(() => import("../pages/supermarket/HomePage"));
@@ -21,8 +22,19 @@ const Systems = lazy(() => import("../pages/Systems"));
 const KdsPage = lazy(() => import("../pages/Restaurant/KdsPage"));
 const EmployeesPage = lazy(() => import("../pages/Restaurant/EmployeesPage"));
 const Financesdashboards = lazy(() => import("../pages/Restaurant/financesdashboards"));
-
+const WaiterDisplay = lazy(() => import("../pages/Restaurant/waiterdisplay"));
+const DeliveryDisplay = lazy(() => import("../pages/Restaurant/deliverydisplay"));
 const About = () => <h1>About Page</h1>;
+
+const ErrorBoundary = () => {
+  return (
+    <div className="error-page">
+      <h1>عذراً، حدث خطأ ما</h1>
+      <p>يرجى التأكد من تسجيل الدخول واختيار النظام المناسب</p>
+      <button onClick={() => window.location.href = '/systems'}>العودة إلى صفحة الأنظمة</button>
+    </div>
+  );
+};
 
 const router = createBrowserRouter([
   // Auth-related routes OUTSIDE the layout
@@ -178,6 +190,28 @@ const router = createBrowserRouter([
           <Suspense fallback={<div>Loading...</div>}>
             <ProtectLogin>
               <Financesdashboards />
+            </ProtectLogin>
+          </Suspense>
+        ),
+      },
+      {
+        path: "/deliverydisplay",
+        errorElement: <ErrorBoundary />,
+        element: (
+          <Suspense fallback={<div>Loading...</div>}>
+            <ProtectLogin>
+              <DeliveryDisplay />
+            </ProtectLogin>
+          </Suspense>
+        ),
+      },
+      {
+        path: "/waiterdisplay",
+        errorElement: <ErrorBoundary />,
+        element: (
+          <Suspense fallback={<div>Loading...</div>}>
+            <ProtectLogin>
+              <WaiterDisplay />
             </ProtectLogin>
           </Suspense>
         ),

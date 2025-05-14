@@ -60,6 +60,8 @@ function getNavItems(): NavItem[] {
     { name: "Menu Management", icon: RiClipboardLine, activeIcon: RiClipboardFill, href: "/menu-management" },
     { name: "Inventory", icon: RiTBoxLine, activeIcon: RiTBoxFill, href: "/Inventory" },
     { name: "KDS", icon: RiComputerLine, activeIcon: RiComputerFill, href: `/kds/` },
+    { name: "Waiter Display", icon: RiComputerLine, activeIcon: RiComputerFill, href: "/waiterdisplay" },
+    { name: "Delivery Display", icon: RiComputerLine, activeIcon: RiComputerFill, href: "/deliverydisplay" },
     { name: "Employees", icon: RiUserLine, activeIcon: RiUserFill, href: "/employees" },
     { name: "About", icon: RiInformationLine, activeIcon: RiInformationFill, href: "/about" },
   ];
