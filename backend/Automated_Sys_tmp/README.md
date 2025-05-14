@@ -38,7 +38,50 @@
 This endpoint provides a custom admin panel for each user to manage their resources 
 
 ---
+### Change Password
 
+**POST** `/api/core/change-password/`
+
+- **Description:**
+  Endpoint to change the current user's password. Requires the old password and the new password. The user must be authenticated.
+
+- **Request Example:**
+```json
+{
+    "old_password": "current_password",
+    "new_password": "new_secure_password"
+}
+```
+
+- **New Password Requirements:**
+  - Must be at least 8 characters long.
+
+- **Response Examples:**
+    - **Success:**
+    ```json
+    {
+        "message": "Password changed successfully"
+    }
+    ```
+    - **Failure (incorrect old password):**
+    ```json
+    {
+        "error": "Old password is incorrect"
+    }
+    ```
+    - **Failure (new password too short):**
+    ```json
+    {
+        "error": "New password must be at least 8 characters long"
+    }
+    ```
+    - **Failure (missing fields):**
+    ```json
+    {
+        "error": "Both old_password and new_password are required"
+    }
+    ```
+---
 **POST** `/api/core/create-system/`
 
 **Request Body:**
@@ -405,167 +448,46 @@ json
 - All financial values are based only on completed orders (status='completed').
 - If no data appears for certain periods, ensure there are completed orders in those periods.
 
-## 👨‍🍳 Waiter Display System (WDS)
+## 🧑‍🍳 Waiter Display System (WDS)
+
+**Description:**
+A dedicated interface for waiters to view and manage active orders in the restaurant.
+
+### Main Endpoints:
+- **List all active orders:**
+  `GET /api/restaurant/{system_id}/waiter/orders/`
+- **Get table status:**
+  `GET /api/restaurant/{system_id}/waiter/orders/tables/`
+- **Update order status:**
+  `PATCH /api/restaurant/{system_id}/waiter/orders/{order_id}/`
+- **Get order details:**
+  `GET /api/restaurant/{system_id}/waiter/orders/{order_id}/`
+- **Create new order:**
+  `POST /api/restaurant/{system_id}/waiter/orders/`
+- **Add item to order:**
+  `POST /api/restaurant/{system_id}/waiter/orders/{order_id}/items/`
+- **Remove item from order:**
+  `DELETE /api/restaurant/{system_id}/waiter/orders/{order_id}/items/{item_id}/`
 
 ---
 
-### 🔹 Retrieve Active Orders
-**GET** `/api/restaurant/{system_id}/waiter/orders/`
+## 🚚 Delivery System
 
-- **Description:**  
-  Returns all active orders for a specific restaurant system.
+**Description:**
+APIs for managing delivery orders from the restaurant to customers outside the restaurant.
 
-- **Sample Response:**
-```json
-[
-  {
-    "id": 12,
-    "table_number": 5,
-    "customer_name": "John Doe",
-    "status": "pending",
-    "order_items": [
-      {
-        "id": 1,
-        "menu_item_name": "Pizza",
-        "quantity": 2,
-        "price": 15.99
-      }
-    ],
-    "total_price": 31.98,
-    "created_at": "2025-04-27T14:00:00Z"
-  }
-]
-```
-
-### 🔹 Get Table Status
-**GET** `/api/restaurant/{system_id}/waiter/orders/tables/`
-
-- **Description:**  
-  Returns the status of all tables in the restaurant.
-
-- **Sample Response:**
-```json
-[
-  {
-    "table_number": "1",
-    "status": "occupied",
-    "current_order": {
-      "id": 12,
-      "customer_name": "John Doe",
-      "status": "pending"
-    }
-  },
-  {
-    "table_number": "2",
-    "status": "available",
-    "current_order": null
-  }
-]
-```
-
-### 🔹 Update Order Status
-**PATCH** `/api/restaurant/{system_id}/waiter/orders/{order_id}/`
-
-- **Description:**  
-  Update the status of a specific order.
-
-- **Request Body:**
-```json
-{
-  "status": "served"
-}
-```
-
-- **Available Statuses:**
-  - `pending`: Order is waiting to be prepared
-  - `preparing`: Order is being prepared
-  - `ready`: Order is ready to be served
-  - `served`: Order has been served
-  - `completed`: Order is completed
-  - `canceled`: Order has been canceled
-
-### 🔹 Get Order Details
-**GET** `/api/restaurant/{system_id}/waiter/orders/{order_id}/`
-
-- **Description:**  
-  Get detailed information about a specific order.
-
-- **Sample Response:**
-```json
-{
-  "id": 12,
-  "table_number": "5",
-  "customer_name": "John Doe",
-  "waiter": {
-    "id": 3,
-    "name": "Sarah Smith"
-  },
-  "status": "pending",
-  "order_items": [
-    {
-      "id": 1,
-      "menu_item_name": "Pizza",
-      "quantity": 2,
-      "price": 15.99,
-      "notes": "Extra cheese"
-    }
-  ],
-  "total_price": 31.98,
-  "created_at": "2025-04-27T14:00:00Z",
-  "updated_at": "2025-04-27T14:05:00Z"
-}
-```
-
-### 🔹 Create New Order
-**POST** `/api/restaurant/{system_id}/waiter/orders/`
-
-- **Description:**  
-  Create a new order.
-
-- **Request Body:**
-```json
-{
-  "table_number": "5",
-  "customer_name": "John Doe",
-  "order_items": [
-    {
-      "menu_item": 1,
-      "quantity": 2,
-      "notes": "Extra cheese"
-    }
-  ]
-}
-```
-
-### 🔹 Add Items to Order
-**POST** `/api/restaurant/{system_id}/waiter/orders/{order_id}/items/`
-
-- **Description:**  
-  Add items to an existing order.
-
-- **Request Body:**
-```json
-{
-  "menu_item": 2,
-  "quantity": 1,
-  "notes": "No onions"
-}
-```
-
-### 🔹 Remove Items from Order
-**DELETE** `/api/restaurant/{system_id}/waiter/orders/{order_id}/items/{item_id}/`
-
-- **Description:**  
-  Remove an item from an order.
-
-### 🔹 Cancel Order
-**DELETE** `/api/restaurant/{system_id}/waiter/orders/{order_id}/`
-
-- **Description:**  
-  Cancel an entire order.
+### Main Endpoints:
+- **List all delivery orders:**
+  `GET /api/restaurant/{system_id}/delivery/orders/`
+- **Create new delivery order:**
+  `POST /api/restaurant/{system_id}/delivery/orders/`
+- **Update delivery order status:**
+  `PATCH /api/restaurant/{system_id}/delivery/orders/{order_id}/`
+- **Get delivery order details:**
+  `GET /api/restaurant/{system_id}/delivery/orders/{order_id}/`
 
 ---
 
-# 🔒 Permissions
+**Notes:**
 - All endpoints require authentication.
-- Roles: System Owner (owner), Manager (manager), Cashier (cashier).
+- You can customize responses as needed (success, error, etc).

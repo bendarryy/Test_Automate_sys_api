@@ -136,6 +136,52 @@ class ProfileView(APIView):
     def get(self, request):
         serializer = ProfileSerializer(request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)
+# change password by ali
+class ChangePasswordView(APIView):
+    """
+    Change user password endpoint.
+    Requires authentication and old password verification.
+    
+    Example request body:
+    {
+        "old_password": "currentpassword",
+        "new_password": "newsecurepassword"
+    }
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        old_password = request.data.get('old_password')
+        new_password = request.data.get('new_password')
+
+        if not old_password or not new_password:
+            return Response(
+                {"error": "Both old_password and new_password are required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Verify old password
+        if not check_password(old_password, request.user.password):
+            return Response(
+                {"error": "Old password is incorrect"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Validate new password (you can add more validation rules here)
+        if len(new_password) < 8:
+            return Response(
+                {"error": "New password must be at least 8 characters long"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Update password
+        request.user.password = make_password(new_password)
+        request.user.save()
+
+        return Response(
+            {"message": "Password changed successfully"},
+            status=status.HTTP_200_OK
+        )
 
 # Employee 
 

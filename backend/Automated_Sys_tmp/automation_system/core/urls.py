@@ -11,6 +11,7 @@ urlpatterns = [
     path("login/", views.login_user, name="login"),  
     path("logout/", views.logout_user, name="logout"), 
     path('profile/', views.ProfileView.as_view(), name='profile'),
+    path('change-password/', views.ChangePasswordView.as_view(), name='change-password'),
    
     path('<int:system_id>/invite/', views.EmployeeInviteView.as_view(), name='employee-invite'),
     path('<int:system_id>/employees/', views.EmployeeListView.as_view(), name='employee-list'),
