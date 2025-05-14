@@ -20,8 +20,8 @@ class MenuItemSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "created_at", "updated_at", "system"]
 
     description = serializers.CharField(required=False, allow_blank=True)
-    price = serializers.DecimalField(required=True, max_digits=10, decimal_places=2 )
-    image = serializers.ImageField(required=False, allow_null=True)
+    price = serializers.DecimalField(required=True, max_digits=10, decimal_places=2)
+    image = serializers.ImageField(required=False, allow_null=True, allow_empty_file=True)
     cost = serializers.DecimalField(required=True, max_digits=10, decimal_places=2)
 
     def create(self, validated_data):
