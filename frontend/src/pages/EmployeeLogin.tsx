@@ -1,34 +1,19 @@
 // src/pages/EmployeeLogin.tsx
-import React from 'react';
-import { useForm } from 'react-hook-form';
-import { yupResolver } from '@hookform/resolvers/yup';
-import * as yup from 'yup';
+import React, { useState } from 'react';
 import { Form, Input, Button, Card, Alert, Typography } from 'antd';
 import { useApi } from '../hooks/useApi';
 import '../styles/Login.css';
 
 const { Title } = Typography;
 
-const schema = yup.object().shape({
-  email: yup.string().email('Invalid email').required('Email is required'),
-  password: yup.string().required('Password is required'),
-});
-
-interface IFormInputs {
-  email: string;
-  password: string;
-}
-
 const EmployeeLogin: React.FC = () => {
   const { loading, error, callApi } = useApi();
-  const [success, setSuccess] = React.useState(false);
-  const { register, handleSubmit, formState: { errors } } = useForm<IFormInputs>({
-    resolver: yupResolver(schema)
-  });
+  const [success, setSuccess] = useState(false);
+  const [form] = Form.useForm();
 
-  const onSubmit = async (data: IFormInputs) => {
+  const onFinish = async (values: { email: string; password: string }) => {
     try {
-      await callApi('post', '/core/employee/login/', { email: data.email, password: data.password });
+      await callApi('post', '/core/employee/login/', { email: values.email, password: values.password });
       setSuccess(true);
       // يمكنك التوجيه بعد النجاح إذا أردت
       // setTimeout(() => navigate('/employee-dashboard'), 1200);
@@ -50,7 +35,12 @@ const EmployeeLogin: React.FC = () => {
         <Title level={2} className="text-center mb-4 logo-text" style={{ textAlign: 'center', marginBottom: 24 }}>
           Employee Portal
         </Title>
-        <Form layout="vertical" onFinish={handleSubmit(onSubmit)} noValidate>
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={onFinish}
+          noValidate
+        >
           {success && (
             <Form.Item>
               <Alert message="Login successful! Welcome." type="success" showIcon style={{ marginBottom: 16 }} />
@@ -63,28 +53,23 @@ const EmployeeLogin: React.FC = () => {
           )}
           <Form.Item
             label="Email"
-            validateStatus={errors.email ? 'error' : ''}
-            help={errors.email?.message}
+            name="email"
+            rules={[
+              { required: true, message: 'Email is required' },
+              { type: 'email', message: 'Invalid email' },
+            ]}
           >
-            <Input
-              type="email"
-              placeholder="Enter company email"
-              {...register('email')}
-              disabled={loading}
-              autoFocus
-            />
+            <Input type="email" placeholder="Enter company email" disabled={loading} autoFocus />
           </Form.Item>
 
           <Form.Item
             label="Password"
-            validateStatus={errors.password ? 'error' : ''}
-            help={errors.password?.message}
+            name="password"
+            rules={[
+              { required: true, message: 'Password is required' },
+            ]}
           >
-            <Input.Password
-              placeholder="Enter password"
-              {...register('password')}
-              disabled={loading}
-            />
+            <Input.Password placeholder="Enter password" disabled={loading} />
           </Form.Item>
 
           <Form.Item>
