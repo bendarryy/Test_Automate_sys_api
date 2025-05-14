@@ -3,10 +3,12 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import { Form, Button, Card, Container } from 'react-bootstrap';
+import { Form, Input, Button, Card, Alert, Typography } from 'antd';
 import '../styles/Login.css';
 import { useLogin } from '../hooks/useLogin';
 import { useNavigate } from 'react-router-dom';
+
+const { Title } = Typography;
 
 const schema = yup.object().shape({
   username: yup.string().required('Username is required').min(3, 'Username must be at least 3 characters'),
@@ -36,52 +38,54 @@ const OwnerLogin: React.FC = () => {
   };
 
   return (
-    <Container className="d-flex min-vh-100 justify-content-center align-items-center">
-      <Card className={`login-card shadow ${error ? 'error' : ''}`}>
-        <Card.Body>
-          <h2 className="text-center mb-4 logo-text">Owner Portal</h2>
-          <Form onSubmit={handleSubmit(onSubmit)} noValidate>
-            <Form.Group controlId="formUsername" className="mb-3">
-              <Form.Label>Username</Form.Label>
-              <Form.Control
-                type="text"
-                placeholder="Enter username"
-                {...register('username')}
-                isInvalid={!!errors.username}
-                required
-              />
-              <Form.Control.Feedback type="invalid">
-                {errors.username?.message}
-              </Form.Control.Feedback>
-            </Form.Group>
+    <div        style={{
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      }}>
+      <Card className={`login-card shadow ${error ? 'error' : ''}`} style={{ width: 400 }}>
+        <Title level={2} className="text-center mb-4 logo-text" style={{ textAlign: 'center', marginBottom: 24 }}>Owner Portal</Title>
+        <Form layout="vertical" onFinish={handleSubmit(onSubmit)} noValidate>
+          <Form.Item
+            label="Username"
+            validateStatus={errors.username ? 'error' : ''}
+            help={errors.username?.message}
+          >
+            <Input
+              placeholder="Enter username"
+              {...register('username')}
+              disabled={loading}
+              autoFocus
+            />
+          </Form.Item>
 
-            <Form.Group controlId="formPassword" className="mb-3">
-              <Form.Label>Password</Form.Label>
-              <Form.Control
-                type="password"
-                placeholder="Password"
-                {...register('password')}
-                isInvalid={!!errors.password}
-                required
-              />
-              <Form.Control.Feedback type="invalid">
-                {errors.password?.message}
-              </Form.Control.Feedback>
-            </Form.Group>
+          <Form.Item
+            label="Password"
+            validateStatus={errors.password ? 'error' : ''}
+            help={errors.password?.message}
+          >
+            <Input.Password
+              placeholder="Password"
+              {...register('password')}
+              disabled={loading}
+            />
+          </Form.Item>
 
-            {error && (
-              <div className="alert alert-danger" role="alert">
-                {error}
-              </div>
-            )}
+          {error && (
+            <Form.Item>
+              <Alert message={error} type="error" showIcon style={{ marginBottom: 16 }} />
+            </Form.Item>
+          )}
 
-            <Button variant="primary" type="submit" className={`w-100 custom-btn ${error ? 'error' : ''}`} disabled={loading}>
-              {loading ? 'Signing In...' : 'Sign In'}
+          <Form.Item>
+            <Button type="primary" htmlType="submit" className="w-100 custom-btn" loading={loading} disabled={loading}>
+              Sign In
             </Button>
-          </Form>
-        </Card.Body>
+          </Form.Item>
+        </Form>
       </Card>
-    </Container>
+    </div>
   );
 };
 

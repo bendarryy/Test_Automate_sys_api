@@ -1,0 +1,9 @@
+.product-card:hover .product-image {
+  transform: scale(1.08);
+  transition: transform 0.3s cubic-bezier(0.4, 0.2, 0.2, 1);
+  box-shadow: 0 4px 16px rgba(24, 144, 255, 0.15);
+  z-index: 2;
+}
+.product-image {
+  transition: transform 0.3s cubic-bezier(0.4, 0.2, 0.2, 1);
+} 
