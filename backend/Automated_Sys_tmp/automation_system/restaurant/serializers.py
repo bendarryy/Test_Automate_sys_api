@@ -86,6 +86,8 @@ class OrderSerializer(serializers.ModelSerializer):
         default="in_house",
         help_text="Set to 'delivery' only for delivery orders. Default is 'in_house'."
     )
+    table_number = serializers.CharField(required=False, allow_null=True)
+    customer_name = serializers.CharField(required=False, allow_null=True)
 
     class Meta:
         model = Order
@@ -112,23 +114,24 @@ class OrderSerializer(serializers.ModelSerializer):
         system_id = self.context["view"].kwargs.get("system_id")
         system = get_object_or_404(System, id=system_id)
 
-        # Validate order type specific requirements
-        order_type = data.get('order_type', 'in_house')
-        if order_type == 'delivery':
-            if not data.get('customer_name'):
-                raise serializers.ValidationError({
-                    "customer_name": "Customer name is required for delivery orders"
-                })
-            # Clear table number for delivery orders
-            data['table_number'] = None
-        else:  # in_house
-            if not data.get('table_number'):
-                raise serializers.ValidationError({
-                    "table_number": "Table number is required for in-house orders"
-                })
-            # Clear customer name for in-house orders if not provided
-            if not data.get('customer_name'):
-                data['customer_name'] = None
+        # Only validate order type specific requirements during creation
+        if self.context['request'].method == 'POST':
+            order_type = data.get('order_type', 'in_house')
+            if order_type == 'delivery':
+                if not data.get('customer_name'):
+                    raise serializers.ValidationError({
+                        "customer_name": "Customer name is required for delivery orders"
+                    })
+                # Clear table number for delivery orders
+                data['table_number'] = None
+            else:  # in_house
+                if not data.get('table_number'):
+                    raise serializers.ValidationError({
+                        "table_number": "Table number is required for in-house orders"
+                    })
+                # Clear customer name for in-house orders if not provided
+                if not data.get('customer_name'):
+                    data['customer_name'] = None
 
         try:
             employee = Employee.objects.get(system=system, user=user)
