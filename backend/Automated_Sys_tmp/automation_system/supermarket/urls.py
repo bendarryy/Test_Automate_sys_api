@@ -1,6 +1,12 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import InventoryItemViewSet, SaleViewSet
+from .views import (
+    InventoryItemViewSet, 
+    SaleViewSet,
+    SupplierViewSet
+)
+import json
+from django.conf import settings
 
 
 router = DefaultRouter()
@@ -10,6 +16,9 @@ inventory_item = InventoryItemViewSet.as_view(
         "patch": "update_stock",
     }
 )
+
+with open(settings.BASE_DIR / 'core/role_actions.json') as f:
+    ROLE_ACTIONS = json.load(f)
 
 urlpatterns = [
     path("", include(router.urls)),
@@ -116,5 +125,24 @@ urlpatterns = [
             }
         ),
         name="sale-apply-discount",
+    ),
+    # Supplier endpoints
+    path(
+        "<int:system_id>/suppliers/",
+        SupplierViewSet.as_view({
+            "get": "list",
+            "post": "create",
+        }),
+        name="supplier-list-create",
+    ),
+    path(
+        "<int:system_id>/suppliers/<int:pk>/",
+        SupplierViewSet.as_view({
+            "get": "retrieve",
+            "put": "update",
+            "patch": "partial_update",
+            "delete": "destroy",
+        }),
+        name="supplier-detail",
     ),
 ]

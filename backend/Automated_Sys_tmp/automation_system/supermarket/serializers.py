@@ -1,10 +1,11 @@
 from core.models import System, UserRole, Employee
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
-from .models import Product, StockChange, Sale, SaleItem, Discount
+from .models import Product, StockChange, Sale, SaleItem, Discount, Supplier
 from django.utils import timezone
 from decimal import Decimal
 import time
+from django.shortcuts import get_object_or_404
 
 
 class InventorysupItemSerializer(serializers.ModelSerializer):
@@ -156,3 +157,22 @@ class ApplyDiscountSerializer(serializers.Serializer):
             return value
         except Discount.DoesNotExist:
             raise serializers.ValidationError("Discount does not exist")
+
+
+class SupplierSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Supplier
+        fields = ['id', 'name', 'phone', 'email', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+    def create(self, validated_data):
+        request = self.context['request']
+        system_id = self.context['view'].kwargs.get('system_id')
+        system = get_object_or_404(System, id=system_id)
+        validated_data['system'] = system
+        return super().create(validated_data)
+
+    def validate_phone(self, value):
+        if not value.startswith('+'):
+            value = '+' + value
+        return value

@@ -55,7 +55,9 @@ urlpatterns = [
 if settings.DEBUG:
     # This will only handle requests from subdomains
     urlpatterns = [
-        path('', include('restaurant.urls')),  # This will handle the public view for subdomains
+        path('restaurant/', include('restaurant.urls')),  # This will handle the public view for subdomains
+        path('supermarket/', include('supermarket.urls')),  # This will handle the public view for subdomains
+
     ] + urlpatterns  # Add all other URLs after
 
 if settings.DEBUG:
