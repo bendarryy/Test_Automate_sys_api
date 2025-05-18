@@ -5,6 +5,8 @@ from .views import (
     SaleViewSet,
     SupplierViewSet
 )
+import json
+from django.conf import settings
 
 
 router = DefaultRouter()
@@ -14,6 +16,9 @@ inventory_item = InventoryItemViewSet.as_view(
         "patch": "update_stock",
     }
 )
+
+with open(settings.BASE_DIR / 'core/role_actions.json') as f:
+    ROLE_ACTIONS = json.load(f)
 
 urlpatterns = [
     path("", include(router.urls)),

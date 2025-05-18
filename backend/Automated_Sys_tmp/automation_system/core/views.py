@@ -23,6 +23,7 @@ from .permissions import IsSystemOwner
 from rest_framework.exceptions import NotFound, ValidationError
 from django.contrib.auth.hashers import make_password , check_password
 from drf_yasg.utils import swagger_auto_schema
+from django.conf import settings
 
 from drf_yasg import openapi
 
@@ -135,7 +136,22 @@ class ProfileView(APIView):
 
     def get(self, request):
         serializer = ProfileSerializer(request.user)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        # Determine role
+        role = serializer.data.get('role')
+        # Load actions from JSON file
+        try:
+            with open(settings.BASE_DIR / 'core/role_actions.json') as f:
+                ROLE_ACTIONS = json.load(f)
+        except Exception:
+            ROLE_ACTIONS = {}
+        actions = ROLE_ACTIONS.get(role, [])
+        # Compose response
+        return Response({
+            "user": serializer.data.get('user'),
+            "role": role,
+            "systems": serializer.data.get('systems'),
+            "actions": actions
+        }, status=status.HTTP_200_OK)
 # change password by ali
 class ChangePasswordView(APIView):
     """

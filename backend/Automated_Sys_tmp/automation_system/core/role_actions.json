@@ -1,0 +1,26 @@
+{
+  "owner": [
+    "view_menu", "create_menu", "update_menu", "delete_menu",
+    "take_order", "update_order", "delete_order",
+    "manage_inventory", "view_analytics", "manage_employees",
+    "access_kitchen", "access_waiter_display", "access_delivery"
+  ],
+  "manager": [
+    "view_menu", "create_menu", "update_menu", "delete_menu",
+    "take_order", "update_order", "delete_order",
+    "manage_inventory", "view_analytics", "manage_employees",
+    "access_kitchen", "access_waiter_display", "access_delivery"
+  ],
+  "chef": [
+    "view_menu", "access_kitchen"
+  ],
+  "waiter": [
+    "view_menu", "take_order", "manage_own_orders", "access_waiter_display"
+  ],
+  "cashier": [
+    "view_menu", "update_order", "view_analytics", "access_waiter_display"
+  ],
+  "delivery_driver": [
+    "access_delivery", "update_order"
+  ]
+} 
