@@ -9,6 +9,7 @@ import {
   RiInformationLine,
   RiComputerLine,
   RiUserLine,
+  RiShoppingBasketLine,
 } from "react-icons/ri";
 import {
   RiHome4Fill,
@@ -20,6 +21,7 @@ import {
   RiInformationFill,
   RiComputerFill,
   RiUserFill,
+  RiShoppingBasketFill,
 } from "react-icons/ri";
 
 // Define the navigation item interface
@@ -140,6 +142,14 @@ export const supermarketNavItems: NavItem[] = [
     icon: RiTBoxLine,
     activeIcon: RiTBoxFill,
     href: '/inventory',
+    systemCategory: 'supermarket',
+    showInSidebar: true,
+  },
+  {
+    name: 'Products Management',
+    icon: RiShoppingBasketLine,
+    activeIcon: RiShoppingBasketFill,
+    href: '/supermarket/products',
     systemCategory: 'supermarket',
     showInSidebar: true,
   },

@@ -3,12 +3,9 @@ import React, { Suspense, lazy } from "react";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import '../styles/error.css';
 import { authRoutes } from '../config/navigation.config';
+import { SalesPage } from "../pages/supermarket/SalesPage";
 const Layout = lazy(() => import("../Layout"));
 const ProtectLogin = lazy(() => import("../security/protectLogin"));
-const SupermarketPage = lazy(() => import("../pages/supermarket/HomePage"));
-
-
-// Dynamic home page that switches based on system category
 const DynamicHomePage = lazy(() => import("../pages/DynamicHomePage"));
 const RegisterPage = lazy(() => import("../pages/RegisterPage"));
 const OrdersPage = lazy(() => import("../pages/Restaurant/OrderPage"));
@@ -30,6 +27,7 @@ const About = () => <h1>About Page</h1>;
 const Profile = lazy(() => import("../pages/Profile"));
 const Settings = lazy(() => import("../pages/Settings"));
 const ChangePassword = lazy(() => import("../pages/ChangePassword"));
+const ProductsManagement = lazy(() => import("../pages/supermarket/ProductsManagement"));
 
 const ErrorBoundary = () => {
   return (
@@ -198,7 +196,7 @@ const router = createBrowserRouter([
             </ProtectLogin>
           </Suspense>
         ),
-      },
+       },
        {
         path: "/financesdashboards",
         element: (
@@ -293,6 +291,26 @@ const supermarketRouter = createBrowserRouter([
           <Suspense fallback={<div>Loading...</div>}>
             <ProtectLogin>
               <InventoryManagementSMPage />
+            </ProtectLogin>
+          </Suspense>
+        ),
+      },
+      {
+        path: "/supermarket/products",
+        element: (
+          <Suspense fallback={<div>Loading...</div>}>
+            <ProtectLogin>
+              <ProductsManagement />
+            </ProtectLogin>
+          </Suspense>
+        ),
+      },
+      {
+        path: "/supermarket/sales",
+        element: (
+          <Suspense fallback={<div>Loading...</div>}>
+            <ProtectLogin>
+              <SalesPage />
             </ProtectLogin>
           </Suspense>
         ),

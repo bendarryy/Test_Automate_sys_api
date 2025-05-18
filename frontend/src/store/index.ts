@@ -1,9 +1,11 @@
-import { configureStore } from "@reduxjs/toolkit";
-import billReducer from "./billSlice";
+import { configureStore } from '@reduxjs/toolkit';
+import billReducer from './billSlice';
+import salesReducer from './salesSlice';
 
 const store = configureStore({
   reducer: {
     bill: billReducer,
+    sales: salesReducer,
   },
 });
 

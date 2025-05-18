@@ -52,8 +52,12 @@ export function Sidebar({ defaultIconsOnly = false, className = "" }: { defaultI
 
       setVisibleItems(navItems.slice(0, numVisible));
       setOverflowItems(navItems.slice(numVisible));
+    } else {
+      // Reset to show all items when not in mobile mode
+      setVisibleItems(navItems);
+      setOverflowItems([]);
     }
-  }, [isMobile, navItems]);
+  }, [isMobile]);
 
   const toggleSidebar = () => {
     setCollapsed(!collapsed);

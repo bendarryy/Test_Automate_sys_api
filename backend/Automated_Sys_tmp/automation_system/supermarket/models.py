@@ -72,9 +72,11 @@ class Sale(models.Model):
 
     def calculate_total(self):
         """Calculate total price including VAT and discounts"""
+        from decimal import Decimal
         subtotal = sum(item.total_price for item in self.items.all())
-        self.vat_amount = subtotal * self.vat_rate
-        self.total_price = subtotal + self.vat_amount - self.discount_amount
+        # Convert vat_rate to Decimal if needed
+        self.vat_amount = subtotal * Decimal(str(self.vat_rate))
+        self.total_price = subtotal + self.vat_amount - Decimal(str(self.discount_amount))
         self.save()
 
 
