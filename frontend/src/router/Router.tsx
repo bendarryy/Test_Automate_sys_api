@@ -2,12 +2,14 @@
 import React, { Suspense, lazy } from "react";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import '../styles/error.css';
+import { authRoutes } from '../config/navigation.config';
 const Layout = lazy(() => import("../Layout"));
 const ProtectLogin = lazy(() => import("../security/protectLogin"));
 const SupermarketPage = lazy(() => import("../pages/supermarket/HomePage"));
 
 
-const HomePage = lazy(() => import("../pages/Restaurant/HomePage"));
+// Dynamic home page that switches based on system category
+const DynamicHomePage = lazy(() => import("../pages/DynamicHomePage"));
 const RegisterPage = lazy(() => import("../pages/RegisterPage"));
 const OrdersPage = lazy(() => import("../pages/Restaurant/OrderPage"));
 const OrderDetailsPage = lazy(() => import("../pages/Restaurant/OrderDetailsPage"));
@@ -25,6 +27,9 @@ const Financesdashboards = lazy(() => import("../pages/Restaurant/financesdashbo
 const WaiterDisplay = lazy(() => import("../pages/Restaurant/waiterdisplay"));
 const DeliveryDisplay = lazy(() => import("../pages/Restaurant/deliverydisplay"));
 const About = () => <h1>About Page</h1>;
+const Profile = lazy(() => import("../pages/Profile"));
+const Settings = lazy(() => import("../pages/Settings"));
+const ChangePassword = lazy(() => import("../pages/ChangePassword"));
 
 const ErrorBoundary = () => {
   return (
@@ -36,24 +41,34 @@ const ErrorBoundary = () => {
   );
 };
 
+// Create auth routes from the centralized configuration
+const authRoutesConfig = authRoutes.map(route => {
+  let element;
+  switch(route.path) {
+    case '/register':
+      element = <RegisterPage />;
+      break;
+    case '/ownerlogin':
+      element = <OwnerLogin />;
+      break;
+    case '/employeelogin':
+      element = <EmployeeLogin />;
+      break;
+    case '/systems':
+      element = <ProtectLogin><Systems /></ProtectLogin>;
+      break;
+    default:
+      element = null;
+  }
+  return {
+    path: route.path,
+    element
+  };
+});
+
 const router = createBrowserRouter([
   // Auth-related routes OUTSIDE the layout
-  {
-    path: "/register",
-    element: <RegisterPage />,
-  },
-  {
-    path: "/ownerlogin",
-    element: <OwnerLogin />,
-  },
-  {
-    path: "/employeelogin",
-    element: <EmployeeLogin />,
-  },
-  {
-    path: "/systems",
-    element: <ProtectLogin><Systems /></ProtectLogin>,
-  },
+  ...authRoutesConfig,
 
   // All main routes under systemId
   {
@@ -69,7 +84,7 @@ const router = createBrowserRouter([
         element: (
           <Suspense fallback={<div>Loading...</div>}>
             <ProtectLogin>
-              <HomePage />
+              <DynamicHomePage />
             </ProtectLogin>
           </Suspense>
         ),
@@ -216,28 +231,43 @@ const router = createBrowserRouter([
           </Suspense>
         ),
       },
+      {
+        path: "/profile",
+        element: (
+          <Suspense fallback={<div>Loading...</div>}>
+            <ProtectLogin>
+              <Profile />
+            </ProtectLogin>
+          </Suspense>
+        ),
+      },
+      {
+        path: "/settings",
+        element: (
+          <Suspense fallback={<div>Loading...</div>}>
+            <ProtectLogin>
+              <Settings />
+            </ProtectLogin>
+          </Suspense>
+        ),
+      },
+      {
+        path: "/settings/change-password",
+        element: (
+          <Suspense fallback={<div>Loading...</div>}>
+            <ProtectLogin>
+              <ChangePassword />
+            </ProtectLogin>
+          </Suspense>
+        ),
+      },
     ],
   },
 ]);
 
 const supermarketRouter = createBrowserRouter([
-    // Auth-related routes OUTSIDE the layout
-    {
-      path: "/register",
-      element: <RegisterPage />,
-    },
-    {
-      path: "/ownerlogin",
-      element: <OwnerLogin />,
-    },
-    {
-      path: "/employeelogin",
-      element: <EmployeeLogin />,
-    },
-    {
-      path: "/systems",
-      element: <ProtectLogin><Systems /></ProtectLogin>,
-    },
+  // Auth-related routes OUTSIDE the layout
+  ...authRoutesConfig,
   
   {
     path: "/",
@@ -252,7 +282,7 @@ const supermarketRouter = createBrowserRouter([
         element: (
           <Suspense fallback={<div>Loading...</div>}>
             <ProtectLogin>
-              <SupermarketPage />
+              <DynamicHomePage />
             </ProtectLogin>
           </Suspense>
         ),
@@ -267,20 +297,73 @@ const supermarketRouter = createBrowserRouter([
           </Suspense>
         ),
       },
+      {
+        path: "/profile",
+        element: (
+          <Suspense fallback={<div>Loading...</div>}>
+            <ProtectLogin>
+              <Profile />
+            </ProtectLogin>
+          </Suspense>
+        ),
+      },
+      {
+        path: "/settings",
+        element: (
+          <Suspense fallback={<div>Loading...</div>}>
+            <ProtectLogin>
+              <Settings />
+            </ProtectLogin>
+          </Suspense>
+        ),
+      },
     ],
   },
 ]);
 
-const Router = () => (
-  <Suspense fallback={<div>Loading...</div>}>
-    <RouterProvider router={router} />
-  </Suspense>
-);
+// Dynamic router that selects the appropriate router based on system category
+const DynamicRouter = () => {
+  // Get the selected system category from localStorage
+  const [systemCategory, setSystemCategory] = React.useState<string | null>(
+    localStorage.getItem('selectedSystemCategory')
+  );
 
+  // Listen for changes to localStorage
+  React.useEffect(() => {
+    const handleStorageChange = () => {
+      setSystemCategory(localStorage.getItem('selectedSystemCategory'));
+    };
+
+    // Listen for custom event when system category changes
+    window.addEventListener('systemCategoryChanged', handleStorageChange);
+    
+    // Also check periodically for changes (fallback)
+    const intervalId = setInterval(handleStorageChange, 500);
+
+    return () => {
+      window.removeEventListener('systemCategoryChanged', handleStorageChange);
+      clearInterval(intervalId);
+    };
+  }, []);
+
+  // Select the appropriate router based on system category
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      {systemCategory === 'supermarket' ? (
+        <RouterProvider router={supermarketRouter} />
+      ) : (
+        <RouterProvider router={router} />
+      )}
+    </Suspense>
+  );
+};
+
+// Keep these for backward compatibility
+const Router = DynamicRouter;
 const SupermarketRouter = () => (
   <Suspense fallback={<div>Loading...</div>}>
     <RouterProvider router={supermarketRouter} />
   </Suspense>
 );
 
-export  {Router, SupermarketRouter};
+export { Router, SupermarketRouter };

@@ -24,14 +24,10 @@ export function Sidebar({ defaultIconsOnly = false, className = "" }: { defaultI
   const systemCategory = localStorage.getItem('selectedSystemCategory');
   
   // Get navigation items based on system category
-  const allNavItems = getNavItems(systemCategory || 'restaurant');
-  // Filter items to only show those with showInSidebar=true
-  const navItems = allNavItems.filter(item => item.showInSidebar !== false);
+  const navItems = getNavItems(systemCategory || 'restaurant');
   
   // Get common navigation items (profile, settings, etc.)
-  const allCommonItems = getCommonNavItems();
-  // Filter common items to only show those with showInSidebar=true
-  const commonItems = allCommonItems.filter(item => item.showInSidebar !== false);
+  const commonItems = getCommonNavItems();
 
   useEffect(() => {
     const checkMobile = () => {

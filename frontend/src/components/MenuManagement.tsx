@@ -5,6 +5,7 @@ import { Key } from 'antd/es/table/interface';
 import { useGetMenu } from '../hooks/useGetMenu';
 import { useSelectedSystemId } from '../hooks/useSelectedSystemId';
 import type { MenuItem } from '../types';
+import { ColumnGroupType, ColumnType } from 'antd/es/table';
 
 interface MenuManagementProps {
   EditPermition?: boolean;
@@ -21,7 +22,7 @@ const initialItem: MenuItem = {
   image: null,
 };
 
-const MenuManagement: React.FC<MenuManagementProps> = ({ EditPermition }) => {
+const MenuManagement: React.FC<MenuManagementProps> = () => {
   const [selectedSystemId] = useSelectedSystemId();
   const { getMenu, createMenuItem, updateMenuItem, deleteMenuItem, getCategories, loading } = useGetMenu(Number(selectedSystemId));
 
@@ -40,7 +41,7 @@ const MenuManagement: React.FC<MenuManagementProps> = ({ EditPermition }) => {
           getCategories()
         ]);
         
-        setItems((fetchedItems || []).map((item: any) => ({
+        setItems((fetchedItems || []).map((item: MenuItem) => ({
           id: item.id,
           name: item.name,
           category: item.category,
@@ -191,7 +192,7 @@ const MenuManagement: React.FC<MenuManagementProps> = ({ EditPermition }) => {
     []
   );
 
-  const columns = [
+  const columns: (ColumnGroupType<MenuItem> | ColumnType<MenuItem>)[] = [
     {
       title: 'Image',
       dataIndex: 'image',
@@ -225,7 +226,7 @@ const MenuManagement: React.FC<MenuManagementProps> = ({ EditPermition }) => {
       dataIndex: 'category',
       key: 'category',
       filters: categories.map(cat => ({ text: cat, value: cat })),
-      onFilter: (value: string | number | boolean, record: MenuItem) => record.category === value,
+      onFilter: (value: boolean | Key, record: MenuItem) => record.category === value,
     },
     {
       title: 'Description',

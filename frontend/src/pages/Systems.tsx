@@ -56,6 +56,10 @@ const Systems: React.FC = () => {
                     onClick={() => {
                       setSelectedSystemId(system.id.toString());
                       setSelectedCategory(system.category);
+                      
+                      // Dispatch a custom event to notify the router that the system category has changed
+                      window.dispatchEvent(new CustomEvent('systemCategoryChanged'));
+                      
                       navigate('/');
                     }}
                   >
@@ -69,7 +73,11 @@ const Systems: React.FC = () => {
               <Alert message="No systems available." type="info" showIcon />
             )
           )}
-          <Button type="default" style={{ marginTop: 24, width: '100%', height: 44, fontWeight: 'bold', borderRadius: 8 }}>
+          <Button 
+            type="default" 
+            style={{ marginTop: 24, width: '100%', height: 44, fontWeight: 'bold', borderRadius: 8 }}
+            onClick={() => navigate('/')}
+          >
             Cancel
           </Button>
         </div>
