@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from django.db.models import F
 from datetime import date, timedelta
 
-from .models import System, Product, StockChange, Sale, SaleItem, Discount, Employee
+from .models import System, Product, StockChange, Sale, SaleItem, Discount, Employee, Supplier
 from .serializers import (
     InventorysupItemSerializer,
     StockUpdateSerializer,
@@ -16,6 +16,7 @@ from .serializers import (
     SaleSerializer,
     SaleCreateSerializer,
     ApplyDiscountSerializer,
+    SupplierSerializer,
 )
 from core.permissions import IsSystemOwner, IsEmployeeRolePermission
 from rest_framework.permissions import OR
@@ -272,3 +273,34 @@ class SaleViewSet(viewsets.ModelViewSet):
         sale.calculate_total()
 
         return Response(SaleSerializer(sale).data)
+
+
+class SupplierViewSet(viewsets.ModelViewSet):
+    serializer_class = SupplierSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        system_id = self.kwargs.get('system_id')
+        return Supplier.objects.filter(system_id=system_id)
+
+    def get_permissions(self):
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            return [
+                IsAuthenticated(),
+                OR(IsSystemOwner(), IsEmployeeRolePermission('manager')),
+            ]
+        return [IsAuthenticated(), OR(IsSystemOwner(), IsEmployeeRolePermission('manager'))]
+
+    def perform_create(self, serializer):
+        serializer.save()
+
+    def perform_update(self, serializer):
+        serializer.save()
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response(
+            {"message": "Supplier deleted successfully."},
+            status=status.HTTP_200_OK
+        )

@@ -1,6 +1,10 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import InventoryItemViewSet, SaleViewSet
+from .views import (
+    InventoryItemViewSet, 
+    SaleViewSet,
+    SupplierViewSet
+)
 
 
 router = DefaultRouter()
@@ -116,5 +120,24 @@ urlpatterns = [
             }
         ),
         name="sale-apply-discount",
+    ),
+    # Supplier endpoints
+    path(
+        "<int:system_id>/suppliers/",
+        SupplierViewSet.as_view({
+            "get": "list",
+            "post": "create",
+        }),
+        name="supplier-list-create",
+    ),
+    path(
+        "<int:system_id>/suppliers/<int:pk>/",
+        SupplierViewSet.as_view({
+            "get": "retrieve",
+            "put": "update",
+            "patch": "partial_update",
+            "delete": "destroy",
+        }),
+        name="supplier-detail",
     ),
 ]
