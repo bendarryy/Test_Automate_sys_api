@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Form, Input, Button, Card, Alert, Typography } from 'antd';
 import { useApi } from '../hooks/useApi';
 import '../styles/Login.css';
+import { useNavigate } from 'react-router-dom';
 
 const { Title } = Typography;
 
@@ -10,6 +11,7 @@ const EmployeeLogin: React.FC = () => {
   const { loading, error, callApi } = useApi();
   const [success, setSuccess] = useState(false);
   const [form] = Form.useForm();
+  const navigate = useNavigate();
 
   const onFinish = async (values: { email: string; password: string }) => {
     try {
@@ -78,6 +80,13 @@ const EmployeeLogin: React.FC = () => {
             </Button>
           </Form.Item>
         </Form>
+        <Button
+          type="link"
+          style={{ marginTop: 16, width: '100%' }}
+          onClick={() => navigate('/ownerLogin')}
+        >
+          Switch to Owner Login
+        </Button>
       </Card>
     </div>
   );

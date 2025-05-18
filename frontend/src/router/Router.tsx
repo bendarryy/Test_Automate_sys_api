@@ -4,6 +4,27 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import '../styles/error.css';
 import { authRoutes } from '../config/navigation.config';
 import { SalesPage } from "../pages/supermarket/SalesPage";
+import ProtectedRoute from '../components/ProtectedRoute';
+import { useSelector } from 'react-redux';
+import { RootState } from '../store';
+import { Navigate } from 'react-router-dom';
+
+function RootUrlPage() {
+  const actions = useSelector((state: RootState) => state.permissions.actions);
+  // Render the correct page component based on root_url marker
+  if (actions.includes('root_url_is_kds')) return <KdsPage />;
+  if (actions.includes('root_url_is_orders') || actions.includes('root_url_is_waiter')) return <OrdersPage />;
+  if (actions.includes('root_url_is_delivery_driver')) return <DeliveryDisplay />;
+  if (actions.includes('root_url_is_cashier') || actions.includes('root_url_is_home')) return <DynamicHomePage />;
+  // Fallbacks
+  if (actions.includes('read_kds')) return <KdsPage />;
+  if (actions.includes('read_order')) return <OrdersPage />;
+  if (actions.includes('read_deliverydisplay')) return <DeliveryDisplay />;
+  if (actions.includes('read_home')) return <DynamicHomePage />;
+  return <About />;
+}
+
+
 const Layout = lazy(() => import("../Layout"));
 const ProtectLogin = lazy(() => import("../security/protectLogin"));
 const DynamicHomePage = lazy(() => import("../pages/DynamicHomePage"));
@@ -82,7 +103,7 @@ const router = createBrowserRouter([
         element: (
           <Suspense fallback={<div>Loading...</div>}>
             <ProtectLogin>
-              <DynamicHomePage />
+              <RootUrlPage />
             </ProtectLogin>
           </Suspense>
         ),
@@ -142,7 +163,9 @@ const router = createBrowserRouter([
         element: (
           <Suspense fallback={<div>Loading...</div>}>
             <ProtectLogin>
-              <MenuManagement />
+              <ProtectedRoute permission="create_order">
+                <MenuManagement />
+              </ProtectedRoute>
             </ProtectLogin>
           </Suspense>
         ),
@@ -152,7 +175,9 @@ const router = createBrowserRouter([
         element: (
           <Suspense fallback={<div>Loading...</div>}>
             <ProtectLogin>
-              <InventoryManagementPage />
+              <ProtectedRoute permission="read_inventory">
+                <InventoryManagementPage />
+              </ProtectedRoute>
             </ProtectLogin>
           </Suspense>
         ),
@@ -162,7 +187,9 @@ const router = createBrowserRouter([
         element: (
           <Suspense fallback={<div>Loading...</div>}>
             <ProtectLogin>
-              <InventoryItemViewPage />
+              <ProtectedRoute permission="read_inventory">
+                <InventoryItemViewPage />
+              </ProtectedRoute>
             </ProtectLogin>
           </Suspense>
         ),
@@ -172,7 +199,9 @@ const router = createBrowserRouter([
         element: (
           <Suspense fallback={<div>Loading...</div>}>
             <ProtectLogin>
-              <KdsPage />
+              <ProtectedRoute permission="read_kds">
+                <KdsPage />
+              </ProtectedRoute>
             </ProtectLogin>
           </Suspense>
         ),
@@ -182,7 +211,9 @@ const router = createBrowserRouter([
         element: (
           <Suspense fallback={<div>Loading...</div>}>
             <ProtectLogin>
-              <KdsPage />
+              <ProtectedRoute permission="read_kds">
+                <KdsPage />
+              </ProtectedRoute>
             </ProtectLogin>
           </Suspense>
         ),
@@ -192,17 +223,21 @@ const router = createBrowserRouter([
         element: (
           <Suspense fallback={<div>Loading...</div>}>
             <ProtectLogin>
-              <EmployeesPage />
+              <ProtectedRoute permission="read_employee">
+                <EmployeesPage />
+              </ProtectedRoute>
             </ProtectLogin>
           </Suspense>
         ),
-       },
-       {
+      },
+      {
         path: "/financesdashboards",
         element: (
           <Suspense fallback={<div>Loading...</div>}>
             <ProtectLogin>
-              <Financesdashboards />
+              <ProtectedRoute permission="read_finance">
+                <Financesdashboards />
+              </ProtectedRoute>
             </ProtectLogin>
           </Suspense>
         ),
@@ -213,7 +248,9 @@ const router = createBrowserRouter([
         element: (
           <Suspense fallback={<div>Loading...</div>}>
             <ProtectLogin>
-              <DeliveryDisplay />
+              <ProtectedRoute permission="read_deliverydisplay">
+                <DeliveryDisplay />
+              </ProtectedRoute>
             </ProtectLogin>
           </Suspense>
         ),
@@ -224,7 +261,9 @@ const router = createBrowserRouter([
         element: (
           <Suspense fallback={<div>Loading...</div>}>
             <ProtectLogin>
-              <WaiterDisplay />
+              <ProtectedRoute permission="read_waiterdisplay">
+                <WaiterDisplay />
+              </ProtectedRoute>
             </ProtectLogin>
           </Suspense>
         ),
@@ -234,7 +273,9 @@ const router = createBrowserRouter([
         element: (
           <Suspense fallback={<div>Loading...</div>}>
             <ProtectLogin>
-              <Profile />
+              <ProtectedRoute permission="read_profile">
+                <Profile />
+              </ProtectedRoute>
             </ProtectLogin>
           </Suspense>
         ),
@@ -244,7 +285,9 @@ const router = createBrowserRouter([
         element: (
           <Suspense fallback={<div>Loading...</div>}>
             <ProtectLogin>
-              <Settings />
+              <ProtectedRoute permission="read_settings">
+                <Settings />
+              </ProtectedRoute>
             </ProtectLogin>
           </Suspense>
         ),
@@ -254,7 +297,9 @@ const router = createBrowserRouter([
         element: (
           <Suspense fallback={<div>Loading...</div>}>
             <ProtectLogin>
-              <ChangePassword />
+              <ProtectedRoute permission="update_settings">
+                <ChangePassword />
+              </ProtectedRoute>
             </ProtectLogin>
           </Suspense>
         ),
@@ -280,7 +325,7 @@ const supermarketRouter = createBrowserRouter([
         element: (
           <Suspense fallback={<div>Loading...</div>}>
             <ProtectLogin>
-              <DynamicHomePage />
+              <RootUrlPage />
             </ProtectLogin>
           </Suspense>
         ),
@@ -290,7 +335,9 @@ const supermarketRouter = createBrowserRouter([
         element: (
           <Suspense fallback={<div>Loading...</div>}>
             <ProtectLogin>
-              <InventoryManagementSMPage />
+              <ProtectedRoute permission="read_inventory">
+                <InventoryManagementSMPage />
+              </ProtectedRoute>
             </ProtectLogin>
           </Suspense>
         ),
@@ -300,7 +347,9 @@ const supermarketRouter = createBrowserRouter([
         element: (
           <Suspense fallback={<div>Loading...</div>}>
             <ProtectLogin>
-              <ProductsManagement />
+              <ProtectedRoute permission="read_product">
+                <ProductsManagement />
+              </ProtectedRoute>
             </ProtectLogin>
           </Suspense>
         ),

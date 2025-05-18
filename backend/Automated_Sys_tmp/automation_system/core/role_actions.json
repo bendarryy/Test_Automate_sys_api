@@ -1,26 +1,44 @@
 {
   "owner": [
-    "view_menu", "create_menu", "update_menu", "delete_menu",
-    "take_order", "update_order", "delete_order",
-    "manage_inventory", "view_analytics", "manage_employees",
-    "access_kitchen", "access_waiter_display", "access_delivery"
+    "root_url_is_home",
+    "create_menu", "read_menu", "update_menu", "delete_menu",
+    "create_order", "read_order", "update_order", "delete_order",
+    "create_inventory", "read_inventory", "update_inventory", "delete_inventory",
+    "create_product", "read_product", "update_product", "delete_product",
+    "create_employee", "read_employee", "update_employee", "delete_employee",
+    "read_finance",
+    "read_kds", "read_waiterdisplay", "read_deliverydisplay",
+    "read_profile", "read_settings", "read_about", "read_home"
   ],
   "manager": [
-    "view_menu", "create_menu", "update_menu", "delete_menu",
-    "take_order", "update_order", "delete_order",
-    "manage_inventory", "view_analytics", "manage_employees",
-    "access_kitchen", "access_waiter_display", "access_delivery"
+    "root_url_is_orders",
+    "create_menu", "read_menu", "update_menu", "delete_menu",
+    "create_order", "read_order", "update_order", "delete_order",
+    "create_inventory", "read_inventory", "update_inventory", "delete_inventory",
+    "create_product", "read_product", "update_product", "delete_product",
+    "create_employee", "read_employee", "update_employee", "delete_employee",
+    "read_finance",
+    "read_kds", "read_waiterdisplay", "read_deliverydisplay",
+    "read_profile", "read_settings", "read_about", "read_home"
   ],
   "chef": [
-    "view_menu", "access_kitchen"
+    "root_url_is_kds",
+    "read_menu", "read_kds", "read_profile", "read_about"
   ],
   "waiter": [
-    "view_menu", "take_order", "manage_own_orders", "access_waiter_display"
+    "root_url_is_waiter",
+    "read_menu", "create_order", "read_order", "update_own_order", "read_waiterdisplay", "read_profile", "read_about"
   ],
   "cashier": [
-    "view_menu", "update_order", "view_analytics", "access_waiter_display"
+    "root_url_is_cashier",
+    "read_menu", "read_order", "update_order", "read_finance", "read_waiterdisplay", "read_profile", "read_about"
   ],
   "delivery_driver": [
-    "access_delivery", "update_order"
+    "root_url_is_delivery_driver",
+    "read_order", "update_order", "read_deliverydisplay", "read_profile", "read_about"
+  ],
+  "inventory_manager": [
+    "root_url_is_inventory_manager",
+    "read_inventory", "update_inventory", "read_profile", "read_about"
   ]
-} 
+}

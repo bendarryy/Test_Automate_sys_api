@@ -44,6 +44,8 @@ export const restaurantNavItems: NavItem[] = [
     href: "/",
     systemCategory: "restaurant",
     showInSidebar: true,
+    requiredPermission: "read_home",
+
   },
   {
     name: "Orders",
@@ -52,6 +54,7 @@ export const restaurantNavItems: NavItem[] = [
     href: "/orders",
     systemCategory: "restaurant",
     showInSidebar: true,
+    requiredPermission: "read_order",
   },
   {
     name: "Menu",
@@ -60,6 +63,7 @@ export const restaurantNavItems: NavItem[] = [
     href: "/menu",
     systemCategory: "restaurant",
     showInSidebar: true,
+    requiredPermission: "read_menu",
   },
   {
     name: "Menu Management",
@@ -68,6 +72,7 @@ export const restaurantNavItems: NavItem[] = [
     href: "/menu-management",
     systemCategory: "restaurant",
     showInSidebar: true,
+    requiredPermission: "update_menu",
   },
   {
     name: "Inventory",
@@ -76,6 +81,7 @@ export const restaurantNavItems: NavItem[] = [
     href: "/Inventory",
     systemCategory: "restaurant",
     showInSidebar: true,
+    requiredPermission: "update_inventory",
   },
   {
     name: "KDS",
@@ -84,6 +90,7 @@ export const restaurantNavItems: NavItem[] = [
     href: "/kds",
     systemCategory: "restaurant",
     showInSidebar: true,
+    requiredPermission: "read_kds",
   },
   {
     name: "Waiter Display",
@@ -92,6 +99,7 @@ export const restaurantNavItems: NavItem[] = [
     href: "/waiterdisplay",
     systemCategory: "restaurant",
     showInSidebar: true,
+    requiredPermission: "read_waiterdisplay",
   },
   {
     name: "Delivery Display",
@@ -100,6 +108,7 @@ export const restaurantNavItems: NavItem[] = [
     href: "/deliverydisplay",
     systemCategory: "restaurant",
     showInSidebar: true,
+    requiredPermission: "read_deliverydisplay",
   },
   {
     name: "Employees",
@@ -108,6 +117,7 @@ export const restaurantNavItems: NavItem[] = [
     href: "/employees",
     systemCategory: "restaurant",
     showInSidebar: true,
+    requiredPermission: "update_employee",
   },
   {
     name: "Finances",
@@ -116,6 +126,7 @@ export const restaurantNavItems: NavItem[] = [
     href: "/financesdashboards",
     systemCategory: "restaurant",
     showInSidebar: true,
+    requiredPermission: "read_finance",
   },
   {
     name: "About",
@@ -124,6 +135,7 @@ export const restaurantNavItems: NavItem[] = [
     href: "/about",
     systemCategory: "restaurant",
     showInSidebar: true,
+    requiredPermission: "read_about",
   },
 ];
 
@@ -136,6 +148,7 @@ export const supermarketNavItems: NavItem[] = [
     href: '/',
     systemCategory: 'supermarket',
     showInSidebar: true,
+    requiredPermission: "read_home",
   },
   {
     name: 'Inventory',
@@ -144,6 +157,7 @@ export const supermarketNavItems: NavItem[] = [
     href: '/inventory',
     systemCategory: 'supermarket',
     showInSidebar: true,
+    requiredPermission: "read_inventory",
   },
   {
     name: 'Products Management',
@@ -152,6 +166,7 @@ export const supermarketNavItems: NavItem[] = [
     href: '/supermarket/products',
     systemCategory: 'supermarket',
     showInSidebar: true,
+    requiredPermission: "update_product",
   },
   {
     name: 'About',
@@ -160,6 +175,7 @@ export const supermarketNavItems: NavItem[] = [
     href: '/about',
     systemCategory: 'supermarket',
     showInSidebar: true,
+    requiredPermission: "access_about",
   },
 ];
 
@@ -172,6 +188,7 @@ export const commonNavItems: NavItem[] = [
     href: '/profile',
     systemCategory: 'all',
     showInSidebar: true,
+    requiredPermission: "read_profile",
   },
   {
     name: 'Settings',
@@ -180,8 +197,15 @@ export const commonNavItems: NavItem[] = [
     href: '/settings',
     systemCategory: 'all',
     showInSidebar: true,
+    requiredPermission: "read_settings",
   },
 ];
+
+// Helper to extract the part after the first underscore
+export function getPermissionKey(permission: string): string {
+  const idx = permission.indexOf('_');
+  return idx !== -1 ? permission.slice(idx + 1) : permission;
+}
 
 // Get navigation items based on system category
 export const getNavItems = (systemCategory?: string): NavItem[] => {

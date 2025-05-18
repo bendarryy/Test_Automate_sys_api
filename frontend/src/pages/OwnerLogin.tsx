@@ -75,6 +75,13 @@ const OwnerLogin: React.FC = () => {
             </Button>
           </Form.Item>
         </Form>
+        <Button
+          type="link"
+          style={{ marginTop: 16, width: '100%' }}
+          onClick={() => navigate('/employeelogin')}
+        >
+          Switch to Employee Login
+        </Button>
       </Card>
     </div>
   );

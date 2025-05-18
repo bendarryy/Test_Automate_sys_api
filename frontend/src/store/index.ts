@@ -1,11 +1,13 @@
 import { configureStore } from '@reduxjs/toolkit';
 import billReducer from './billSlice';
 import salesReducer from './salesSlice';
+import permissionsReducer from './permissionsSlice';
 
 const store = configureStore({
   reducer: {
     bill: billReducer,
     sales: salesReducer,
+    permissions: permissionsReducer,
   },
 });
 

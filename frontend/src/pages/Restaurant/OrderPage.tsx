@@ -1,4 +1,5 @@
 import React from 'react';
+import useHasPermission from '../../hooks/useHasPermission';
 import { Button, Select, notification, Space, Input, Tag } from 'antd';
 import { DeleteOutlined, SearchOutlined } from '@ant-design/icons';
 import { useOrders } from '../../hooks/useOrders';
@@ -38,6 +39,9 @@ const statusColors: Record<OrderStatus, string> = {
 };
 
 const OrderPage: React.FC = () => {
+  // صلاحيات المستخدم
+  const canUpdate = useHasPermission('update_order');
+  const canDelete = useHasPermission('delete_order');
   const systemId = localStorage.getItem('selectedSystemId') || '';
   const { data: orders = [], loading, getOrders, updateOrderStatus, deleteOrder } = useOrders(systemId);
   const navigate = useNavigate();
@@ -174,39 +178,45 @@ const OrderPage: React.FC = () => {
       title: 'Actions',
       key: 'actions',
       render: (text: string, record: Order) => (
-        <Space size="middle">
-          <Select
-            value={record.status}
-            style={{ width: 120 }}
-            onChange={(value) => handleStatusChange(record.id, value)}
-          >
-            <Select.Option value="pending">Pending</Select.Option>
-            <Select.Option value="preparing">Preparing</Select.Option>
-            <Select.Option value="ready">Ready</Select.Option>
-            <Select.Option value="completed">Completed</Select.Option>
-            <Select.Option value="canceled">Canceled</Select.Option>
-          </Select>
-          <Button 
-            danger 
-            onClick={async () => {
-              try {
-                await deleteOrder(record.id);
-                notification.success({ message: 'Order deleted successfully' });
-                getOrders();
-              } catch (err: unknown) {
-                const error = err as Error;
-                notification.error({ message: 'Failed to delete order', description: error.message });
-              }
-            }}
-          >
-            <DeleteOutlined />
-          </Button>
-        </Space>
+        (canUpdate || canDelete) ? (
+          <Space size="middle">
+            {canUpdate && (
+              <Select
+                value={record.status}
+                style={{ width: 120 }}
+                onChange={(value) => handleStatusChange(record.id, value)}
+              >
+                <Select.Option value="pending">Pending</Select.Option>
+                <Select.Option value="preparing">Preparing</Select.Option>
+                <Select.Option value="ready">Ready</Select.Option>
+                <Select.Option value="completed">Completed</Select.Option>
+                <Select.Option value="canceled">Canceled</Select.Option>
+              </Select>
+            )}
+            {canDelete && (
+              <Button 
+                danger 
+                onClick={async () => {
+                  try {
+                    await deleteOrder(record.id);
+                    notification.success({ message: 'Order deleted successfully' });
+                    getOrders();
+                  } catch (err: unknown) {
+                    const error = err as Error;
+                    notification.error({ message: 'Failed to delete order', description: error.message });
+                  }
+                }}
+              >
+                <DeleteOutlined />
+              </Button>
+            )}
+          </Space>
+        ) : null
       ),
     },
   ];
 
-  const extraActions = selectedRowKeys.length > 0 && (
+  const extraActions = (selectedRowKeys.length > 0 && canDelete) ? (
     <Button 
       danger 
       onClick={handleBulkDelete}
@@ -214,13 +224,18 @@ const OrderPage: React.FC = () => {
     >
       Delete Selected
     </Button>
-  );
+  ) : null;
 
   return (
     <ReusableTable<Order>
       data={orders as Order[]}
       loading={loading}
-      columns={columns}
+      columns={columns.filter(col => {
+        if (col.key === 'actions') {
+          return canUpdate || canDelete;
+        }
+        return true;
+      })}
       rowKey="id"
       onRowSelectionChange={(keys: React.Key[]) => setSelectedRowKeys(keys as string[])}
       selectedRowKeys={selectedRowKeys}

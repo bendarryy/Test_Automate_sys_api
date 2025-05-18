@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Modal, Input, Space, Tag, Spin, Table, Upload, message, Select, Popover, Typography } from 'antd';
+import useHasPermission from '../hooks/useHasPermission';
 import { PlusOutlined } from '@ant-design/icons';
 import { Key } from 'antd/es/table/interface';
 import { useGetMenu } from '../hooks/useGetMenu';
@@ -23,6 +24,10 @@ const initialItem: MenuItem = {
 };
 
 const MenuManagement: React.FC<MenuManagementProps> = () => {
+  // صلاحيات المستخدم
+  const canAdd = useHasPermission('create_menu');
+  const canEdit = useHasPermission('update_menu');
+  const canDelete = useHasPermission('delete_menu');
   const [selectedSystemId] = useSelectedSystemId();
   const { getMenu, createMenuItem, updateMenuItem, deleteMenuItem, getCategories, loading } = useGetMenu(Number(selectedSystemId));
 
@@ -300,9 +305,11 @@ const MenuManagement: React.FC<MenuManagementProps> = () => {
             options={categories.map(cat => ({ label: cat, value: cat }))}
             loading={loading}
           />
-          <Button type="primary" onClick={handleAddClick}>
-            Add Item
-          </Button>
+          {canAdd && (
+            <Button type="primary" onClick={handleAddClick}>
+              Add Item
+            </Button>
+          )}
         </Space>
       </div>
 
@@ -312,7 +319,25 @@ const MenuManagement: React.FC<MenuManagementProps> = () => {
         </div>
       ) : (
         <Table<MenuItem>
-          columns={columns}
+          columns={columns.filter(col => {
+            if (col.key === 'actions') {
+              return canEdit || canDelete;
+            }
+            return true;
+          }).map(col => {
+            if (col.key === 'actions') {
+              return {
+                ...col,
+                render: (text: any, record: MenuItem) => (
+                  <>
+                    {canEdit && <Button onClick={() => handleEditClick(record)} style={{marginRight: 8}}>Edit</Button>}
+                    {canDelete && <Button danger onClick={() => handleDeleteClick(record)}>Delete</Button>}
+                  </>
+                )
+              };
+            }
+            return col;
+          })}
           dataSource={filteredItems}
           rowKey="id"
           bordered

@@ -4,6 +4,7 @@ import { RiArrowLeftSLine, RiArrowRightSLine, RiMoreFill } from "react-icons/ri"
 import { Layout, Menu, Button, theme, Typography, Dropdown } from 'antd';
 import styles from './Sidebar.module.css';
 import { getNavItems, getCommonNavItems, NavItem } from '../config/navigation.config';
+import useNavigationItems from '../hooks/useNavigationItems';
 
 const { Sider } = Layout;
 const { Text } = Typography;
@@ -24,9 +25,8 @@ export function Sidebar({ defaultIconsOnly = false, className = "" }: { defaultI
   const systemCategory = localStorage.getItem('selectedSystemCategory');
   
   // Get navigation items based on system category
-  const allNavItems = getNavItems(systemCategory || 'restaurant');
-  // Filter items to only show those with showInSidebar=true
-  const navItems = allNavItems.filter(item => item.showInSidebar !== false);
+  // Filter navigation items by permissions using the custom hook
+  const navItems = useNavigationItems().filter(item => item.showInSidebar !== false);
   
   // Get common navigation items (profile, settings, etc.)
   const allCommonItems = getCommonNavItems();
