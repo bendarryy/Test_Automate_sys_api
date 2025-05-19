@@ -17,8 +17,7 @@ const EmployeeLogin: React.FC = () => {
     try {
       await callApi('post', '/core/employee/login/', { email: values.email, password: values.password });
       setSuccess(true);
-      // يمكنك التوجيه بعد النجاح إذا أردت
-      // setTimeout(() => navigate('/employee-dashboard'), 1200);
+      navigate('/');
     } catch {
       setSuccess(false);
     }
