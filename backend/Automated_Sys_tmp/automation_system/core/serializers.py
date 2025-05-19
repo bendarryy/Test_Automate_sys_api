@@ -115,8 +115,10 @@ class SystemCreateSerializer(serializers.ModelSerializer):
         help_text="Whether the system is publicly accessible"
     )
     subdomain = serializers.CharField(
-        required=True,
-        help_text="Subdomain for your system (e.g., 'myrestaurant' for myrestaurant.yourdomain.com)"
+        required=False,
+        allow_blank=True,
+        allow_null=True,
+        help_text="Optional subdomain for your system (e.g., 'myrestaurant' for myrestaurant.yourdomain.com)"
     )
     custom_domain = serializers.CharField(
         required=False,

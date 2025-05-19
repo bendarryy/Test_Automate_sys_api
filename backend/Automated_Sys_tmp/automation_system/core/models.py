@@ -36,7 +36,7 @@ class System(models.Model):
     category = models.CharField(max_length=50, choices=SYSTEM_CATEGORIES)
     
     # 🌐 Domain Handling
-    subdomain = models.CharField(max_length=100, unique=True)  # Required, no auto-generation
+    subdomain = models.CharField(max_length=100, unique=True, null=True, blank=True)  # Optional subdomain
     custom_domain = models.CharField(max_length=255, unique=True, null=True, blank=True)
     ssl_enabled = models.BooleanField(default=False)
     
