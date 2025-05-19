@@ -1,6 +1,11 @@
 from django.db import models
 from django.contrib.auth.models import User
 import uuid
+from django.utils import timezone
+
+
+def generate_uuid():
+    return str(uuid.uuid4())
 
 
 # Create your models here.
@@ -19,28 +24,58 @@ class System(models.Model):
     """Each generated system (e.g., a restaurant) is stored here"""
     SYSTEM_CATEGORIES = [
         ('restaurant', 'Restaurant'),
-        ('cafe', 'Cafe'),
         ('supermarket', 'Supermarket'),
-        ('workshop', 'Workshop'),
+   
     ]
+
+# 🔑 Core Identifiers
+    id = models.AutoField(primary_key=True)  # Existing ID (No Change)
+    uuid = models.UUIDField(unique=True, editable=False)  # Remove default, we'll handle it in save()
+
+
     name = models.CharField(max_length=100)
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
     category = models.CharField(max_length=50, choices=SYSTEM_CATEGORIES)
+    
+    # 🌐 Domain Handling
     subdomain = models.CharField(max_length=100, unique=True, null=True, blank=True)
+    custom_domain = models.CharField(max_length=255, unique=True, null=True, blank=True)  # Optional Custom Domain
+    ssl_enabled = models.BooleanField(default=False)
+
+    
+    # 📋 Metadata
     description = models.TextField(blank=True)
     is_public = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=True)  # New Field for Active Status
 
+        # 🕒 Timestamps
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
+
+    
     def __str__(self):
         return f"{self.name} ({self.category})"
 
     def save(self, *args, **kwargs):
+        # Auto-generate Subdomain (Existing Logic)
         if not self.subdomain:
-            # Generate a unique subdomain
             while True:
                 subdomain = str(uuid.uuid4())[:8]
                 if not System.objects.filter(subdomain=subdomain).exists():
                     self.subdomain = subdomain
                     break
+
+        # Ensure UUID is generated for new records
+        if not self.uuid:
+            while True:
+                new_uuid = uuid.uuid4()
+                if not System.objects.filter(uuid=new_uuid).exists():
+                    self.uuid = new_uuid
+                    break
+
+        # Update the updated_at timestamp
+        self.updated_at = timezone.now()
+        
         super().save(*args, **kwargs)
 
 from django.contrib.auth.hashers import make_password, check_password
