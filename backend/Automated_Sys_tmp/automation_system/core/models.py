@@ -49,6 +49,11 @@ class System(models.Model):
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(default=timezone.now)
 
+# 📍 Location Information (Accurate with Latitude & Longitude)
+    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    google_maps_link = models.URLField(max_length=500, blank=True, null=True)
+    
     def __str__(self):
         return f"{self.name} ({self.category})"
 
@@ -63,6 +68,12 @@ class System(models.Model):
 
         # Update the updated_at timestamp
         self.updated_at = timezone.now()
+        
+        # Auto-generate Google Maps Link if coordinates are provided
+        if self.latitude and self.longitude:
+            self.google_maps_link = f"https://www.google.com/maps?q={self.latitude},{self.longitude}"
+        else:
+            self.google_maps_link = None
         
         super().save(*args, **kwargs)
 
