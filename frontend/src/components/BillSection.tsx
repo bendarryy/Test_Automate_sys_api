@@ -76,7 +76,7 @@ const OrdersSection = () => {
   return (
     <Card 
       style={{ height: '100%', display: 'flex', flexDirection: 'column' }}
-      bodyStyle={{ height: '100%', padding: '12px', display: 'flex', flexDirection: 'column' }}
+      styles={{ body: { height: '100%', padding: '12px', display: 'flex', flexDirection: 'column' } }}
     >
       <Title level={4}>
         {orderType === 'in_house' 

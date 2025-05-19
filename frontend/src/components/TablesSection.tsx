@@ -193,7 +193,7 @@ const TablesSection: React.FC<TablesSectionProps> = ({ onClose, orderType = 'in_
           }}
           onMouseEnter={() => setHoveredTable(table.id)}
           onMouseLeave={() => setHoveredTable(null)}
-          bodyStyle={{ padding: '12px' }}
+          styles={{ body: { padding: '12px' } }}
         >
           <Space direction="vertical" style={{ width: '100%' }} align="center" size="small">
             <Badge
@@ -339,10 +339,12 @@ const TablesSection: React.FC<TablesSectionProps> = ({ onClose, orderType = 'in_
       closable={false}
       onClose={handleClose}
       open={isOpen}
-      bodyStyle={{ padding: 0 }}
-      headerStyle={{ 
-        padding: '16px 24px',
-        borderBottom: '1px solid #f0f0f0'
+      styles={{
+        body: { padding: 0 },
+        header: { 
+          padding: '16px 24px',
+          borderBottom: '1px solid #f0f0f0'
+        }
       }}
       maskClosable={true}
       keyboard={true}

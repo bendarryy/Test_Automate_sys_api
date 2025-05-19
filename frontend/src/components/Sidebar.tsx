@@ -13,7 +13,10 @@ const { Text } = Typography;
 // Sidebar يظهر فقط على الشاشات الكبيرة، وBottomNavBar يظهر فقط على الشاشات الصغيرة (راجع CSS).
 
 export function Sidebar({ defaultIconsOnly = false, className = "" }: { defaultIconsOnly?: boolean, className?: string }) {
-  const [collapsed, setCollapsed] = useState(defaultIconsOnly);
+  const [collapsed, setCollapsed] = useState(() => {
+    const storedCollapsed = localStorage.getItem('sidebarCollapsed');
+    return storedCollapsed ? JSON.parse(storedCollapsed) : defaultIconsOnly;
+  });
   const [isMobile, setIsMobile] = useState(false);
   const [visibleItems, setVisibleItems] = useState<NavItem[]>([]);
   const [overflowItems, setOverflowItems] = useState<NavItem[]>([]);
@@ -60,7 +63,9 @@ export function Sidebar({ defaultIconsOnly = false, className = "" }: { defaultI
   }, [isMobile]);
 
   const toggleSidebar = () => {
-    setCollapsed(!collapsed);
+    const newCollapsed = !collapsed;
+    setCollapsed(newCollapsed);
+    localStorage.setItem('sidebarCollapsed', JSON.stringify(newCollapsed));
   };
   
   // Create menu items for main navigation

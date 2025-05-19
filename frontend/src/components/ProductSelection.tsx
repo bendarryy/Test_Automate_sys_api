@@ -409,7 +409,10 @@ const ProductSelection = () => {
 
                   }}
                   cover={renderProductImage(product)}
-                  bodyStyle={{ padding: "12px" , position: 'static'}}
+                  styles={{
+                    
+                    body: { padding: "12px" , position: 'static'}}
+                  }
                 >
 
                   <Card.Meta
