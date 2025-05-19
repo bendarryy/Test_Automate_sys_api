@@ -25,46 +25,34 @@ class System(models.Model):
     SYSTEM_CATEGORIES = [
         ('restaurant', 'Restaurant'),
         ('supermarket', 'Supermarket'),
-   
     ]
 
-# 🔑 Core Identifiers
-    id = models.AutoField(primary_key=True)  # Existing ID (No Change)
-    uuid = models.UUIDField(unique=True, editable=False)  # Remove default, we'll handle it in save()
-
+    # 🔑 Core Identifiers
+    id = models.AutoField(primary_key=True)
+    uuid = models.UUIDField(unique=True, editable=False)
 
     name = models.CharField(max_length=100)
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
     category = models.CharField(max_length=50, choices=SYSTEM_CATEGORIES)
     
     # 🌐 Domain Handling
-    subdomain = models.CharField(max_length=100, unique=True, null=True, blank=True)
-    custom_domain = models.CharField(max_length=255, unique=True, null=True, blank=True)  # Optional Custom Domain
+    subdomain = models.CharField(max_length=100, unique=True)  # Required, no auto-generation
+    custom_domain = models.CharField(max_length=255, unique=True, null=True, blank=True)
     ssl_enabled = models.BooleanField(default=False)
-
     
     # 📋 Metadata
     description = models.TextField(blank=True)
     is_public = models.BooleanField(default=True)
-    is_active = models.BooleanField(default=True)  # New Field for Active Status
+    is_active = models.BooleanField(default=True)
 
-        # 🕒 Timestamps
+    # 🕒 Timestamps
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(default=timezone.now)
 
-    
     def __str__(self):
         return f"{self.name} ({self.category})"
 
     def save(self, *args, **kwargs):
-        # Auto-generate Subdomain (Existing Logic)
-        if not self.subdomain:
-            while True:
-                subdomain = str(uuid.uuid4())[:8]
-                if not System.objects.filter(subdomain=subdomain).exists():
-                    self.subdomain = subdomain
-                    break
-
         # Ensure UUID is generated for new records
         if not self.uuid:
             while True:

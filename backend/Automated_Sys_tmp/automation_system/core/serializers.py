@@ -96,6 +96,80 @@ class SystemSerializer(serializers.ModelSerializer):
         
         
 
+class SystemCreateSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(
+        validators=[UniqueValidator(queryset=System.objects.all())],
+        help_text="Unique name for the system"
+    )
+    category = serializers.ChoiceField(
+        choices=System.SYSTEM_CATEGORIES,
+        help_text="Type of system (restaurant or supermarket)"
+    )
+    description = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        help_text="Optional description of the system"
+    )
+    is_public = serializers.BooleanField(
+        default=True,
+        help_text="Whether the system is publicly accessible"
+    )
+    subdomain = serializers.CharField(
+        required=True,
+        help_text="Subdomain for your system (e.g., 'myrestaurant' for myrestaurant.yourdomain.com)"
+    )
+    custom_domain = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        allow_null=True,
+        help_text="Optional custom domain for the system"
+    )
+
+    class Meta:
+        model = System
+        fields = [
+            'name', 
+            'category', 
+            'description', 
+            'is_public', 
+            'subdomain',
+            'custom_domain'
+        ]
+
+    def validate_subdomain(self, value):
+        # Check if subdomain is already taken
+        if System.objects.filter(subdomain=value).exists():
+            raise serializers.ValidationError("This subdomain is already taken")
+        
+        # Validate subdomain format
+        if not value.isalnum() and not all(c.isalnum() or c == '-' for c in value):
+            raise serializers.ValidationError("Subdomain can only contain letters, numbers, and hyphens")
+        
+        if len(value) < 3:
+            raise serializers.ValidationError("Subdomain must be at least 3 characters long")
+            
+        if len(value) > 63:
+            raise serializers.ValidationError("Subdomain cannot be longer than 63 characters")
+            
+        return value.lower()  # Convert to lowercase
+
+    def validate_custom_domain(self, value):
+        if not value:
+            return value
+            
+        # Check if custom domain is already taken
+        if System.objects.filter(custom_domain=value).exists():
+            raise serializers.ValidationError("This domain is already taken")
+            
+        # Basic domain validation
+        if not all(c.isalnum() or c in '.-' for c in value):
+            raise serializers.ValidationError("Domain can only contain letters, numbers, dots, and hyphens")
+            
+        if len(value) > 255:
+            raise serializers.ValidationError("Domain cannot be longer than 255 characters")
+            
+        return value.lower()  # Convert to lowercase
+
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
