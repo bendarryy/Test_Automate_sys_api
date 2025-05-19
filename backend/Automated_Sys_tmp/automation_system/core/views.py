@@ -12,7 +12,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status , generics
 from rest_framework.permissions import IsAuthenticated ,AllowAny
-from .serializers import SystemSerializer, UserSerializer, SystemListSerializer , ProfileSerializer
+from .serializers import SystemSerializer, UserSerializer, SystemListSerializer , ProfileSerializer, SystemCreateSerializer
 from rest_framework.generics import RetrieveAPIView, ListAPIView
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
@@ -431,3 +431,74 @@ def update_system_subdomain(request, system_id):
         "message": "Subdomain updated successfully",
         "subdomain": system.subdomain
     })
+
+class SystemCreateView(APIView):
+    """
+    Create a new system with enhanced features.
+    
+    This view handles system creation with:
+    - User-defined subdomain
+    - Custom domain validation
+    - Owner association
+    - System status tracking
+    
+    Example request:
+    {
+        "name": "My Restaurant",
+        "category": "restaurant",
+        "description": "A fine dining restaurant",
+        "is_public": true,
+        "subdomain": "myrestaurant",
+        "custom_domain": "myrestaurant.com"  // optional
+    }
+    """
+    permission_classes = [IsAuthenticated]
+    serializer_class = SystemCreateSerializer
+
+    @swagger_auto_schema(
+        request_body=SystemCreateSerializer,
+        responses={
+            201: openapi.Response(
+                description="System created successfully",
+                schema=SystemCreateSerializer
+            ),
+            400: "Bad Request - Invalid data",
+            401: "Unauthorized - Authentication required"
+        }
+    )
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            try:
+                # Create system with owner
+                system = serializer.save(
+                    owner=request.user,
+                    is_active=True
+                )
+                
+                # Generate response data
+                response_data = {
+                    "message": "System created successfully",
+                    "system": {
+                        "id": system.id,
+                        "uuid": system.uuid,
+                        "name": system.name,
+                        "category": system.category,
+                        "subdomain": system.subdomain,
+                        "custom_domain": system.custom_domain,
+                        "is_public": system.is_public,
+                        "is_active": system.is_active,
+                        "created_at": system.created_at,
+                        "url": f"https://{system.subdomain}.yourdomain.com"  # Replace with your actual domain
+                    }
+                }
+                
+                return Response(response_data, status=status.HTTP_201_CREATED)
+                
+            except Exception as e:
+                return Response(
+                    {"error": str(e)},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+                
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
