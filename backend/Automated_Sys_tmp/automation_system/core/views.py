@@ -10,9 +10,22 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 from rest_framework.decorators import api_view, permission_classes 
 from rest_framework.response import Response
-from rest_framework import status , generics
-from rest_framework.permissions import IsAuthenticated ,AllowAny
-from .serializers import SystemSerializer, UserSerializer, SystemListSerializer , ProfileSerializer, SystemCreateSerializer
+from rest_framework import status, generics
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from .serializers import (
+    UserSerializer, 
+    SystemListSerializer, 
+    ProfileSerializer, 
+    SystemCreateSerializer, 
+    SystemUpdateSerializer,
+    EmployeeSerializer, 
+    EmployeeCreateSerializer, 
+    EmployeeLoginSerializer,
+    EmployeeUpdateSerializer, 
+    EmployeeListSerializer, 
+    EmployeeInviteSerializer,
+    SystemDeleteSerializer
+)
 from rest_framework.generics import RetrieveAPIView, ListAPIView
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
@@ -21,10 +34,9 @@ from rest_framework import permissions
 from rest_framework.exceptions import NotFound
 from .permissions import IsSystemOwner
 from rest_framework.exceptions import NotFound, ValidationError
-from django.contrib.auth.hashers import make_password , check_password
+from django.contrib.auth.hashers import make_password, check_password
 from drf_yasg.utils import swagger_auto_schema
 from django.conf import settings
-
 from drf_yasg import openapi
 
 @csrf_exempt
@@ -200,10 +212,6 @@ class ChangePasswordView(APIView):
         )
 
 # Employee 
-
-
-from .serializers import EmployeeSerializer, EmployeeCreateSerializer, EmployeeLoginSerializer ,EmployeeUpdateSerializer , EmployeeListSerializer , EmployeeInviteSerializer
-from .models import Employee
 
 
 class EmployeeInviteView(APIView):
@@ -432,26 +440,28 @@ def update_system_subdomain(request, system_id):
         "subdomain": system.subdomain
     })
 
-class SystemCreateView(APIView):
-    """
-    Create a new system with enhanced features.
+class BaseSystemView(APIView):
+    """Base view for system operations with common functionality"""
     
-    This view handles system creation with:
-    - User-defined subdomain
-    - Custom domain validation
-    - Owner association
-    - System status tracking
-    
-    Example request:
-    {
-        "name": "My Restaurant",
-        "category": "restaurant",
-        "description": "A fine dining restaurant",
-        "is_public": true,
-        "subdomain": "myrestaurant",
-        "custom_domain": "myrestaurant.com"  // optional
-    }
-    """
+    def get_system_response(self, system):
+        """Generate standard system response data"""
+        return {
+            "id": system.id,
+            "uuid": system.uuid,
+            "name": system.name,
+            "category": system.category,
+            "description": system.description,
+            "subdomain": system.subdomain,
+            "custom_domain": system.custom_domain,
+            "is_public": system.is_public,
+            "is_active": system.is_active,
+            "created_at": system.created_at,
+            "updated_at": system.updated_at,
+            "url": f"https://{system.subdomain}.yourdomain.com" if system.subdomain else None
+        }
+
+class SystemCreateView(BaseSystemView):
+    """Create a new system"""
     permission_classes = [IsAuthenticated]
     serializer_class = SystemCreateSerializer
 
@@ -470,35 +480,124 @@ class SystemCreateView(APIView):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
             try:
-                # Create system with owner
                 system = serializer.save(
                     owner=request.user,
                     is_active=True
                 )
-                
-                # Generate response data
-                response_data = {
+                return Response({
                     "message": "System created successfully",
-                    "system": {
-                        "id": system.id,
-                        "uuid": system.uuid,
-                        "name": system.name,
-                        "category": system.category,
-                        "subdomain": system.subdomain,
-                        "custom_domain": system.custom_domain,
-                        "is_public": system.is_public,
-                        "is_active": system.is_active,
-                        "created_at": system.created_at,
-                        "url": f"https://{system.subdomain}.yourdomain.com"  # Replace with your actual domain
-                    }
-                }
-                
-                return Response(response_data, status=status.HTTP_201_CREATED)
-                
+                    "system": self.get_system_response(system)
+                }, status=status.HTTP_201_CREATED)
             except Exception as e:
                 return Response(
                     {"error": str(e)},
                     status=status.HTTP_400_BAD_REQUEST
                 )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class SystemUpdateView(BaseSystemView):
+    """Update an existing system"""
+    permission_classes = [IsAuthenticated, IsSystemOwner]
+    serializer_class = SystemUpdateSerializer
+
+    @swagger_auto_schema(
+        request_body=SystemUpdateSerializer,
+        responses={
+            200: openapi.Response(
+                description="System updated successfully",
+                schema=SystemUpdateSerializer
+            ),
+            400: "Bad Request - Invalid data or incorrect password",
+            401: "Unauthorized - Authentication required",
+            403: "Forbidden - Not the system owner",
+            404: "Not Found - System not found"
+        }
+    )
+    def patch(self, request, system_id, *args, **kwargs):
+        try:
+            system = System.objects.get(id=system_id)
+        except System.DoesNotExist:
+            return Response(
+                {"error": "System not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        if system.owner != request.user:
+            return Response(
+                {"error": "You do not have permission to update this system"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        serializer = self.serializer_class(
+            system, 
+            data=request.data, 
+            partial=True,
+            context={'request': request}
+        )
+        if serializer.is_valid():
+            try:
+                # Remove password from data before saving
+                validated_data = serializer.validated_data
+                validated_data.pop('password', None)
                 
+                updated_system = serializer.save()
+                return Response({
+                    "message": "System updated successfully",
+                    "system": self.get_system_response(updated_system)
+                }, status=status.HTTP_200_OK)
+            except Exception as e:
+                return Response(
+                    {"error": str(e)},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class SystemDeleteView(APIView):
+    """Delete a system with password confirmation"""
+    permission_classes = [IsAuthenticated, IsSystemOwner]
+    serializer_class = SystemDeleteSerializer
+
+    @swagger_auto_schema(
+        request_body=SystemDeleteSerializer,
+        responses={
+            200: "System deleted successfully",
+            400: "Bad Request - Invalid data or incorrect password",
+            401: "Unauthorized - Authentication required",
+            403: "Forbidden - Not the system owner",
+            404: "Not Found - System not found"
+        }
+    )
+    def delete(self, request, system_id, *args, **kwargs):
+        try:
+            system = System.objects.get(id=system_id)
+        except System.DoesNotExist:
+            return Response(
+                {"error": "System not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        if system.owner != request.user:
+            return Response(
+                {"error": "You do not have permission to delete this system"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        serializer = self.serializer_class(
+            data=request.data,
+            context={'request': request}
+        )
+        
+        if serializer.is_valid():
+            try:
+                # Delete the system
+                system.delete()
+                return Response(
+                    {"message": "System deleted successfully"},
+                    status=status.HTTP_200_OK
+                )
+            except Exception as e:
+                return Response(
+                    {"error": str(e)},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

@@ -65,13 +65,17 @@ class ProfileSerializer(serializers.Serializer):
     def get_systems(self, obj):
         if obj.groups.filter(name="Owner").exists():
             systems = System.objects.filter(owner=obj)
-            return SystemSerializer(systems, many=True).data
+            return BaseSystemSerializer(systems, many=True).data
         try:
             employee = obj.employee_profile
             system = employee.system
             return {
                 'id': system.id,
-                'category': system.category
+                'category': system.category,
+                'name': system.name,
+                'is_active': system.is_active,
+                'subdomain': system.subdomain,
+                'custom_domain': system.custom_domain
             }
         except Employee.DoesNotExist:
             return None
@@ -84,22 +88,11 @@ class SystemListSerializer(serializers.ModelSerializer):
 
 
 
-class SystemSerializer(serializers.ModelSerializer):
-    name = serializers.CharField(
-        validators=[UniqueValidator(queryset=System.objects.all())]
-    )
-    class Meta:
-        model = System
-        fields = ['name', 'category' , "id"]
-        read_only_fields = ['id']
-        
-        
-        
-
-class SystemCreateSerializer(serializers.ModelSerializer):
+class BaseSystemSerializer(serializers.ModelSerializer):
+    """Base serializer for system operations with common validation logic"""
     name = serializers.CharField(
         validators=[UniqueValidator(queryset=System.objects.all())],
-        help_text="Unique name for the system"
+        help_text="System name"
     )
     category = serializers.ChoiceField(
         choices=System.SYSTEM_CATEGORIES,
@@ -108,7 +101,7 @@ class SystemCreateSerializer(serializers.ModelSerializer):
     description = serializers.CharField(
         required=False,
         allow_blank=True,
-        help_text="Optional description of the system"
+        help_text="System description"
     )
     is_public = serializers.BooleanField(
         default=True,
@@ -118,29 +111,37 @@ class SystemCreateSerializer(serializers.ModelSerializer):
         required=False,
         allow_blank=True,
         allow_null=True,
-        help_text="Optional subdomain for your system (e.g., 'myrestaurant' for myrestaurant.yourdomain.com)"
+        help_text="Subdomain for your system"
     )
     custom_domain = serializers.CharField(
         required=False,
         allow_blank=True,
         allow_null=True,
-        help_text="Optional custom domain for the system"
+        help_text="Custom domain for the system"
     )
 
     class Meta:
         model = System
         fields = [
-            'name', 
-            'category', 
-            'description', 
-            'is_public', 
+            "id",
+            'name',
+            'category',
+            'description',
+            'is_public',
             'subdomain',
             'custom_domain'
         ]
 
     def validate_subdomain(self, value):
+        if not value:
+            return value
+            
         # Check if subdomain is already taken
-        if System.objects.filter(subdomain=value).exists():
+        queryset = System.objects.all()
+        if self.instance:  # For updates
+            queryset = queryset.exclude(id=self.instance.id)
+            
+        if queryset.filter(subdomain=value).exists():
             raise serializers.ValidationError("This subdomain is already taken")
         
         # Validate subdomain format
@@ -153,14 +154,18 @@ class SystemCreateSerializer(serializers.ModelSerializer):
         if len(value) > 63:
             raise serializers.ValidationError("Subdomain cannot be longer than 63 characters")
             
-        return value.lower()  # Convert to lowercase
+        return value.lower()
 
     def validate_custom_domain(self, value):
         if not value:
             return value
             
         # Check if custom domain is already taken
-        if System.objects.filter(custom_domain=value).exists():
+        queryset = System.objects.all()
+        if self.instance:  # For updates
+            queryset = queryset.exclude(id=self.instance.id)
+            
+        if queryset.filter(custom_domain=value).exists():
             raise serializers.ValidationError("This domain is already taken")
             
         # Basic domain validation
@@ -170,7 +175,74 @@ class SystemCreateSerializer(serializers.ModelSerializer):
         if len(value) > 255:
             raise serializers.ValidationError("Domain cannot be longer than 255 characters")
             
-        return value.lower()  # Convert to lowercase
+        # Validate domain format
+        parts = value.split('.')
+        if len(parts) < 2:
+            raise serializers.ValidationError("Domain must have at least one dot (e.g., example.com)")
+            
+        # Validate each part of the domain
+        for part in parts:
+            if not part:
+                raise serializers.ValidationError("Domain parts cannot be empty")
+            if len(part) > 63:
+                raise serializers.ValidationError("Each part of the domain cannot be longer than 63 characters")
+            if part[0] == '-' or part[-1] == '-':
+                raise serializers.ValidationError("Domain parts cannot start or end with a hyphen")
+            if not all(c.isalnum() or c == '-' for c in part):
+                raise serializers.ValidationError("Domain parts can only contain letters, numbers, and hyphens")
+            
+        # Validate TLD (Top Level Domain)
+        tld = parts[-1]
+        if len(tld) < 2:
+            raise serializers.ValidationError("Top level domain must be at least 2 characters")
+            
+        return value.lower()
+
+class SystemCreateSerializer(BaseSystemSerializer):
+    """Serializer for system creation"""
+    class Meta(BaseSystemSerializer.Meta):
+        fields = BaseSystemSerializer.Meta.fields + ['id']
+        read_only_fields = ['id']
+
+class SystemUpdateSerializer(BaseSystemSerializer):
+    """Serializer for system updates"""
+    name = serializers.CharField(required=False)
+    category = serializers.ChoiceField(required=False, read_only=True, choices=System.SYSTEM_CATEGORIES)
+    is_active = serializers.BooleanField(required=False)
+    password = serializers.CharField(
+        write_only=True, 
+        required=True, 
+        help_text="Your current password for verification",
+        style={'input_type': 'password'},
+        error_messages={
+            'required': 'Password is required for system updates',
+            'blank': 'Password cannot be blank'
+        }
+    )
+
+    class Meta(BaseSystemSerializer.Meta):
+        fields = BaseSystemSerializer.Meta.fields + ['is_active', 'password']
+        read_only_fields = ['category']  # Explicitly mark category as read-only
+
+    def validate(self, data):
+        # Ensure category is not being updated
+        if 'category' in data:
+            raise serializers.ValidationError({"category": "Category cannot be updated"})
+        
+        # Ensure password is provided and correct
+        if 'password' not in data:
+            raise serializers.ValidationError({"password": "Password is required for system updates"})
+            
+        user = self.context['request'].user
+        if not user.check_password(data['password']):
+            raise serializers.ValidationError({"password": "Incorrect password"})
+            
+        return data
+
+    def validate_password(self, value):
+        if not value:
+            raise serializers.ValidationError("Password cannot be blank")
+        return value
 
 from rest_framework import serializers
 from django.contrib.auth.models import User
@@ -320,3 +392,25 @@ class EmployeeCreateSerializer(serializers.Serializer):
         group, created = Group.objects.get_or_create(name="Employee")  # Create if not exists
         user.groups.add(group)  # Assign group
         return employee
+
+class SystemDeleteSerializer(serializers.Serializer):
+    """Serializer for system deletion with password confirmation"""
+    password = serializers.CharField(
+        write_only=True,
+        required=True,
+        help_text="Your current password for verification",
+        style={'input_type': 'password'},
+        error_messages={
+            'required': 'Password is required for system deletion',
+            'blank': 'Password cannot be blank'
+        }
+    )
+
+    def validate_password(self, value):
+        if not value:
+            raise serializers.ValidationError("Password cannot be blank")
+        
+        user = self.context['request'].user
+        if not user.check_password(value):
+            raise serializers.ValidationError("Incorrect password")
+        return value
