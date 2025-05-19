@@ -68,9 +68,14 @@ class ProfileSerializer(serializers.Serializer):
             return SystemSerializer(systems, many=True).data
         try:
             employee = obj.employee_profile
-            return employee.system.id
+            system = employee.system
+            return {
+                'id': system.id,
+                'category': system.category
+            }
         except Employee.DoesNotExist:
             return None
+        
 class SystemListSerializer(serializers.ModelSerializer):
     class Meta:
         model = System
