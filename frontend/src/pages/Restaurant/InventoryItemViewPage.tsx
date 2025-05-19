@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button, Form, Input, Spin } from 'antd';
 import { useInventory, InventoryItem } from '../../hooks/useInventory';
+import useHasPermission from '../../hooks/useHasPermission';
 
 const InventoryItemViewPage: React.FC = () => {
   const { itemId } = useParams<{ itemId: string }>();
@@ -12,6 +13,7 @@ const InventoryItemViewPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const hasUpdatePermission = useHasPermission('update_inventory');
 
   useEffect(() => {
     if (systemId && itemId) {
@@ -35,6 +37,7 @@ const InventoryItemViewPage: React.FC = () => {
 
   const handleSave = async () => {
     if (!item || !systemId || !itemId) return;
+    if (!hasUpdatePermission) return;
     setSaving(true);
     setError(null);
     try {

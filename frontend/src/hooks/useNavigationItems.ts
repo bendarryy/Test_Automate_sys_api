@@ -12,9 +12,7 @@ export default function useNavigationItems(): NavItem[] {
   } else {
     navItems = restaurantNavItems;
   }
-  // Always include commonNavItems
-  navItems = [...navItems, ...commonNavItems];
-
+  // لا تضف commonNavItems هنا
   return navItems.filter(
     (item) => !item.requiredPermission || actions.includes(item.requiredPermission)
   );

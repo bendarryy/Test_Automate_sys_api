@@ -19,7 +19,7 @@ const ChangePassword: React.FC = () => {
       message.success('Password changed successfully');
       passwordForm.resetFields();
       navigate('/settings');
-    } catch (error) {
+    } catch {
       message.error('Failed to change password. Please check your current password.');
     } finally {
       setLoading(false);

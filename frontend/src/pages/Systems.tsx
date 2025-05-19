@@ -21,7 +21,7 @@ const Systems: React.FC = () => {
   const [, setSelectedSystemId, , setSelectedCategory] = useSelectedSystemId();
 
   useEffect(() => {
-    callApi('get', '/core/systems');
+    callApi('get', '/core/systems/');
   }, []);
 
   return (

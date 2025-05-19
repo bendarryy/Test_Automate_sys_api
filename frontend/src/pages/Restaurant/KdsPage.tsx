@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useApi } from '../../hooks/useApi';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, Navigate } from 'react-router-dom';
 import { Table, Tag, Button, Space, Card, Typography, Alert, Spin, Modal } from 'antd';
 import { 
   EyeOutlined, 
@@ -9,6 +9,7 @@ import {
   DashboardOutlined 
 } from '@ant-design/icons';
 import KdsOrderDetails from './KdsOrderDetails';
+import useHasPermission from '../../hooks/useHasPermission';
 
 const { Title, Text } = Typography;
 
@@ -46,7 +47,7 @@ const KdsPage: React.FC = () => {
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [detailsError, setDetailsError] = useState<string | null>(null);
 
-  const fetchOrders = useCallback(() => {
+  const fetchOrders = useCallback(async () => {
     if (systemId) {
       callApi('get', `/restaurant/${systemId}/kitchen/orders/`)
         .then(setOrders)
@@ -66,7 +67,7 @@ const KdsPage: React.FC = () => {
       .then((data) => setOrderDetails(data))
       .catch((err) => setDetailsError(err?.message || 'Error loading details'))
       .finally(() => setDetailsLoading(false));
-  }, [params.orderId, systemId]);
+  }, [params.orderId, callApi, systemId]);
 
   const handleStatusUpdate = async (id: number, status: 'preparing' | 'ready' | 'completed' | 'canceled') => {
     if (!systemId) return;
@@ -78,6 +79,9 @@ const KdsPage: React.FC = () => {
       setUpdating(null);
     }
   };
+
+  const hasKdsPermission = useHasPermission('read_kds');
+  if (!hasKdsPermission) return <Navigate to="/" replace />;
 
   const columns = [
     {

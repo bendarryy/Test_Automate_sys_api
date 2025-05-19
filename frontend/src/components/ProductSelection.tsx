@@ -17,6 +17,7 @@ import {
   Popover,
   Button,
   message,
+  Badge,
 } from "antd";
 import { MdTableRestaurant, MdDeliveryDining, MdStore } from "react-icons/md";
 import { RootState } from "../store";
@@ -43,6 +44,7 @@ type SortOrder =
   | "default";
 
 const ProductSelection = () => {
+  const billItems = useSelector((state: RootState) => state.bill.items);
   const dispatch = useDispatch();
   const selectedTable = useSelector(
     (state: RootState) => state.bill.selectedTable
@@ -366,8 +368,20 @@ const ProductSelection = () => {
           <Row gutter={[16, 16]} style={{ margin: "0px", padding: "10px" }}>
             {displayedProducts.map((product) => (
               <Col key={product.id} xs={24} sm={12} md={8} lg={4}>
-                {" "}
-                {/* Adjusted column sizes */}
+                {/* Badge for product quantity in bill */}
+                {/* Badge in top-right */}
+                <div style={{ position: 'relative' }}>
+                {(() => {
+                    const item = billItems.find((item) => String(item.id) === String(product.id));
+                    return item && item.quantity > 0 ? (
+                      <div style={{ position: 'absolute', top: 5, right: 5 , transform: 'translate(50%, -50%)', zIndex: 1000 }}>
+                      <Badge
+                        count={item.quantity}
+                        color="blue"
+                      />
+                      </div>
+                    ) : null;
+                  })()}
                 <Card
                   className="product-card"
                   hoverable
@@ -384,71 +398,79 @@ const ProductSelection = () => {
                     }
                   }}
                   style={{
-                    height: "100%",
+                    height: 260,
+                    minHeight: 260,
+                    width: '100%',
                     opacity: product.is_available ? 1 : 0.6,
                     cursor: product.is_available ? "pointer" : "not-allowed",
+                    position: 'relative',
+                    display: 'flex',
+                    flexDirection: 'column',
+
                   }}
                   cover={renderProductImage(product)}
-                  bodyStyle={{ padding: "12px" }}
+                  bodyStyle={{ padding: "12px" , position: 'static'}}
                 >
+
                   <Card.Meta
-                    title={
-                      <Popover
-                        content={product.name}
-                        trigger="hover"
-                        placement="topLeft"
-                      >
-                        <Typography.Text
-                          ellipsis
-                          style={{
-                            fontSize: "16px",
-                            fontWeight: "bold",
-                            marginBottom: "4px",
-                            display: "block",
-                            width: "100%",
-                          }}
+                      title={
+                        <Popover
+                          content={product.name}
+                          trigger="hover"
+                          placement="topLeft"
                         >
-                          {product.name}
-                        </Typography.Text>
-                      </Popover>
-                    }
-                    description={
-                      <div>
-                        <p
-                          style={{
-                            margin: 0,
-                            fontSize: "15px",
-                            fontWeight: "bold",
-                            color: "#1890ff",
-                          }}
-                        >
-                          ${product.price}
-                        </p>
-                        {product.description && (
-                          <Popover
-                            content={product.description}
-                            trigger="hover"
-                            placement="topLeft"
+                          <Typography.Text
+                            ellipsis
+                            style={{
+                              fontSize: "16px",
+                              fontWeight: "bold",
+                              marginBottom: "4px",
+                              display: "block",
+                              width: "100%",
+                            }}
                           >
-                            <Typography.Paragraph
-                              style={{
-                                margin: "4px 0 0 0",
-                                fontSize: "12px",
-                                color: "#666",
-                              }}
-                              ellipsis={{
-                                rows: 2,
-                                expandable: false,
-                              }}
+                            {product.name}
+                          </Typography.Text>
+                        </Popover>
+                      }
+                      description={
+                        <div>
+                          <p
+                            style={{
+                              margin: 0,
+                              fontSize: "15px",
+                              fontWeight: "bold",
+                              color: "#1890ff",
+                            }}
+                          >
+                            ${product.price}
+                          </p>
+                          {product.description && (
+                            <Popover
+                              content={product.description}
+                              trigger="hover"
+                              placement="topLeft"
                             >
-                              {product.description}
-                            </Typography.Paragraph>
-                          </Popover>
-                        )}
-                      </div>
-                    }
-                  />
-                </Card>
+                              <Typography.Paragraph
+                                style={{
+                                  margin: "4px 0 0 0",
+                                  fontSize: "12px",
+                                  color: "#666",
+                                }}
+                                ellipsis={{
+                                  rows: 2,
+                                  expandable: false,
+                                }}
+                              >
+                                {product.description}
+                              </Typography.Paragraph>
+                            </Popover>
+                          )}
+                        </div>
+                      }
+                    />
+                  </Card>
+                </div>
               </Col>
             ))}
           </Row>

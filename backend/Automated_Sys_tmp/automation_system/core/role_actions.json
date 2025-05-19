@@ -2,13 +2,12 @@
   "owner": [
     "root_url_is_home",
     "create_menu", "read_menu", "update_menu", "delete_menu",
-    "create_order", "read_order", "update_order", "delete_order",
+    "create_order", "read_order", "update_order", "delete_order", "update_own_order",
     "create_inventory", "read_inventory", "update_inventory", "delete_inventory",
     "create_product", "read_product", "update_product", "delete_product",
     "create_employee", "read_employee", "update_employee", "delete_employee",
-    "read_finance",
-    "read_kds", "read_waiterdisplay", "read_deliverydisplay",
-    "read_profile", "read_settings", "read_about", "read_home"
+    "read_finance", "read_kds", "read_waiterdisplay", "read_deliverydisplay",
+    "read_profile", "read_settings", "read_about", "read_home", "read_sales"
   ],
   "manager": [
     "root_url_is_orders",
@@ -19,7 +18,7 @@
     "create_employee", "read_employee", "update_employee", "delete_employee",
     "read_finance",
     "read_kds", "read_waiterdisplay", "read_deliverydisplay",
-    "read_profile", "read_settings", "read_about", "read_home"
+    "read_profile", "read_settings", "read_about", "read_home", "read_sales"
   ],
   "chef": [
     "root_url_is_kds",
@@ -32,6 +31,10 @@
   "cashier": [
     "root_url_is_cashier",
     "read_menu", "read_order", "update_order", "read_finance", "read_waiterdisplay", "read_profile", "read_about"
+  ],
+  "cashier_supermarket": [
+    "root_url_is_cashier_supermarket",
+    "read_menu", "read_order", "update_order", "read_finance", "read_sales", "read_waiterdisplay", "read_profile", "read_about"
   ],
   "delivery_driver": [
     "root_url_is_delivery_driver",

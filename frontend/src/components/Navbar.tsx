@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from "react";
-import { useApi } from "../hooks/useApi";
+import { useState } from "react";
+import { useSelector } from "react-redux";
+import { RootState } from "../store";
 import { MdNotifications, MdNotificationsActive, MdAccountCircle } from "react-icons/md"; // react-icons Material Design
 import { useNavigate } from "react-router-dom";
 import { Layout, Badge, Dropdown, Space, Button, theme } from 'antd';
 import type { MenuProps } from 'antd';
+import { useApi } from "../hooks/useApi";
 
 const { Header } = Layout;
 const { useToken } = theme;
@@ -13,23 +15,13 @@ const Navbar = () => {
   const { callApi } = useApi();
   const navigate = useNavigate();
   const { token } = useToken();
-  const [userRole, setUserRole] = useState<string | null>(null);
+  const profile = useSelector((state: RootState) => state.profile.profile);
+  const userRole = profile?.role || null;
 
   const [notificationHover, setNotificationHover] = useState(false);
   const [accountHover, setAccountHover] = useState(false);
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const response = await callApi('get', '/core/profile/');
-        setUserRole(response.role);
-      } catch (error) {
-        console.error('Failed to fetch profile:', error);
-      }
-    };
 
-    fetchProfile();
-  }, []);
 
   const handleLogout = async () => {
     try {

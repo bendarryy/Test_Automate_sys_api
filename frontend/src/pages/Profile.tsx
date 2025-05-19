@@ -1,62 +1,19 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Card, Typography, Descriptions, Tag, Spin, Alert } from 'antd';
-import { useApi } from '../hooks/useApi';
+import { useSelector } from 'react-redux';
+import { RootState } from '../store';
 
 const { Title } = Typography;
 
-interface System {
-  name: string;
-  category: string;
-  id: number;
-}
 
-interface User {
-  username: string;
-  email: string;
-  first_name: string;
-  last_name: string;
-  date_joined: string;
-}
 
-interface ProfileData {
-  user: User;
-  role: string;
-  systems: System[] | number;
-}
+
 
 const Profile: React.FC = () => {
-  const { callApi, loading, error, data } = useApi<ProfileData>();
-  const [profileData, setProfileData] = useState<ProfileData | null>(null);
-
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        console.log('Fetching profile data...');
-        const response = await callApi('get', '/core/profile/');
-        console.log('Profile response:', response);
-        setProfileData(response);
-
-        // Handle employee systems
-        if (response.role !== 'owner' && typeof response.systems === 'number') {
-          // For employees, set their system ID
-          localStorage.setItem('selectedSystemId', response.systems.toString());
-        }
-      } catch (err) {
-        console.error('Failed to fetch profile:', err);
-      }
-    };
-
-    fetchProfile();
-  }, []);
-
-  // Update profileData when data changes
-  useEffect(() => {
-    if (data) {
-      setProfileData(data);
-    }
-  }, [data]);
-
-  console.log('Current state:', { loading, error, profileData, data });
+  const profileState = useSelector((state: RootState) => state.profile);
+  const profileData = profileState.profile;
+  const loading = profileState.loading;
+  const error = profileState.error;
 
   if (loading) {
     return (

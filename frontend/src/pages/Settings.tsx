@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, List, Typography, Space } from 'antd';
+import { Card, List, Typography } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { 
   UserOutlined, 
@@ -59,14 +59,7 @@ const Settings: React.FC = () => {
           renderItem={(item) => (
             <List.Item
               onClick={() => navigate(item.path)}
-              style={{ 
-                cursor: 'pointer',
-                padding: '16px',
-                transition: 'all 0.3s',
-                ':hover': {
-                  backgroundColor: '#f5f5f5'
-                }
-              }}
+              className="settings-list-item"
             >
               <List.Item.Meta
                 avatar={item.icon}

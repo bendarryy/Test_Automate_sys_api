@@ -1,27 +1,33 @@
 import { IconType } from "react-icons";
 import {
   RiHome4Line,
-  RiListCheck,
-  RiBookOpenLine,
-  RiTBoxLine,
-  RiClipboardLine,
-  RiSettings4Line,
-  RiInformationLine,
-  RiComputerLine,
-  RiUserLine,
-  RiShoppingBasketLine,
-} from "react-icons/ri";
-import {
   RiHome4Fill,
-  RiListCheck2,
-  RiBookOpenFill,
-  RiTBoxFill,
-  RiClipboardFill,
+  RiFileList2Line,
+  RiFileList2Fill,
+  RiRestaurant2Line,
+  RiRestaurant2Fill,
+  RiEditBoxLine,
+  RiEditBoxFill,
+  RiArchiveLine,
+  RiArchiveFill,
+  RiDashboardLine,
+  RiDashboardFill,
+  RiUserVoiceLine,
+  RiUserVoiceFill,
+  RiTruckLine,
+  RiTruckFill,
+  RiTeamLine,
+  RiTeamFill,
+  RiMoneyDollarCircleLine,
+  RiMoneyDollarCircleFill,
+  RiAccountCircleLine,
+  RiAccountCircleFill,
+  RiSettings4Line,
   RiSettings4Fill,
+  RiInformationLine,
   RiInformationFill,
-  RiComputerFill,
-  RiUserFill,
-  RiShoppingBasketFill,
+  RiShoppingBasketLine,
+  RiShoppingBasketFill
 } from "react-icons/ri";
 
 // Define the navigation item interface
@@ -49,8 +55,8 @@ export const restaurantNavItems: NavItem[] = [
   },
   {
     name: "Orders",
-    icon: RiListCheck,
-    activeIcon: RiListCheck2,
+    icon: RiFileList2Line,
+    activeIcon: RiFileList2Fill,
     href: "/orders",
     systemCategory: "restaurant",
     showInSidebar: true,
@@ -58,8 +64,8 @@ export const restaurantNavItems: NavItem[] = [
   },
   {
     name: "Menu",
-    icon: RiBookOpenLine,
-    activeIcon: RiBookOpenFill,
+    icon: RiRestaurant2Line,
+    activeIcon: RiRestaurant2Fill,
     href: "/menu",
     systemCategory: "restaurant",
     showInSidebar: true,
@@ -67,8 +73,8 @@ export const restaurantNavItems: NavItem[] = [
   },
   {
     name: "Menu Management",
-    icon: RiClipboardLine,
-    activeIcon: RiClipboardFill,
+    icon: RiEditBoxLine,
+    activeIcon: RiEditBoxFill,
     href: "/menu-management",
     systemCategory: "restaurant",
     showInSidebar: true,
@@ -76,8 +82,8 @@ export const restaurantNavItems: NavItem[] = [
   },
   {
     name: "Inventory",
-    icon: RiTBoxLine,
-    activeIcon: RiTBoxFill,
+    icon: RiArchiveLine,
+    activeIcon: RiArchiveFill,
     href: "/Inventory",
     systemCategory: "restaurant",
     showInSidebar: true,
@@ -85,8 +91,8 @@ export const restaurantNavItems: NavItem[] = [
   },
   {
     name: "KDS",
-    icon: RiComputerLine,
-    activeIcon: RiComputerFill,
+    icon: RiDashboardLine,
+    activeIcon: RiDashboardFill,
     href: "/kds",
     systemCategory: "restaurant",
     showInSidebar: true,
@@ -94,8 +100,8 @@ export const restaurantNavItems: NavItem[] = [
   },
   {
     name: "Waiter Display",
-    icon: RiComputerLine,
-    activeIcon: RiComputerFill,
+    icon: RiUserVoiceLine,
+    activeIcon: RiUserVoiceFill,
     href: "/waiterdisplay",
     systemCategory: "restaurant",
     showInSidebar: true,
@@ -103,8 +109,8 @@ export const restaurantNavItems: NavItem[] = [
   },
   {
     name: "Delivery Display",
-    icon: RiComputerLine,
-    activeIcon: RiComputerFill,
+    icon: RiTruckLine,
+    activeIcon: RiTruckFill,
     href: "/deliverydisplay",
     systemCategory: "restaurant",
     showInSidebar: true,
@@ -112,8 +118,8 @@ export const restaurantNavItems: NavItem[] = [
   },
   {
     name: "Employees",
-    icon: RiUserLine,
-    activeIcon: RiUserFill,
+    icon: RiTeamLine,
+    activeIcon: RiTeamFill,
     href: "/employees",
     systemCategory: "restaurant",
     showInSidebar: true,
@@ -121,8 +127,8 @@ export const restaurantNavItems: NavItem[] = [
   },
   {
     name: "Finances",
-    icon: RiClipboardLine,
-    activeIcon: RiClipboardFill,
+    icon: RiMoneyDollarCircleLine,
+    activeIcon: RiMoneyDollarCircleFill,
     href: "/financesdashboards",
     systemCategory: "restaurant",
     showInSidebar: true,
@@ -152,8 +158,8 @@ export const supermarketNavItems: NavItem[] = [
   },
   {
     name: 'Inventory',
-    icon: RiTBoxLine,
-    activeIcon: RiTBoxFill,
+    icon: RiArchiveLine,
+    activeIcon: RiArchiveFill,
     href: '/inventory',
     systemCategory: 'supermarket',
     showInSidebar: true,
@@ -169,6 +175,15 @@ export const supermarketNavItems: NavItem[] = [
     requiredPermission: "update_product",
   },
   {
+    name: 'Sales',
+    icon: RiMoneyDollarCircleLine,
+    activeIcon: RiMoneyDollarCircleFill,
+    href: '/supermarket/sales',
+    systemCategory: 'supermarket',
+    showInSidebar: true,
+    requiredPermission: "read_sales",
+  },
+  {
     name: 'About',
     icon: RiInformationLine,
     activeIcon: RiInformationFill,
@@ -176,15 +191,15 @@ export const supermarketNavItems: NavItem[] = [
     systemCategory: 'supermarket',
     showInSidebar: true,
     requiredPermission: "access_about",
-  },
+  }
 ];
 
 // Common navigation items for all systems
 export const commonNavItems: NavItem[] = [
   {
     name: 'Profile',
-    icon: RiUserLine,
-    activeIcon: RiUserFill,
+    icon: RiAccountCircleLine,
+    activeIcon: RiAccountCircleFill,
     href: '/profile',
     systemCategory: 'all',
     showInSidebar: true,

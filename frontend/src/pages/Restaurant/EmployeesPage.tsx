@@ -14,11 +14,9 @@ import {
   message,
   Popconfirm,
   Tag,
-  Divider
 } from 'antd';
 import {
   UserAddOutlined,
-  EyeOutlined,
   EditOutlined,
   DeleteOutlined,
   SaveOutlined,
@@ -76,20 +74,7 @@ const EmployeesPage: React.FC = () => {
   useEffect(() => { fetchEmployees(); /* eslint-disable-next-line */ }, []);
 
   // Open modal and fetch details
-  const handleView = async (emp: Employee) => {
-    setShowViewModal(true);
-    setModalMode('view');
-    setModalLoading(true);
-    try {
-      const details = await employeeApi.getEmployee(emp.id);
-      setSelectedEmployee(details);
-      viewForm.setFieldsValue(details);
-    } catch (error) {
-      message.error('Error loading employee details');
-    } finally {
-      setModalLoading(false);
-    }
-  };
+
 
   const handleEdit = () => {
     setModalMode('edit');
@@ -106,7 +91,7 @@ const EmployeesPage: React.FC = () => {
       setModalMode('view');
       fetchEmployees();
       message.success('Employee updated successfully');
-    } catch (error) {
+    } catch {
       message.error('Error updating employee');
     } finally {
       setModalLoading(false);
@@ -120,7 +105,7 @@ const EmployeesPage: React.FC = () => {
       setShowViewModal(false);
       fetchEmployees();
       message.success('Employee deleted successfully');
-    } catch (error) {
+    } catch {
       message.error('Error deleting employee');
     }
   };
@@ -133,7 +118,7 @@ const EmployeesPage: React.FC = () => {
       inviteForm.resetFields();
       setShowInviteModal(false);
       fetchEmployees();
-    } catch (error) {
+    } catch {
       message.error('Failed to invite employee. Please try again.');
     } finally {
       setModalLoading(false);
@@ -176,11 +161,23 @@ const EmployeesPage: React.FC = () => {
       title: 'Actions',
       key: 'actions',
       width: 100,
-      render: (_: any, record: Employee) => (
+      render: (_: unknown, record: Employee) => (
         <Button
           type="text"
-          icon={<EyeOutlined />}
-          onClick={() => handleView(record)}
+          icon={<EditOutlined />}
+          onClick={() => {
+            setShowViewModal(true);
+            setModalMode('edit');
+            setModalLoading(true);
+            employeeApi.getEmployee(record.id).then(details => {
+              setSelectedEmployee(details);
+              viewForm.setFieldsValue(details);
+            }).catch(() => {
+              message.error('Error loading employee details');
+            }).finally(() => {
+              setModalLoading(false);
+            });
+          }}
         />
       ),
     },
@@ -203,7 +200,7 @@ const EmployeesPage: React.FC = () => {
 
           <Table
             columns={columns}
-            dataSource={data}
+            dataSource={data ?? undefined}
             loading={loading}
             rowKey="id"
             pagination={{ pageSize: 10 }}

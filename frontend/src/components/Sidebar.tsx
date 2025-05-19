@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { RiArrowLeftSLine, RiArrowRightSLine, RiMoreFill } from "react-icons/ri";
 import { Layout, Menu, Button, theme, Typography, Dropdown } from 'antd';
 import styles from './Sidebar.module.css';
-import { getNavItems, getCommonNavItems, NavItem } from '../config/navigation.config';
+import { getCommonNavItems, NavItem } from '../config/navigation.config';
 import useNavigationItems from '../hooks/useNavigationItems';
 
 const { Sider } = Layout;

@@ -12,8 +12,8 @@ const HomePage = () => {
 
   return (
     <main>
-      <div className="d-flex" style={{ height: 'calc(100vh - 64px)' }}>
-        <div className="d-flex flex-column gap-2" style={{ flex: 2, width: '100%' }}>
+      <div style={{ height: 'calc(100vh - 64px)' }}>
+        <div style={{ flex: 2, width: '100%' }}>
           <ProductsSection />
         </div>
       </div>

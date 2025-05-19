@@ -4,24 +4,34 @@ import { Sidebar } from "./components/Sidebar"
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { setPermissions } from './store/permissionsSlice';
+import { setProfile } from './store/profileSlice';
 import { RootState } from './store';
 import { useApi } from './hooks/useApi';
 
 const Layout = () => {
   const dispatch = useDispatch();
   const loaded = useSelector((state: RootState) => state.permissions.loaded);
+  const profile = useSelector((state: RootState) => state.profile.profile);
   const { loading, callApi } = useApi();
 
   useEffect(() => {
-    if (!loaded) {
-      callApi('get', '/core/profile/').then((data) => {
-        dispatch(setPermissions(data?.actions || []));
-      }).catch(() => {
-        dispatch(setPermissions([]));
-      });
+    if (!profile) {
+      (async () => {
+        try {
+          const data = await callApi('get', '/core/profile/');
+          dispatch(setProfile(data));
+          dispatch(setPermissions(data?.actions || []));
+        } catch {
+          dispatch(setProfile(null));
+          dispatch(setPermissions([]));
+        }
+      })();
+    } else if (!loaded) {
+      // profile موجود لكن لم يتم تحميل الصلاحيات بعد
+      dispatch(setPermissions(profile.actions || []));
     }
     // eslint-disable-next-line
-  }, [dispatch, loaded]);
+  }, [dispatch, loaded, profile]);
 
   const systemId = localStorage.getItem('selectedSystemId');
   if (!systemId) {

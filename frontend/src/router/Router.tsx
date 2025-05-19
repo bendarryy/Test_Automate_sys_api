@@ -7,7 +7,7 @@ import { SalesPage } from "../pages/supermarket/SalesPage";
 import ProtectedRoute from '../components/ProtectedRoute';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
-import { Navigate } from 'react-router-dom';
+
 
 function RootUrlPage() {
   const actions = useSelector((state: RootState) => state.permissions.actions);
@@ -31,7 +31,6 @@ const DynamicHomePage = lazy(() => import("../pages/DynamicHomePage"));
 const RegisterPage = lazy(() => import("../pages/RegisterPage"));
 const OrdersPage = lazy(() => import("../pages/Restaurant/OrderPage"));
 const OrderDetailsPage = lazy(() => import("../pages/Restaurant/OrderDetailsPage"));
-const EditOrderPage = lazy(() => import("../pages/Restaurant/EditOrderPage"));
 const MenuManagement = lazy(() => import("../components/MenuManagement"));
 const InventoryManagementPage = lazy(() => import("../pages/Restaurant/InventoryManagementPage"));
 const InventoryManagementSMPage = lazy(() => import("../pages/supermarket/InventoryManagementPage"));
@@ -134,16 +133,6 @@ const router = createBrowserRouter([
           <Suspense fallback={<div>Loading...</div>}>
             <ProtectLogin>
               <OrderDetailsPage />
-            </ProtectLogin>
-          </Suspense>
-        ),
-      },
-      {
-        path: "/orders/:orderId/edit",
-        element: (
-          <Suspense fallback={<div>Loading...</div>}>
-            <ProtectLogin>
-              <EditOrderPage />
             </ProtectLogin>
           </Suspense>
         ),
@@ -359,7 +348,9 @@ const supermarketRouter = createBrowserRouter([
         element: (
           <Suspense fallback={<div>Loading...</div>}>
             <ProtectLogin>
-              <SalesPage />
+              <ProtectedRoute permission="read_sales">
+                <SalesPage />
+              </ProtectedRoute>
             </ProtectLogin>
           </Suspense>
         ),
