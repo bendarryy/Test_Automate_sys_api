@@ -1,9 +1,11 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
-    InventoryItemViewSet, 
+    InventoryItemViewSet,
     SaleViewSet,
-    SupplierViewSet
+    SupplierViewSet,
+    PurchaseOrderViewSet,
+    GoodsReceivingViewSet,
 )
 import json
 from django.conf import settings
@@ -17,7 +19,7 @@ inventory_item = InventoryItemViewSet.as_view(
     }
 )
 
-with open(settings.BASE_DIR / 'core/role_actions.json') as f:
+with open(settings.BASE_DIR / "core/role_actions.json") as f:
     ROLE_ACTIONS = json.load(f)
 
 urlpatterns = [
@@ -129,20 +131,97 @@ urlpatterns = [
     # Supplier endpoints
     path(
         "<int:system_id>/suppliers/",
-        SupplierViewSet.as_view({
-            "get": "list",
-            "post": "create",
-        }),
+        SupplierViewSet.as_view(
+            {
+                "get": "list",
+                "post": "create",
+            }
+        ),
         name="supplier-list-create",
     ),
     path(
         "<int:system_id>/suppliers/<int:pk>/",
-        SupplierViewSet.as_view({
-            "get": "retrieve",
-            "put": "update",
-            "patch": "partial_update",
-            "delete": "destroy",
-        }),
+        SupplierViewSet.as_view(
+            {
+                "get": "retrieve",
+                "put": "update",
+                "patch": "partial_update",
+                "delete": "destroy",
+            }
+        ),
         name="supplier-detail",
+    ),
+    # Purchase Order endpoints
+    path(
+        "<int:system_id>/purchase-orders/",
+        PurchaseOrderViewSet.as_view(
+            {
+                "get": "list",
+                "post": "create",
+            }
+        ),
+        name="purchase-order-list-create",
+    ),
+    path(
+        "<int:system_id>/purchase-orders/<int:pk>/",
+        PurchaseOrderViewSet.as_view(
+            {
+                "get": "retrieve",
+                "put": "update",
+                "patch": "partial_update",
+                "delete": "destroy",
+            }
+        ),
+        name="purchase-order-detail",
+    ),
+    path(
+        "<int:system_id>/purchase-orders/pending/",
+        PurchaseOrderViewSet.as_view(
+            {
+                "get": "pending",
+            }
+        ),
+        name="purchase-order-pending",
+    ),
+    path(
+        "<int:system_id>/purchase-orders/partially-received/",
+        PurchaseOrderViewSet.as_view(
+            {
+                "get": "partially_received",
+            }
+        ),
+        name="purchase-order-partially-received",
+    ),
+    # Goods Receiving endpoints
+    path(
+        "<int:system_id>/goods-receiving/",
+        GoodsReceivingViewSet.as_view(
+            {
+                "get": "list",
+                "post": "create",
+            }
+        ),
+        name="goods-receiving-list-create",
+    ),
+    path(
+        "<int:system_id>/goods-receiving/<int:pk>/",
+        GoodsReceivingViewSet.as_view(
+            {
+                "get": "retrieve",
+                "put": "update",
+                "patch": "partial_update",
+                "delete": "destroy",
+            }
+        ),
+        name="goods-receiving-detail",
+    ),
+    path(
+        "<int:system_id>/goods-receiving/by-purchase-order/",
+        GoodsReceivingViewSet.as_view(
+            {
+                "get": "by_purchase_order",
+            }
+        ),
+        name="goods-receiving-by-po",
     ),
 ]

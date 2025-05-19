@@ -7,7 +7,18 @@ from rest_framework.response import Response
 from django.db.models import F
 from datetime import date, timedelta
 
-from .models import System, Product, StockChange, Sale, SaleItem, Discount, Employee, Supplier
+from .models import (
+    System,
+    Product,
+    StockChange,
+    Sale,
+    SaleItem,
+    Discount,
+    Employee,
+    Supplier,
+    PurchaseOrder,
+    GoodsReceiving,
+)
 from .serializers import (
     InventorysupItemSerializer,
     StockUpdateSerializer,
@@ -17,6 +28,8 @@ from .serializers import (
     SaleCreateSerializer,
     ApplyDiscountSerializer,
     SupplierSerializer,
+    PurchaseOrderSerializer,
+    GoodsReceivingSerializer,
 )
 from core.permissions import IsSystemOwner, IsEmployeeRolePermission
 from rest_framework.permissions import OR
@@ -280,16 +293,19 @@ class SupplierViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        system_id = self.kwargs.get('system_id')
+        system_id = self.kwargs.get("system_id")
         return Supplier.objects.filter(system_id=system_id)
 
     def get_permissions(self):
-        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+        if self.action in ["create", "update", "partial_update", "destroy"]:
             return [
                 IsAuthenticated(),
-                OR(IsSystemOwner(), IsEmployeeRolePermission('manager')),
+                OR(IsSystemOwner(), IsEmployeeRolePermission("manager")),
             ]
-        return [IsAuthenticated(), OR(IsSystemOwner(), IsEmployeeRolePermission('manager'))]
+        return [
+            IsAuthenticated(),
+            OR(IsSystemOwner(), IsEmployeeRolePermission("manager")),
+        ]
 
     def perform_create(self, serializer):
         serializer.save()
@@ -301,6 +317,145 @@ class SupplierViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         self.perform_destroy(instance)
         return Response(
-            {"message": "Supplier deleted successfully."},
-            status=status.HTTP_200_OK
+            {"message": "Supplier deleted successfully."}, status=status.HTTP_200_OK
         )
+
+
+class PurchaseOrderViewSet(viewsets.ModelViewSet):
+    serializer_class = PurchaseOrderSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        system_id = self.kwargs.get("system_id")
+        user = self.request.user
+
+        try:
+            system = System.objects.get(id=system_id, owner=user)
+        except System.DoesNotExist:
+            raise PermissionDenied(
+                "You do not have permission to access this system's purchase orders."
+            )
+
+        return PurchaseOrder.objects.filter(system=system).order_by("-created_at")
+
+    def get_permissions(self):
+        if self.action in ["create", "update", "partial_update", "destroy"]:
+            return [
+                IsAuthenticated(),
+                OR(IsSystemOwner(), IsEmployeeRolePermission("manager")),
+            ]
+        return [IsAuthenticated(), OR(IsSystemOwner(), IsEmployeeRolePermission())]
+
+    def perform_create(self, serializer):
+        system_id = self.kwargs.get("system_id")
+        user = self.request.user
+
+        try:
+            system = System.objects.get(id=system_id, owner=user)
+        except System.DoesNotExist:
+            raise PermissionDenied(
+                "You do not have permission to create purchase orders in this system."
+            )
+
+        serializer.save(system=system)
+
+    @action(detail=False, methods=["get"])
+    def pending(self, request, system_id=None):
+        """Get all pending purchase orders"""
+        system = self._get_system_or_403(system_id)
+        pending_orders = PurchaseOrder.objects.filter(
+            system=system, status="pending"
+        ).order_by("expected_delivery_date")
+        serializer = self.get_serializer(pending_orders, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=["get"])
+    def partially_received(self, request, system_id=None):
+        """Get all partially received purchase orders"""
+        system = self._get_system_or_403(system_id)
+        partial_orders = PurchaseOrder.objects.filter(
+            system=system, status="partially_received"
+        ).order_by("expected_delivery_date")
+        serializer = self.get_serializer(partial_orders, many=True)
+        return Response(serializer.data)
+
+    def _get_system_or_403(self, system_id):
+        """Helper method to get system or raise 403"""
+        try:
+            return System.objects.get(id=system_id, owner=self.request.user)
+        except System.DoesNotExist:
+            raise PermissionDenied("You do not have permission for this system.")
+
+
+class GoodsReceivingViewSet(viewsets.ModelViewSet):
+    serializer_class = GoodsReceivingSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        system_id = self.kwargs.get("system_id")
+        user = self.request.user
+
+        try:
+            system = System.objects.get(id=system_id, owner=user)
+        except System.DoesNotExist:
+            raise PermissionDenied(
+                "You do not have permission to access this system's goods receiving."
+            )
+
+        return GoodsReceiving.objects.filter(purchase_order__system=system).order_by(
+            "-created_at"
+        )
+
+    def get_permissions(self):
+        if self.action in ["create", "update", "partial_update", "destroy"]:
+            return [
+                IsAuthenticated(),
+                OR(IsSystemOwner(), IsEmployeeRolePermission("manager")),
+            ]
+        return [IsAuthenticated(), OR(IsSystemOwner(), IsEmployeeRolePermission())]
+
+    def perform_create(self, serializer):
+        po_id = serializer.validated_data["purchase_order"].id
+        system_id = self.kwargs.get("system_id")
+        user = self.request.user
+
+        try:
+            po = PurchaseOrder.objects.get(id=po_id, system_id=system_id)
+            if po.system.owner != user:
+                raise PermissionDenied(
+                    "You do not have permission to create goods receiving for this PO."
+                )
+        except PurchaseOrder.DoesNotExist:
+            raise PermissionDenied("Purchase Order not found.")
+
+        serializer.save()
+
+    @action(detail=False, methods=["get"])
+    def by_purchase_order(self, request, system_id=None):
+        """Get all goods receiving records for a specific purchase order"""
+        po_id = request.query_params.get("purchase_order_id")
+        if not po_id:
+            return Response(
+                {"error": "purchase_order_id parameter is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        system = self._get_system_or_403(system_id)
+        try:
+            po = PurchaseOrder.objects.get(id=po_id, system=system)
+        except PurchaseOrder.DoesNotExist:
+            return Response(
+                {"error": "Purchase Order not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        goods_receiving = GoodsReceiving.objects.filter(purchase_order=po)
+        serializer = self.get_serializer(goods_receiving, many=True)
+        return Response(serializer.data)
+
+    def _get_system_or_403(self, system_id):
+        """Helper method to get system or raise 403"""
+        try:
+            return System.objects.get(id=system_id, owner=self.request.user)
+        except System.DoesNotExist:
+            raise PermissionDenied("You do not have permission for this system.")
