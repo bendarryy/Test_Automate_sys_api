@@ -15,7 +15,18 @@ const EmployeeLogin: React.FC = () => {
 
   const onFinish = async (values: { email: string; password: string }) => {
     try {
-      await callApi('post', '/core/employee/login/', { email: values.email, password: values.password });
+      await callApi('post', '/core/employee/login/', { 
+        email: values.email, 
+        password: values.password 
+      });
+      
+      // Get and store profile data
+      const profileData = await callApi('get', '/core/profile/');
+      if (profileData?.systems) {
+        localStorage.setItem('selectedSystemId', profileData.systems.id);
+        localStorage.setItem('selectedSystemCategory', profileData.systems.category);
+      }
+
       setSuccess(true);
       navigate('/');
     } catch {

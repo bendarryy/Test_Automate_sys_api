@@ -15,7 +15,8 @@ const OwnerLogin: React.FC = () => {
   const onFinish = async (values: { username: string; password: string }) => {
     try {
       await login({ username: values.username, password: values.password });
-      navigate('/');
+      localStorage.setItem('loginViaOwner', 'true');
+      navigate('/', { replace: true });
     } catch (error) {
       // error handled by useLogin
       console.error(error);

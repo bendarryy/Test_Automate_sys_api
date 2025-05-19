@@ -21,6 +21,26 @@ const Layout = () => {
           const data = await callApi('get', '/core/profile/');
           dispatch(setProfile(data));
           dispatch(setPermissions(data?.actions || []));
+          
+          // Store system info in localStorage
+          if (data?.systems) {
+            const isOwnerLogin = localStorage.getItem('loginViaOwner') === 'true';
+            localStorage.removeItem('loginViaOwner');
+
+            // For non-owners, only store if localStorage is empty
+            if (data.role !== 'owner') {
+              if (!localStorage.getItem('selectedSystemId')) {
+                localStorage.setItem('selectedSystemId', data.systems.id);
+              }
+              if (!localStorage.getItem('selectedSystemCategory')) {
+                localStorage.setItem('selectedSystemCategory', data.systems.category);
+              }
+            } else if (!isOwnerLogin) {
+              // Always store for owners unless logging in via owner login
+              localStorage.setItem('selectedSystemId', data.systems.id);
+              localStorage.setItem('selectedSystemCategory', data.systems.category);
+            }
+          }
         } catch {
           dispatch(setProfile(null));
           dispatch(setPermissions([]));
@@ -34,7 +54,7 @@ const Layout = () => {
   }, [dispatch, loaded, profile]);
 
   const systemId = localStorage.getItem('selectedSystemId');
-  if (!systemId) {
+  if (profile?.role === 'owner' && !systemId) {
     return <Navigate to="/systems" replace />;
   }
   if (!loaded || loading) return null;
