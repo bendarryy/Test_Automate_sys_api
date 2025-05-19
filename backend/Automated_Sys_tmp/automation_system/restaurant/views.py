@@ -58,7 +58,7 @@ class MenuItemViewSet(viewsets.ModelViewSet):
         if self.action in ["create", "update", "partial_update", "destroy"]:
             return [
                 IsAuthenticated(),
-                OR(IsSystemOwner(), IsEmployeeRolePermission("manager", "head chef")),
+                OR(IsSystemOwner(), IsEmployeeRolePermission("manager", "head_chef")),
             ]
         return [IsAuthenticated(), OR(IsSystemOwner(), IsEmployeeRolePermission())]
 
@@ -218,11 +218,11 @@ class KitchenOrderViewSet(viewsets.ModelViewSet):
         if self.action in ["partial_update", "get"]:
             return [
                 IsAuthenticated(),
-                OR(IsSystemOwner(), IsEmployeeRolePermission("chef", "manager")),
+                OR(IsSystemOwner(), IsEmployeeRolePermission("chef", "manager", "head_chef")),
             ]
         return [
             IsAuthenticated(),
-            OR(IsSystemOwner(), IsEmployeeRolePermission("chef", "manager")),
+            OR(IsSystemOwner(), IsEmployeeRolePermission("chef", "manager", "head_chef")),
         ]
 
     def get_queryset(self):
@@ -273,11 +273,11 @@ class InventoryItemViewSet(viewsets.ModelViewSet):
         if self.action in ["create", "update", "partial_update", "destroy"]:
             return [
                 IsAuthenticated(),
-                OR(IsSystemOwner(), IsEmployeeRolePermission("manager")),
+                OR(IsSystemOwner(), IsEmployeeRolePermission("manager", "inventory_manager")),
             ]
         return [
             IsAuthenticated(),
-            OR(IsSystemOwner(), IsEmployeeRolePermission("manager", "chef")),
+            OR(IsSystemOwner(), IsEmployeeRolePermission("manager", "chef" , "inventory_manager" , "head_chef")), 
         ]
 
 
@@ -588,7 +588,7 @@ class WaiterDisplayViewSet(viewsets.ModelViewSet):
                 IsAuthenticated(),
                 OR(IsSystemOwner(), IsEmployeeRolePermission(*editable_roles)),
             ]
-        return [IsAuthenticated(), OR(IsSystemOwner(), IsEmployeeRolePermission())]
+        return [IsAuthenticated(), OR(IsSystemOwner(), IsEmployeeRolePermission(*editable_roles))]
 
     def get_queryset(self):
         """Filter orders by system and ready/served status"""
@@ -677,7 +677,8 @@ class DeliveryViewSet(viewsets.ModelViewSet):
                 IsAuthenticated(),
                 OR(IsSystemOwner(), IsEmployeeRolePermission(*editable_roles)),
             ]
-        return [IsAuthenticated(), OR(IsSystemOwner(), IsEmployeeRolePermission())]
+        editable_roles = ["delivery_driver", "manager", "cashier"]
+        return [IsAuthenticated(), OR(IsSystemOwner(), IsEmployeeRolePermission(*editable_roles))]
 
     def get_queryset(self):
         """Filter delivery orders by system and ready/out_for_delivery status"""

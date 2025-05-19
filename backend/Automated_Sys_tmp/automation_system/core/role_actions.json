@@ -30,7 +30,7 @@
   ],
   "cashier": [
     "root_url_is_cashier",
-    "read_menu", "read_order", "update_order", "read_finance", "read_waiterdisplay", "read_profile", "read_about"
+    "read_menu", "read_order", "update_order", "read_finance", "read_waiterdisplay", "read_deliverydisplay"  , "read_profile", "read_about"
   ],
   "cashier_supermarket": [
     "root_url_is_cashier_supermarket",
@@ -43,5 +43,11 @@
   "inventory_manager": [
     "root_url_is_inventory_manager",
     "read_inventory", "update_inventory", "read_profile", "read_about"
+  ],
+  "head_chef": [
+    "root_url_is_head_chef",
+     "read_menu" ,  "create_menu", "update_menu", "delete_menu", "read_kds", "read_profile", "read_about" ,  "read_inventory"  
   ]
 }
+
+

@@ -58,7 +58,7 @@ class Employee(models.Model):
         ('chef', 'Chef'),
         ('delivery', 'Delivery'),
         ('manager', "Manager"),
-        ("head chef" , "Head Chef"),
+        ("head_chef" , "Head Chef"),
         ("cashier", "Cashier"),
         ("inventory_manager", "Inventory Manager")
     ])
