@@ -24,7 +24,8 @@ from .serializers import (
     EmployeeUpdateSerializer, 
     EmployeeListSerializer, 
     EmployeeInviteSerializer,
-    SystemDeleteSerializer
+    SystemDeleteSerializer,
+    ProfileUpdateSerializer
 )
 from rest_framework.generics import RetrieveAPIView, ListAPIView
 from django.shortcuts import get_object_or_404
@@ -600,4 +601,46 @@ class SystemDeleteView(APIView):
                     {"error": str(e)},
                     status=status.HTTP_400_BAD_REQUEST
                 )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+# ubdate profile by ali
+class ProfileUpdateView(APIView):
+    """
+    Update user profile information with password verification.
+    Endpoint: PATCH /api/core/profile/update/
+    
+    Example request body:
+    {
+        "current_password": "your_current_password",
+        "username": "new_username",  # optional
+        "email": "new_email@example.com",  # optional
+        "first_name": "New First Name",  # optional
+        "last_name": "New Last Name",  # optional
+        "phone": "1234567890"  # optional
+    }
+    """
+    permission_classes = [IsAuthenticated]
+    serializer_class = ProfileUpdateSerializer
+
+    @swagger_auto_schema(
+        request_body=ProfileUpdateSerializer,
+        responses={
+            200: ProfileSerializer,
+            400: "Bad Request - Invalid data or incorrect password",
+            401: "Unauthorized - Authentication required"
+        }
+    )
+    def patch(self, request, *args, **kwargs):
+        serializer = self.serializer_class(
+            request.user,
+            data=request.data,
+            context={'request': request},
+            partial=True
+        )
+        
+        if serializer.is_valid():
+            updated_user = serializer.save()
+            # Return updated profile data
+            profile_serializer = ProfileSerializer(updated_user)
+            return Response(profile_serializer.data, status=status.HTTP_200_OK)
+        
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
