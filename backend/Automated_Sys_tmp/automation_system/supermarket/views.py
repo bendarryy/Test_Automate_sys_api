@@ -2,10 +2,11 @@ from django.shortcuts import get_object_or_404, render
 from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import PermissionDenied
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
 from django.db.models import F
 from datetime import date, timedelta
+from django.http import Http404
 
 from .models import (
     System,
@@ -30,6 +31,7 @@ from .serializers import (
     SupplierSerializer,
     PurchaseOrderSerializer,
     GoodsReceivingSerializer,
+    PublicProductSerializer,
 )
 from core.permissions import IsSystemOwner, IsEmployeeRolePermission
 from rest_framework.permissions import OR
@@ -459,3 +461,46 @@ class GoodsReceivingViewSet(viewsets.ModelViewSet):
             return System.objects.get(id=system_id, owner=self.request.user)
         except System.DoesNotExist:
             raise PermissionDenied("You do not have permission for this system.")
+
+
+@api_view(['GET'])
+def public_view(request):
+    """
+    Public view for accessing supermarket systems via subdomain.
+    Returns products as JSON data.
+    """
+    subdomain = getattr(request, 'subdomain', None)
+    
+    if not subdomain:
+        return Response(
+            {"error": "Subdomain not found"},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    try:
+        system = System.objects.get(subdomain=subdomain)
+        if not system.is_public or not system.is_active:
+            return Response(
+                {"error": "System is not public or active"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        products = Product.objects.filter(
+            system=system,
+            stock_quantity__gt=0  # Only show products with stock
+        ).order_by('name')
+        
+        return Response({
+            'system': {
+                'name': system.name,
+                'description': system.description,
+                'category': system.category
+            },
+            'products': PublicProductSerializer(products, many=True).data
+        })
+        
+    except System.DoesNotExist:
+        return Response(
+            {"error": "System not found"},
+            status=status.HTTP_404_NOT_FOUND
+        )

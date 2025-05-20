@@ -426,3 +426,9 @@ class GoodsReceivingSerializer(serializers.ModelSerializer):
         # Remove purchase_order_id as it's not a model field
         validated_data.pop("purchase_order_id", None)
         return super().update(instance, validated_data)
+
+
+class PublicProductSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = ['id', 'name', 'price', 'stock_quantity', 'expiry_date', 'minimum_stock']
