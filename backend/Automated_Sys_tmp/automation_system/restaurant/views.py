@@ -18,6 +18,8 @@ from decimal import Decimal
 from rest_framework.decorators import action, api_view
 from django.http import HttpResponseNotFound
 import logging
+from core.serializers import PublicSystemSerializer
+
 
 logger = logging.getLogger(__name__)
 
@@ -555,11 +557,7 @@ def public_view(request):
             menu_by_category[item.category].append(PublicMenuItemSerializer(item).data)
 
         return Response({
-            'system': {
-                'name': system.name,
-                'description': system.description,
-                'category': system.category
-            },
+            'system': PublicSystemSerializer(system).data,
             'menu': menu_by_category
         })
         

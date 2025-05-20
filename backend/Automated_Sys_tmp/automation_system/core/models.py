@@ -33,6 +33,7 @@ class System(models.Model):
 
     name = models.CharField(max_length=100)
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
+    phone_number = models.CharField(max_length=20, null=True, blank=True)
     category = models.CharField(max_length=50, choices=SYSTEM_CATEGORIES)
     
     # 🌐 Domain Handling
@@ -52,7 +53,8 @@ class System(models.Model):
 # 📍 Location Information (Accurate with Latitude & Longitude)
     latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
-    google_maps_link = models.URLField(max_length=500, blank=True, null=True)
+    # google_maps_link = models.URLField(max_length=500, blank=True, null=True)
+   
     
     def __str__(self):
         return f"{self.name} ({self.category})"

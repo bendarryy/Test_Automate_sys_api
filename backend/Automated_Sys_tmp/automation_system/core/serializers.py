@@ -120,6 +120,10 @@ class BaseSystemSerializer(serializers.ModelSerializer):
         help_text="Custom domain for the system"
     )
 
+    phone_number = serializers.CharField(required=False, allow_blank=True)
+    latitude = serializers.DecimalField(required=False, allow_null=True, max_digits=9, decimal_places=6)
+    longitude = serializers.DecimalField(required=False, allow_null=True, max_digits=9, decimal_places=6)
+
     class Meta:
         model = System
         fields = [
@@ -129,7 +133,10 @@ class BaseSystemSerializer(serializers.ModelSerializer):
             'description',
             'is_public',
             'subdomain',
-            'custom_domain'
+            'custom_domain',
+            "phone_number",
+            "latitude",
+            "longitude",
         ]
 
     def validate_subdomain(self, value):
@@ -464,3 +471,12 @@ class ProfileUpdateSerializer(serializers.ModelSerializer):
         
         instance.save()
         return instance
+
+class PublicSystemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = System
+        fields = ['name', 'description', 'category' , "phone_number" ,  "latitude", "longitude" , 'custom_domain']
+        read_only_fields = ['name', 'description', 'category' , "phone_number" ,  "latitude", "longitude" , 'custom_domain']
+
+
+  

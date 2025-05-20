@@ -35,6 +35,7 @@ from .serializers import (
 )
 from core.permissions import IsSystemOwner, IsEmployeeRolePermission
 from rest_framework.permissions import OR
+from core.serializers import PublicSystemSerializer
 
 
 class InventoryItemViewSet(viewsets.ModelViewSet):
@@ -490,13 +491,19 @@ def public_view(request):
             stock_quantity__gt=0  # Only show products with stock
         ).order_by('name')
         
+        # Explicitly select fields for products
+        products_data = [{
+            'id': product.id,
+            'name': product.name,
+            'price': str(product.price),  # Convert Decimal to string
+            'stock_quantity': product.stock_quantity,
+            'expiry_date': product.expiry_date.strftime('%Y-%m-%d') if product.expiry_date else None,
+            'minimum_stock': product.minimum_stock
+        } for product in products]
+
         return Response({
-            'system': {
-                'name': system.name,
-                'description': system.description,
-                'category': system.category
-            },
-            'products': PublicProductSerializer(products, many=True).data
+            'system': PublicSystemSerializer(system).data,
+            'products': products_data
         })
         
     except System.DoesNotExist:
