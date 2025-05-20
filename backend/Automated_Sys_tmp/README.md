@@ -491,3 +491,79 @@ APIs for managing delivery orders from the restaurant to customers outside the r
 **Notes:**
 - All endpoints require authentication.
 - You can customize responses as needed (success, error, etc).
+
+#update profile by ali
+### Update Profile
+
+**PATCH** `/api/core/profile/update/`
+
+- **Description:**
+  Endpoint to update the authenticated user's profile information. Requires the current password for verification. Allows updating username, email, first name, last name, and phone number.
+
+- **Request Example:**
+```json
+{
+    "current_password": "your_current_password",
+    "username": "new_username",
+    "email": "new_email@example.com",
+    "first_name": "New First Name",
+    "last_name": "New Last Name",
+    "phone": "1234567890"
+}
+```
+
+- **Notes:**
+  - All fields except `current_password` are optional. Send only the fields you want to update.
+  - Username and email must be unique (excluding the current user).
+  - If the user is an employee, the phone number in their employee profile will also be updated.
+
+- **Response Examples:**
+    - **Success:**
+    ```json
+    // Returns the updated profile data (similar to GET /api/core/profile/)
+    {
+        "user": {
+            "username": "new_username",
+            "email": "new_email@example.com",
+            "first_name": "New First Name",
+            "last_name": "New Last Name",
+            "date_joined": "..."
+        },
+        "role": "...",
+        "systems": "..."
+    }
+    ```
+    - **Failure (incorrect current password):**
+    ```json
+    {
+        "current_password": [
+            "Current password is incorrect"
+        ]
+    }
+    ```
+    - **Failure (username already taken):**
+    ```json
+    {
+        "username": [
+            "Username already taken"
+        ]
+    }
+    ```
+    - **Failure (email already taken):**
+    ```json
+    {
+        "email": [
+            "Email already taken"
+        ]
+    }
+    ```
+    - **Failure (missing current password):**
+    ```json
+    {
+        "current_password": [
+            "This field is required."
+        ]
+    }
+    ```
+
+---

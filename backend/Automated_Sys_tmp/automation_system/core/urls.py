@@ -8,6 +8,7 @@ urlpatterns = [
     path("login/", views.login_user, name="login"),  
     path("logout/", views.logout_user, name="logout"), 
     path('profile/', views.ProfileView.as_view(), name='profile'),
+    path('profile/update/', views.ProfileUpdateView.as_view(), name='profile-update'),
     path('change-password/', views.ChangePasswordView.as_view(), name='change-password'),
    
     # System management endpoints

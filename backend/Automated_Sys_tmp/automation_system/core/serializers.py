@@ -2,7 +2,7 @@ from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 from .models import System ,Employee
 from django.contrib.auth.models import  User ,Group, Permission 
-from django.contrib.auth.hashers import make_password
+from django.contrib.auth.hashers import make_password, check_password
 from django.core.exceptions import ValidationError
 import uuid
 
@@ -414,3 +414,53 @@ class SystemDeleteSerializer(serializers.Serializer):
         if not user.check_password(value):
             raise serializers.ValidationError("Incorrect password")
         return value
+# update profile by ali
+class ProfileUpdateSerializer(serializers.ModelSerializer):
+    """Serializer for updating user profile with password verification"""
+    current_password = serializers.CharField(write_only=True, required=True)
+    username = serializers.CharField(required=False)
+    email = serializers.EmailField(required=False)
+    first_name = serializers.CharField(required=False, allow_blank=True)
+    last_name = serializers.CharField(required=False, allow_blank=True)
+    phone = serializers.CharField(required=False, allow_blank=True)
+
+    class Meta:
+        model = User
+        fields = ['current_password', 'username', 'email', 'first_name', 'last_name', 'phone']
+
+    def validate_current_password(self, value):
+        if not check_password(value, self.context['request'].user.password):
+            raise serializers.ValidationError("Current password is incorrect")
+        return value
+
+    def validate_username(self, value):
+        if value and User.objects.exclude(pk=self.context['request'].user.pk).filter(username=value).exists():
+            raise serializers.ValidationError("Username already taken")
+        return value
+
+    def validate_email(self, value):
+        if value and User.objects.exclude(pk=self.context['request'].user.pk).filter(email=value).exists():
+            raise serializers.ValidationError("Email already taken")
+        return value
+
+    def update(self, instance, validated_data):
+        # Remove current_password from validated_data as it's not a model field
+        validated_data.pop('current_password', None)
+        
+        # Update User model fields
+        for attr, value in validated_data.items():
+            if attr != 'phone':  # Skip phone as it's not a User model field
+                setattr(instance, attr, value)
+        
+        # Update phone number in Employee model if it exists
+        phone = validated_data.get('phone')
+        if phone is not None:
+            try:
+                employee = instance.employee_profile
+                employee.phone = phone
+                employee.save()
+            except Employee.DoesNotExist:
+                pass  # User is not an employee, so no phone to update
+        
+        instance.save()
+        return instance
