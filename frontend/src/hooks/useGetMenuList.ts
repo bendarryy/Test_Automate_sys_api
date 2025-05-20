@@ -10,7 +10,7 @@ interface MenuItem {
   // أضف خصائص أخرى حسب الحاجة
 }
 
-export const useGetMenuList = (systemId: number, category?: string) => {
+export const useGetMenuList = (systemId: number) => {
   const { callApi, data: menuItems, loading, error } = useApi<MenuItem[]>();
 
   const getMenu = async (category?: string) => {

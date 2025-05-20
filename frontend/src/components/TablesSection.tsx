@@ -2,11 +2,11 @@ import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../store";
 import { setSelectedTable } from "../store/billSlice";
-import { Card, Row, Col, Badge, Tooltip, Space, Typography, Tag, Drawer, Tabs, Input, Button, Select, Popover, message } from 'antd';
-import { MdPeopleOutline, MdTableRestaurant, MdEventSeat, MdEventAvailable, MdSearch, MdFilterList, MdClose } from "react-icons/md";
+import { Card, Row, Col, Badge, Space, Typography, Tag, Drawer, Tabs, Input, Button, Select, Popover, message } from 'antd';
+import { MdPeopleOutline, MdTableRestaurant, MdEventSeat, MdEventAvailable, MdSearch, MdClose } from "react-icons/md";
 import { Table } from '../types';
 
-const { Text, Title } = Typography;
+const { Text } = Typography;
 const { Search } = Input;
 const { TabPane } = Tabs;
 
@@ -197,7 +197,7 @@ const TablesSection: React.FC<TablesSectionProps> = ({ onClose, orderType = 'in_
         >
           <Space direction="vertical" style={{ width: '100%' }} align="center" size="small">
             <Badge
-              status={getStatusColor(table.status) as any}
+              status={getStatusColor(table.status) as 'success' | 'error' | 'warning' | 'processing' | 'default'}
               text={
                 <Tag color={getStatusColor(table.status)} style={{ margin: 0 }}>
                   {getStatusText(table.status)}

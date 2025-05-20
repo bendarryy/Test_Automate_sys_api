@@ -31,7 +31,7 @@ const DynamicHomePage = lazy(() => import("../pages/DynamicHomePage"));
 const RegisterPage = lazy(() => import("../pages/RegisterPage"));
 const OrdersPage = lazy(() => import("../pages/Restaurant/OrderPage"));
 const OrderDetailsPage = lazy(() => import("../pages/Restaurant/OrderDetailsPage"));
-const MenuManagement = lazy(() => import("../components/MenuManagement"));
+const MenuManagement = lazy(() => import("../pages/Restaurant/MenuManagementPage"));
 const InventoryManagementPage = lazy(() => import("../pages/Restaurant/InventoryManagementPage"));
 const InventoryManagementSMPage = lazy(() => import("../pages/supermarket/InventoryManagementPage"));
 const InventoryItemViewPage = lazy(() => import("../pages/Restaurant/InventoryItemViewPage"));

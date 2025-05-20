@@ -1,41 +1,148 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useState } from 'react';
+import ReactApexChart from 'react-apexcharts';
 import '../../styles/financesdashboards.css';
+import { useApi } from '../../hooks/useApi';
+
+interface ProfitSummary {
+  day_profit: number;
+  day_change: number;
+  week_profit: number;
+  week_change: number;
+  month_profit: number;
+  month_change: number;
+}
+
+interface OrderSummary {
+  today_orders: number;
+  today_change: number;
+  week_orders: number;
+  week_change: number;
+  month_orders: number;
+  month_change: number;
+}
+
+interface ProfitTrendPoint {
+  date: string;
+  profit: number;
+}
 
 // سيتم تهيئة Chart.js من CDN
 
 const FinancialDashboard = () => {
-  // بيانات تجريبية
-  const profitTrendData = {
-    labels: ['Apr 6', 'Apr 7', 'Apr 8', 'Apr 9', 'Apr 10', 'Apr 11', 'Apr 12', 'Apr 13', 'Apr 14', 'Apr 15',
-            'Apr 16', 'Apr 17', 'Apr 18', 'Apr 19', 'Apr 20', 'Apr 21', 'Apr 22', 'Apr 23', 'Apr 24', 'Apr 25',
-            'Apr 26', 'Apr 27', 'Apr 28', 'Apr 29', 'Apr 30', 'May 1', 'May 2', 'May 3', 'May 4', 'May 5'],
-    values: [1200, 1300, 1400, 1350, 1450, 1200, 1100, 1300, 1400, 1350, 1300, 1250, 1400, 1500, 1600,
-             1700, 1800, 1750, 1600, 1500, 1700, 1800, 1900, 1850, 1800, 1900, 2000, 1950, 1900, 2000]
-  };
+  // State for API data
+  const [profitSummary, setProfitSummary] = useState<ProfitSummary | null>(null);
+  const [orderSummary, setOrderSummary] = useState<OrderSummary | null>(null);
+  const [trendView, setTrendView] = useState<'daily' | 'monthly'>('daily');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const data = {
-    today: {
-      profit: 2450,
-      change: 12.5
+  const { callApi } = useApi();
+
+  // Extract systemId from localStorage
+  const systemId = localStorage.getItem('selectedSystemId');
+
+  // Prepare chart data state
+  const [profitTrendData, setProfitTrendData] = useState<{ labels: string[]; values: number[] }>({ labels: [], values: [] });
+
+  // ApexCharts options
+  const chartOptions = {
+    chart: {
+      id: 'profit-trend',
+      toolbar: {
+        show: true,
+        tools: {
+          download: true,
+          selection: true,
+          zoom: true,
+          zoomin: true,
+          zoomout: true,
+          pan: true,
+          reset: true,
+        },
+      },
+      zoom: { enabled: true, type: 'x' as const, autoScaleYaxis: true },
+      animations: {
+        enabled: true,
+        easing: 'easeinout',
+        speed: 800,
+        animateGradually: { enabled: true, delay: 150 },
+        dynamicAnimation: { enabled: true, speed: 350 }
+      },
     },
-    week: {
-      profit: 15780,
-      change: 10.2
+    xaxis: {
+      categories: profitTrendData.labels,
+      crosshairs: { show: true, width: 1, position: 'back', opacity: 0.7 },
+      labels: { style: { colors: '#666', fontSize: '10px' } },
+      axisBorder: { show: false },
+      axisTicks: { show: false },
     },
-    month: {
-      profit: 64320,
-      change: -2.5
+    yaxis: {
+      labels: { style: { colors: '#666', fontSize: '10px' } },
+      axisBorder: { show: false },
+      axisTicks: { show: false },
     },
-    orders: {
-      today: 124,
-      todayChange: 15.3,
-      week: 842,
-      weekChange: 7.8,
-      month: 3256,
-      monthChange: -1.2,
-      weeklyDistribution: [120, 145, 132, 148, 138, 112, 98]
-    }
+    grid: { borderColor: '#f0f0f0' },
+    dataLabels: { enabled: false },
+    stroke: { curve: 'smooth' as const, width: 2 },
+    fill: {
+      type: 'gradient',
+      gradient: {
+        shade: 'light',
+        type: 'vertical',
+        shadeIntensity: 0.3,
+        gradientToColors: ['#10b981'],
+        inverseColors: false,
+        opacityFrom: 0.8,
+        opacityTo: 0.1,
+        stops: [0, 100]
+      }
+    },
+    markers: {
+      size: 4,
+      colors: ['#10b981'],
+      strokeColors: '#fff',
+      strokeWidth: 2,
+      hover: { size: 6 }
+    },
+    colors: ['#10b981'],
+    tooltip: { theme: 'dark' },
+    legend: { show: true, position: 'top' as const, horizontalAlign: 'right' as const }
   };
+  const chartSeries = [
+    {
+      name: 'Profit',
+      data: profitTrendData.values,
+    },
+  ];
+
+  // Fetch data on mount or when trendView changes
+  useEffect(() => {
+    if (!systemId) {
+      setError('No system selected');
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    Promise.all([
+      callApi('get', `/restaurant/${systemId}/orders/analytics/profit-summary/`),
+      callApi('get', `/restaurant/${systemId}/orders/analytics/profit-trend/?view=${trendView}`),
+      callApi('get', `/restaurant/${systemId}/orders/analytics/order-summary/`)
+    ])
+      .then(([profitSummaryRes, profitTrendRes, orderSummaryRes]: [ProfitSummary, ProfitTrendPoint[], OrderSummary]) => {
+        setProfitSummary(profitSummaryRes);
+        setOrderSummary(orderSummaryRes);
+        // Prepare chart data
+        setProfitTrendData({
+          labels: profitTrendRes.map((d) => trendView === 'daily' ? new Date(d.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : new Date(d.date).toLocaleDateString('en-US', { month: 'short', year: '2-digit' })),
+          values: profitTrendRes.map((d) => d.profit)
+        });
+      })
+      .catch(() => {
+        setError('Failed to load dashboard data');
+      })
+      .finally(() => setLoading(false));
+  }, [systemId, trendView]);
 
   const formatNumber = (num: number) => {
     return new Intl.NumberFormat('en-US').format(num);
@@ -55,96 +162,9 @@ const FinancialDashboard = () => {
     </div>
   );
 
-  const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  useEffect(() => {
-    const script = document.createElement('script');
-    script.src = 'https://cdn.jsdelivr.net/npm/chart.js';
-    script.async = true;
-    script.onload = initChart;
-    document.body.appendChild(script);
-
-    return () => {
-      document.body.removeChild(script);
-    };
-  }, []);
-
-  const initChart = () => {
-    if (!canvasRef.current) return;
-
-    const ctx = canvasRef.current.getContext('2d');
-    if (!ctx) return;
-
-    new (window as any).Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: profitTrendData.labels,
-        datasets: [{
-          data: profitTrendData.values,
-          fill: true,
-          borderColor: '#10b981',
-          backgroundColor: 'rgba(16, 185, 129, 0.1)',
-          tension: 0.4,
-          borderWidth: 2,
-          pointRadius: 0,
-          pointHitRadius: 10,
-          pointHoverRadius: 4,
-          pointHoverBorderWidth: 2,
-          pointBackgroundColor: '#10b981',
-          pointBorderColor: '#fff'
-        }]
-      },
-      options: chartConfig
-    });
-  };
-
-  const chartConfig = {
-    maintainAspectRatio: false,
-    responsive: true,
-    plugins: {
-      legend: { display: false },
-      tooltip: {
-        mode: 'index',
-        intersect: false,
-        backgroundColor: '#1a1a1a',
-        titleColor: '#fff',
-        bodyColor: '#fff',
-        borderColor: '#333',
-        borderWidth: 1,
-      },
-    },
-    scales: {
-      x: {
-        grid: { display: false },
-        ticks: { color: '#666', font: { size: 10 } }
-      },
-      y: {
-        grid: { color: '#f0f0f0' },
-        ticks: { color: '#666', font: { size: 10 } }
-      }
-    },
-    elements: {
-      line: {
-        tension: 0.4,
-        borderColor: '#10b981',
-        borderWidth: 2,
-        fill: true,
-        backgroundColor: 'rgba(16, 185, 129, 0.1)'
-      },
-      point: {
-        radius: 0,
-        hitRadius: 10,
-        hoverRadius: 4,
-        hoverBorderWidth: 2,
-        backgroundColor: '#10b981',
-        borderColor: '#fff'
-      }
-    },
-    interaction: {
-      intersect: false,
-      mode: 'index'
-    }
-  };
+  if (loading) return <div className="dashboard"><div className="loading">Loading...</div></div>;
+  if (error) return <div className="dashboard"><div className="error">{error}</div></div>;
 
   return (
     <div className="dashboard">
@@ -164,22 +184,22 @@ const FinancialDashboard = () => {
         <div className="cards">
           <div className="card">
             <h3>Today's Profit</h3>
-            <div className="amount">${formatNumber(data.today.profit)}</div>
-            {renderChangeIndicator(data.today.change)}
+            <div className="amount">${formatNumber(profitSummary?.day_profit ?? 0)}</div>
+            {renderChangeIndicator(profitSummary?.day_change ?? 0)}
             <div className="vs">vs yesterday</div>
           </div>
 
           <div className="card">
             <h3>This Week's Profit</h3>
-            <div className="amount">${formatNumber(data.week.profit)}</div>
-            {renderChangeIndicator(data.week.change)}
+            <div className="amount">${formatNumber(profitSummary?.week_profit ?? 0)}</div>
+            {renderChangeIndicator(profitSummary?.week_change ?? 0)}
             <div className="vs">vs last week</div>
           </div>
 
           <div className="card">
             <h3>This Month's Profit</h3>
-            <div className="amount">${formatNumber(data.month.profit)}</div>
-            {renderChangeIndicator(data.month.change)}
+            <div className="amount">${formatNumber(profitSummary?.month_profit ?? 0)}</div>
+            {renderChangeIndicator(profitSummary?.month_change ?? 0)}
             <div className="vs">vs last month</div>
           </div>
         </div>
@@ -189,12 +209,27 @@ const FinancialDashboard = () => {
         <div className="section-header">
           <h2>Profit Trend Analysis</h2>
           <div className="period-selector">
-            <button className="active">Daily (30 Days)</button>
-            <button>Monthly (12 Months)</button>
+            <button className={trendView === 'daily' ? 'active' : ''} onClick={() => setTrendView('daily')}>Daily (30 Days)</button>
+            <button className={trendView === 'monthly' ? 'active' : ''} onClick={() => setTrendView('monthly')}>Monthly (12 Months)</button>
           </div>
         </div>
         <div className="chart-container">
-          <canvas ref={canvasRef}></canvas>
+          <ReactApexChart
+            type="area"
+            height={260}
+            options={{
+              ...chartOptions,
+              fill: {
+                ...chartOptions.fill,
+                gradient: {
+                  ...chartOptions.fill.gradient,
+                  opacityFrom: 0.8, // أوضح تدرج
+                  opacityTo: 0.1,
+                },
+              },
+            }}
+            series={chartSeries}
+          />
         </div>
       </div>
 
@@ -203,37 +238,36 @@ const FinancialDashboard = () => {
         <div className="cards">
           <div className="card">
             <h3>Orders Today</h3>
-            <div className="amount">{data.orders.today}</div>
-            {renderChangeIndicator(data.orders.todayChange)}
+            <div className="amount">{orderSummary?.today_orders ?? 0}</div>
+            {renderChangeIndicator(orderSummary?.today_change ?? 0)}
             <div className="vs">vs yesterday</div>
           </div>
 
           <div className="card">
             <h3>Orders This Week</h3>
-            <div className="amount">{data.orders.week}</div>
-            {renderChangeIndicator(data.orders.weekChange)}
+            <div className="amount">{orderSummary?.week_orders ?? 0}</div>
+            {renderChangeIndicator(orderSummary?.week_change ?? 0)}
             <div className="vs">vs last week</div>
           </div>
 
           <div className="card">
             <h3>Orders This Month</h3>
-            <div className="amount">{data.orders.month}</div>
-            {renderChangeIndicator(data.orders.monthChange)}
+            <div className="amount">{orderSummary?.month_orders ?? 0}</div>
+            {renderChangeIndicator(orderSummary?.month_change ?? 0)}
             <div className="vs">vs last month</div>
           </div>
 
           <div className="weekly-chart">
             <h3>Weekly Orders</h3>
             <div className="bars">
-              {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, i) => (
-                <div key={day} className="bar-wrapper">
+              {/* Placeholder for weekly distribution, since API does not provide this directly */}
+              {[...Array(7)].map((_, i) => (
+                <div key={i} className="bar-wrapper">
                   <div 
                     className="bar" 
-                    style={{ 
-                      height: `${(data.orders.weeklyDistribution[i] / Math.max(...data.orders.weeklyDistribution)) * 100}%` 
-                    }}
+                    style={{ height: '80%' }}
                   />
-                  <span>{day}</span>
+                  <span>{['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][i]}</span>
                 </div>
               ))}
             </div>

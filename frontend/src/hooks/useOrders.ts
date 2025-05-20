@@ -3,12 +3,7 @@ import { useApi } from './useApi';
 type OrderStatus = 'pending' | 'preparing' | 'ready' | 'completed' | 'canceled';
 type OrderType = 'in_house' | 'delivery';
 
-interface CreateOrderData {
-  customer_name: string | null;
-  table_number: string | null;
-  waiter: number | null;
-  order_type: OrderType;
-}
+
 
 interface Order {
   id: string;
@@ -46,9 +41,6 @@ export const useOrders = <T extends Order>(systemId: string) => {
     return api.callApi('get', `/restaurant/${systemId}/orders/${id}/`);
   };
 
-  const createOrder = async (data: CreateOrderData) => {
-    return api.callApi('post', `/restaurant/${systemId}/orders/`, data);
-  };
 
   const updateOrderStatus = async (id: string, status: string) => {
     return api.callApi('patch', `/restaurant/${systemId}/orders/${id}/`, { status });

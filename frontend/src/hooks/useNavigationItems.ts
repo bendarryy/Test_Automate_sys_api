@@ -1,6 +1,6 @@
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
-import { restaurantNavItems, supermarketNavItems, commonNavItems, NavItem } from '../config/navigation.config';
+import { restaurantNavItems, supermarketNavItems, NavItem } from '../config/navigation.config';
 
 export default function useNavigationItems(): NavItem[] {
   const actions = useSelector((state: RootState) => state.permissions.actions);

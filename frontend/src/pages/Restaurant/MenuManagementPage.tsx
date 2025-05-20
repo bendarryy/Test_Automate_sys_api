@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Button, Modal, Input, Space, Tag, Spin, Table, Upload, message, Select, Popover, Typography } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { Key } from 'antd/es/table/interface';
-import { useGetMenu } from '../hooks/useGetMenu';
-import { useSelectedSystemId } from '../hooks/useSelectedSystemId';
-import type { MenuItem } from '../types';
+import { useGetMenu } from '../../hooks/useGetMenu';
+import { useSelectedSystemId } from '../../hooks/useSelectedSystemId';
+import type { MenuItem } from '../../types';
 import { ColumnGroupType, ColumnType } from 'antd/es/table';
 
 interface MenuManagementProps {
@@ -22,7 +22,7 @@ const initialItem: MenuItem = {
   image: null,
 };
 
-const MenuManagement: React.FC<MenuManagementProps> = () => {
+const MenuManagementPage: React.FC<MenuManagementProps> = () => {
   const [selectedSystemId] = useSelectedSystemId();
   const { getMenu, createMenuItem, updateMenuItem, deleteMenuItem, getCategories, loading } = useGetMenu(Number(selectedSystemId));
 
@@ -446,4 +446,4 @@ const MenuManagement: React.FC<MenuManagementProps> = () => {
   );
 }
 
-export default MenuManagement;
+export default MenuManagementPage;

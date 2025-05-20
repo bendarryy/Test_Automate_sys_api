@@ -1,8 +1,8 @@
 import React from 'react';
-import { Table, Input, Space, Tag, Button } from 'antd';
+import { Table, Input, Space, Tag } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { SearchOutlined } from '@ant-design/icons';
-import useHasPermission from '../hooks/useHasPermission';
+
 
 
 interface ReusableTableProps<T extends Record<string, unknown>> {

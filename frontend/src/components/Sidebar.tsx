@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { RiArrowLeftSLine, RiArrowRightSLine, RiMoreFill } from "react-icons/ri";
 import { Layout, Menu, Button, theme, Typography, Dropdown } from 'antd';
-import styles from './Sidebar.module.css';
+import styles from '../styles/Sidebar.module.css';
 import { getCommonNavItems, NavItem } from '../config/navigation.config';
 import useNavigationItems from '../hooks/useNavigationItems';
 

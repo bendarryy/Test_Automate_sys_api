@@ -27,11 +27,10 @@ const { Title } = Typography;
 const { Option } = Select;
 
 interface Employee {
-  id: number;
+  id: string | number;
   name: string;
-  role: string;
-  phone: string;
-  email: string;
+  position: string;
+  department: string;
 }
 
 interface EmployeeFormData extends Omit<Employee, 'id'> {
@@ -68,9 +67,10 @@ const EmployeesPage: React.FC = () => {
   const [viewForm] = Form.useForm<Employee>();
   const [inviteForm] = Form.useForm<EmployeeFormData>();
   const [modalLoading, setModalLoading] = useState(false);
+  const systemId = localStorage.getItem('selectedSystemId');
 
   // Fetch employees
-  const fetchEmployees = () => callApi('get', '/core/5/employees/');
+  const fetchEmployees = () => callApi('get', `/core/systems/${systemId}/employees/`);
   useEffect(() => { fetchEmployees(); /* eslint-disable-next-line */ }, []);
 
   // Open modal and fetch details
@@ -113,7 +113,7 @@ const EmployeesPage: React.FC = () => {
   const handleInvite = async (values: EmployeeFormData) => {
     try {
       setModalLoading(true);
-      await callApi('post', '/core/5/invite/', values);
+      await callApi('post', `/core/systems/${systemId}/employees/invite/`, values);
       message.success('Employee invited successfully!');
       inviteForm.resetFields();
       setShowInviteModal(false);

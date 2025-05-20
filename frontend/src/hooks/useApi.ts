@@ -23,14 +23,14 @@ export const useApi = <T,>() => {
     try {
       let response;
       if (isFormData || (payload && typeof FormData !== 'undefined' && payload instanceof FormData)) {
-        response = await apiClient[method](url, payload, {
+        response = await apiClient[method](url, payload as FormData, {
           headers: {
             'X-CSRFToken': "gpPejT7onkPSewykjLJNNl4YLhPyTy7b",
             // Do NOT set Content-Type for FormData; browser will handle it
           },
         });
       } else {
-        response = await apiClient[method](url, payload, {
+        response = await apiClient[method](url, payload as FormData, {
           headers: {
             'X-CSRFToken': "gpPejT7onkPSewykjLJNNl4YLhPyTy7b",
           },
