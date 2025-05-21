@@ -30,7 +30,7 @@
   ],
   "cashier": [
     "root_url_is_cashier",
-    "read_menu", "read_order", "update_order", "read_finance", "read_waiterdisplay", "read_deliverydisplay"  , "read_profile", "read_about"
+    "read_menu", "read_order", "update_order", "create_order" , "read_finance", "read_waiterdisplay", "read_deliverydisplay"  , "read_profile", "read_about"
   ],
   "cashier_supermarket": [
     "root_url_is_cashier_supermarket",
