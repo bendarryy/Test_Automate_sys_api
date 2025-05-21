@@ -7,13 +7,13 @@
 }
 
 .header {
-  margin-bottom: 40px;
+  margin-bottom: 30px;
 }
 
 .header h1 {
   font-size: 28px;
   color: #1a1a1a;
-  margin-bottom: 8px;
+  margin-bottom: 20px;
   font-weight: 600;
 }
 
@@ -25,7 +25,7 @@
 .nav {
   display: flex;
   gap: 15px;
-  margin-bottom: 30px;
+  margin-bottom: 20px;
 }
 
 .nav button {
@@ -231,5 +231,85 @@ h2 {
   .nav button.export {
     margin-left: 0;
     width: 100%;
+  }
+}
+
+.analytics-section {
+  margin-bottom: 40px;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.metric-card {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.metric-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.metric-card h3 {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 12px;
+}
+
+.nav button {
+  padding: 8px 16px;
+  border: none;
+  background: none;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.nav button:hover {
+  color: #3b82f6;
+}
+
+.nav button.active {
+  color: #3b82f6;
+  font-weight: 500;
+}
+
+.nav button.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: #3b82f6;
+  border-radius: 2px;
+}
+
+@media (max-width: 768px) {
+  .metrics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .nav {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .nav button {
+    flex: 1;
+    text-align: center;
+  }
+
+  .nav button.active::after {
+    display: none;
   }
 }

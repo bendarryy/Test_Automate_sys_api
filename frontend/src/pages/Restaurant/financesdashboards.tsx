@@ -28,6 +28,8 @@ interface ProfitTrendPoint {
 
 // سيتم تهيئة Chart.js من CDN
 
+type DashboardSection = 'overview' | 'analytics';
+
 const FinancialDashboard = () => {
   // State for API data
   const [profitSummary, setProfitSummary] = useState<ProfitSummary | null>(null);
@@ -35,6 +37,7 @@ const FinancialDashboard = () => {
   const [trendView, setTrendView] = useState<'daily' | 'monthly'>('daily');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeSection, setActiveSection] = useState<DashboardSection>('overview');
 
   const { callApi } = useApi();
 
@@ -149,36 +152,53 @@ const FinancialDashboard = () => {
   };
 
   const renderChangeIndicator = (change: number) => (
-    <div className={`change ${change >= 0 ? 'positive' : 'negative'}`}>
-      <div className="indicator-icon">
-        <svg viewBox="0 0 24 24" width="24" height="24">
-          <path fill="currentColor" d={change >= 0 ?
-            "M7 14l5-5 5 5H7z" :
-            "M7 10l5 5 5-5H7z"
-          } />
-        </svg>
-      </div>
+    <div className={`change ${change >= 0 ? 'positive' : 'negative'}`}>  
       <span>{Math.abs(change)}%</span>
     </div>
   );
 
+  const handleExportReport = () => {
+    if (!profitSummary || !orderSummary || !profitTrendData) return;
 
-  if (loading) return <div className="dashboard"><div className="loading">Loading...</div></div>;
-  if (error) return <div className="dashboard"><div className="error">{error}</div></div>;
+    // Prepare CSV content
+    const csvContent = [
+      // Profit Summary
+      ['Profit Summary'],
+      ['Period', 'Amount', 'Change'],
+      ['Today', `$${formatNumber(profitSummary.day_profit)}`, `${profitSummary.day_change}%`],
+      ['This Week', `$${formatNumber(profitSummary.week_profit)}`, `${profitSummary.week_change}%`],
+      ['This Month', `$${formatNumber(profitSummary.month_profit)}`, `${profitSummary.month_change}%`],
+      [],
+      // Order Summary
+      ['Order Summary'],
+      ['Period', 'Count', 'Change'],
+      ['Today', orderSummary.today_orders, `${orderSummary.today_change}%`],
+      ['This Week', orderSummary.week_orders, `${orderSummary.week_change}%`],
+      ['This Month', orderSummary.month_orders, `${orderSummary.month_change}%`],
+      [],
+      // Profit Trend
+      ['Profit Trend'],
+      ['Date', 'Profit'],
+      ...profitTrendData.labels.map((date, index) => [
+        date,
+        `$${formatNumber(profitTrendData.values[index])}`
+      ])
+    ].map(row => row.join(',')).join('\n');
 
-  return (
-    <div className="dashboard">
-      <div className="header">
-        <h1>Financial Dashboard</h1>
-        <p>Track your business performance and financial metrics</p>
-        <div className="nav">
-          <button className="active">Overview</button>
-          <button>Analytics</button>
-          <button>Reports</button>
-          <button className="export">Export Report</button>
-        </div>
-      </div>
+    // Create and download file
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `financial_report_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
+  const renderOverviewSection = () => (
+    <>
       <div className="profit-section">
         <h2>Total Profit Overview</h2>
         <div className="cards">
@@ -223,7 +243,7 @@ const FinancialDashboard = () => {
                 ...chartOptions.fill,
                 gradient: {
                   ...chartOptions.fill.gradient,
-                  opacityFrom: 0.8, // أوضح تدرج
+                  opacityFrom: 0.8,
                   opacityTo: 0.1,
                 },
               },
@@ -256,24 +276,85 @@ const FinancialDashboard = () => {
             {renderChangeIndicator(orderSummary?.month_change ?? 0)}
             <div className="vs">vs last month</div>
           </div>
+        </div>
+      </div>
+    </>
+  );
 
-          <div className="weekly-chart">
-            <h3>Weekly Orders</h3>
-            <div className="bars">
-              {/* Placeholder for weekly distribution, since API does not provide this directly */}
-              {[...Array(7)].map((_, i) => (
-                <div key={i} className="bar-wrapper">
-                  <div 
-                    className="bar" 
-                    style={{ height: '80%' }}
-                  />
-                  <span>{['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][i]}</span>
-                </div>
-              ))}
-            </div>
+  const renderAnalyticsSection = () => (
+    <div className="analytics-section">
+      <h2>Detailed Analytics</h2>
+      <div className="cards">
+        <div className="card">
+          <h3>Average Order Value</h3>
+          <div className="amount">
+            ${formatNumber((profitSummary?.day_profit ?? 0) / (orderSummary?.today_orders || 1))}
+          </div>
+          <div className="vs">per order today</div>
+        </div>
+
+        <div className="card">
+          <h3>Peak Hours</h3>
+          <div className="amount">12:00 - 14:00</div>
+          <div className="vs">Most active period</div>
+        </div>
+
+        <div className="card">
+          <h3>Customer Retention</h3>
+          <div className="amount">75%</div>
+          <div className="vs">Returning customers</div>
+        </div>
+      </div>
+
+      <div className="trend-analysis">
+        <h2>Performance Metrics</h2>
+        <div className="metrics-grid">
+          <div className="metric-card">
+            <h3>Revenue Growth</h3>
+            <div className="amount">+15%</div>
+            <div className="vs">vs last month</div>
+          </div>
+          <div className="metric-card">
+            <h3>Order Growth</h3>
+            <div className="amount">+8%</div>
+            <div className="vs">vs last month</div>
+          </div>
+          <div className="metric-card">
+            <h3>Customer Growth</h3>
+            <div className="amount">+12%</div>
+            <div className="vs">vs last month</div>
           </div>
         </div>
       </div>
+    </div>
+  );
+
+  if (loading) return <div className="dashboard"><div className="loading">Loading...</div></div>;
+  if (error) return <div className="dashboard"><div className="error">{error}</div></div>;
+
+  return (
+    <div className="dashboard">
+      <div className="header">
+        <h1>Financial Dashboard</h1>
+        <div className="nav">
+          <button 
+            className={activeSection === 'overview' ? 'active' : ''} 
+            onClick={() => setActiveSection('overview')}
+          >
+            Overview
+          </button>
+          <button 
+            className={activeSection === 'analytics' ? 'active' : ''} 
+            onClick={() => setActiveSection('analytics')}
+          >
+            Analytics
+          </button>
+          <button className="export" onClick={handleExportReport}>Export Report</button>
+        </div>
+      </div>
+
+      {activeSection === 'overview' && renderOverviewSection()}
+      {activeSection === 'analytics' && renderAnalyticsSection()}
     </div>
   );
 };
