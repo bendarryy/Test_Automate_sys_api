@@ -10,7 +10,7 @@
     "read_profile", "read_settings", "read_about", "read_home", "read_sales"
   ],
   "manager": [
-    "root_url_is_orders",
+    "root_url_is_home",
     "create_menu", "read_menu", "update_menu", "delete_menu",
     "create_order", "read_order", "update_order", "delete_order",
     "create_inventory", "read_inventory", "update_inventory", "delete_inventory",
@@ -25,7 +25,7 @@
     "read_menu", "read_kds", "read_profile", "read_about"
   ],
   "waiter": [
-    "root_url_is_waiter",
+    "root_url_is_home",
     "read_menu", "create_order", "read_order", "update_own_order", "read_waiterdisplay", "read_profile", "read_about"
   ],
   "cashier": [

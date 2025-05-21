@@ -50,7 +50,7 @@ export const restaurantNavItems: NavItem[] = [
     href: "/",
     systemCategory: "restaurant",
     showInSidebar: true,
-    requiredPermission: "read_home",
+    requiredPermission: "create_order",
 
   },
   {
