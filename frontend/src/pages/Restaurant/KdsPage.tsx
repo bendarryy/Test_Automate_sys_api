@@ -56,7 +56,10 @@ const KdsPage: React.FC = () => {
   }, [systemId]);
 
   useEffect(() => {
-    fetchOrders();
+    const fetchData = async () => {
+      await fetchOrders();
+    };
+    fetchData();
   }, []);
 
   useEffect(() => {
@@ -67,7 +70,7 @@ const KdsPage: React.FC = () => {
       .then((data) => setOrderDetails(data))
       .catch((err) => setDetailsError(err?.message || 'Error loading details'))
       .finally(() => setDetailsLoading(false));
-  }, [params.orderId, callApi, systemId]);
+  }, [params.orderId, systemId]);
 
   const handleStatusUpdate = async (id: number, status: 'preparing' | 'ready' | 'completed' | 'canceled') => {
     if (!systemId) return;

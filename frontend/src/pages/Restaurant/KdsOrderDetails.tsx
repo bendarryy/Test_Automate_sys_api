@@ -31,16 +31,22 @@ interface KitchenOrder {
 
 const KdsOrderDetails: React.FC = () => {
   const { orderId } = useParams<{ orderId: string }>();
-  const systemId = localStorage.getItem('selectedSystemId') || '5';
+  const systemId = localStorage.getItem('selectedSystemId');
   const { callApi, loading, error } = useApi();
   const [order, setOrder] = useState<KitchenOrder | null>(null);
 
 
   useEffect(() => {
     if (!orderId) return;
-    callApi('get', `/restaurant/${systemId}/kitchen/orders/${orderId}/`)
-      .then((data) => setOrder(data))
-      .catch(() => {});
+    const fetchData = async () => {
+      try {
+        const data = await callApi('get', `/restaurant/${systemId}/kitchen/orders/${orderId}/`);
+        setOrder(data);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchData();
   }, [orderId, systemId]);
 
   if (loading) return <Spin size="large" className="center-spinner" />;
