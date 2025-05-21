@@ -83,7 +83,7 @@ class ProfileSerializer(serializers.Serializer):
 class SystemListSerializer(serializers.ModelSerializer):
     class Meta:
         model = System
-        fields = ['id', 'name', 'category']
+        fields = ['id', 'name', 'category' ]
         read_only_fields = fields  # All fields are read-only
 
 
@@ -119,25 +119,59 @@ class BaseSystemSerializer(serializers.ModelSerializer):
         allow_null=True,
         help_text="Custom domain for the system"
     )
-
-    phone_number = serializers.CharField(required=False, allow_blank=True)
-    latitude = serializers.DecimalField(required=False, allow_null=True, max_digits=9, decimal_places=6)
-    longitude = serializers.DecimalField(required=False, allow_null=True, max_digits=9, decimal_places=6)
+    phone_number = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        help_text="Phone number for the system"
+    )
+    latitude = serializers.DecimalField(
+        required=False,
+        allow_null=True,
+        max_digits=9,
+        decimal_places=6,
+        help_text="Latitude coordinate of the system location"
+    )
+    longitude = serializers.DecimalField(
+        required=False,
+        allow_null=True,
+        max_digits=9,
+        decimal_places=6,
+        help_text="Longitude coordinate of the system location"
+    )
+    custom_link = serializers.URLField(
+        required=False,
+        allow_blank=True,
+        allow_null=True,
+        help_text="Optional custom URL for the system location (e.g., a map link or website)"
+    )
+    location_link = serializers.SerializerMethodField(
+        help_text="Returns the custom link if provided, otherwise a Google Maps link based on latitude and longitude"
+    )
 
     class Meta:
         model = System
         fields = [
             "id",
-            'name',
-            'category',
-            'description',
-            'is_public',
-            'subdomain',
-            'custom_domain',
+            "name",
+            "category",
+            "description",
+            "is_public",
+            "subdomain",
+            "custom_domain",
             "phone_number",
             "latitude",
             "longitude",
+            "custom_link",
+            "location_link",
         ]
+
+    def get_location_link(self, obj):
+        """Return the custom link if available, otherwise generate a Google Maps link."""
+        if obj.custom_link:
+            return obj.custom_link
+        if obj.latitude is not None and obj.longitude is not None:
+            return f"https://www.google.com/maps?q={obj.latitude},{obj.longitude}"
+        return None
 
     def validate_subdomain(self, value):
         if not value:
@@ -204,6 +238,18 @@ class BaseSystemSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Top level domain must be at least 2 characters")
             
         return value.lower()
+
+    def validate(self, data):
+        """Custom validation for latitude and longitude."""
+        latitude = data.get("latitude")
+        longitude = data.get("longitude")
+
+        if latitude is not None and (latitude < -90 or latitude > 90):
+            raise serializers.ValidationError({"latitude": "Latitude must be between -90 and 90 degrees."})
+        if longitude is not None and (longitude < -180 or longitude > 180):
+            raise serializers.ValidationError({"longitude": "Longitude must be between -180 and 180 degrees."})
+
+        return data
 
 class SystemCreateSerializer(BaseSystemSerializer):
     """Serializer for system creation"""

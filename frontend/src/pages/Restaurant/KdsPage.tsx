@@ -57,7 +57,7 @@ const KdsPage: React.FC = () => {
 
   useEffect(() => {
     fetchOrders();
-  }, [fetchOrders]);
+  }, []);
 
   useEffect(() => {
     if (!params.orderId) return;

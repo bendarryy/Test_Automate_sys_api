@@ -53,7 +53,17 @@ class System(models.Model):
 # 📍 Location Information (Accurate with Latitude & Longitude)
     latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
-    # google_maps_link = models.URLField(max_length=500, blank=True, null=True)
+    custom_link = models.URLField(max_length=500, blank=True, null=True)  # Optional user-provided link
+
+    def get_google_maps_link(self):
+        """Generate a Google Maps link from latitude and longitude if available."""
+        if self.latitude is not None and self.longitude is not None:
+            return f"https://www.google.com/maps?q={self.latitude},{self.longitude}"
+        return None
+
+    def get_location_link(self):
+        """Return the user-provided custom link if available, otherwise the Google Maps link."""
+        return self.custom_link or self.get_google_maps_link()
    
     
     def __str__(self):

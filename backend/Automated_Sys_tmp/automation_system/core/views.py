@@ -25,7 +25,8 @@ from .serializers import (
     EmployeeListSerializer, 
     EmployeeInviteSerializer,
     SystemDeleteSerializer,
-    ProfileUpdateSerializer
+    ProfileUpdateSerializer,
+    BaseSystemSerializer
 )
 from rest_framework.generics import RetrieveAPIView, ListAPIView
 from django.shortcuts import get_object_or_404
@@ -44,7 +45,7 @@ from drf_yasg import openapi
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def create_system(request):
-    serializer = SystemSerializer(data=request.data)
+    serializer = BaseSystemSerializer(data=request.data)
 
     if serializer.is_valid():
         system = serializer.save(owner=request.user)  # Save the instance with the owner
@@ -59,7 +60,8 @@ def create_system(request):
 @permission_classes([IsAuthenticated])
 class SystemRetrieveView(ListAPIView):
     queryset = System.objects.all()
-    serializer_class = SystemListSerializer
+    # serializer_class = SystemListSerializer
+    serializer_class = BaseSystemSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):

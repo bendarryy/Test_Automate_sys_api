@@ -148,7 +148,7 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: "/menu-management",
+        path: "-management",
         element: (
           <Suspense fallback={<div>Loading...</div>}>
             <ProtectLogin>

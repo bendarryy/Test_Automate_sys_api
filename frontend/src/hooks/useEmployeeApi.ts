@@ -11,16 +11,18 @@ export const useEmployeeApi = () => {
   const api = useApi();
 
   // Get employee by ID
+  const  systemId  = localStorage.getItem("selectedSystemId");
+
   const getEmployee = (id: string | number) =>
-    api.callApi('get', `/core/systems/5/employees/${id}/`);
+    api.callApi('get', `/core/systems/${systemId}/employees/${id}/`);
 
   // Update employee by ID
   const updateEmployee = (id: string | number, data: EmployeeData) =>
-    api.callApi('put', `/core/systems/5/employees/${id}/`, data);
+    api.callApi('put', `/core/systems/${systemId}/employees/${id}/`, data);
 
   // Delete employee by ID
   const deleteEmployee = (id: string | number) =>
-    api.callApi('delete', `/core/systems/5/employees/${id}/`);
+    api.callApi('delete', `/core/systems/${systemId}/employees/${id}/`);
 
   return {
     ...api,

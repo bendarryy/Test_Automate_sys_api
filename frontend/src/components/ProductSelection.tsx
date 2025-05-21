@@ -49,11 +49,12 @@ const ProductSelection = () => {
   const selectedTable = useSelector(
     (state: RootState) => state.bill.selectedTable
   );
+  const systemId = localStorage.getItem("selectedSystemId");
   const orderType = useSelector((state: RootState) => state.bill.orderType);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortOrder, setSortOrder] = useState<SortOrder>("default");
-  const { getMenu, getCategories, loading } = useGetMenu(5);
+  const { getMenu, getCategories, loading } = useGetMenu(Number(systemId));
   const [categories, setCategories] = useState<string[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [showTables, setShowTables] = useState(false);

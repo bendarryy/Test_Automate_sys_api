@@ -28,6 +28,7 @@ export const useEditOrder = () => {
   const { orderId } = useParams<{ orderId: string }>();
   const { callApi, loading, error } = useApi();
   const navigate = useNavigate();
+  const  systemId  = localStorage.getItem("selectedSystemId");
 
   const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
   const [formData, setFormData] = useState<FormData>({
@@ -38,10 +39,11 @@ export const useEditOrder = () => {
     waiter: null
   });
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
+  
 
   useEffect(() => {
     const fetchData = async () => {
-      const orderResponse = await callApi("get", `/restaurant/5/orders/${orderId}/`);
+      const orderResponse = await callApi("get", `/restaurant/${systemId}/orders/${orderId}/`);
       if (orderResponse) {
         setOrderDetails(orderResponse);
         setFormData({
@@ -100,7 +102,7 @@ export const useEditOrder = () => {
   // إرسال التعديلات على عناصر الطلب للـ API
   const updateOrderItems = async (updatedItems: OrderItem[]) => {
     for (const item of updatedItems) {
-      await callApi("post", `/restaurant/5/orders/${orderId}/items/`, {
+      await callApi("post", `/restaurant/${systemId}/orders/${orderId}/items/`, {
         menu_item: item.id,
         menu_item_name: item.menu_item_name,
         quantity: item.quantity,
@@ -116,7 +118,7 @@ export const useEditOrder = () => {
     };
 
     // تحديث الطلب الأساسي
-    const orderResponse = await callApi("put", `/restaurant/5/orders/${orderId}/`, updatedOrder);
+    const orderResponse = await callApi("put", `/restaurant/${systemId}/orders/${orderId}/`, updatedOrder);
 
     // تحديث عناصر الطلب
     const itemsResponse = await updateOrderItems(orderItems);
