@@ -581,7 +581,7 @@ class WaiterDisplayViewSet(viewsets.ModelViewSet):
         - Others: Read-only access
         """
         editable_roles = ["waiter", "cashier", "manager"]
-        if self.action in ["update", "partial_update"]:
+        if self.action in ["partial_update"]:
             return [
                 IsAuthenticated(),
                 OR(IsSystemOwner(), IsEmployeeRolePermission(*editable_roles)),
@@ -597,13 +597,6 @@ class WaiterDisplayViewSet(viewsets.ModelViewSet):
             order_type="in_house",
             status__in=["ready", "served"]
         ).select_related("waiter").prefetch_related("order_items__menu_item")
-
-    @action(detail=False, methods=["get"])
-    def in_house(self, request, *args, **kwargs):
-        """Get all ready and served in-house orders"""
-        queryset = self.get_queryset()
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
 
     @action(detail=False, methods=["get"])
     def tables(self, request, *args, **kwargs):
@@ -661,7 +654,7 @@ class WaiterDisplayViewSet(viewsets.ModelViewSet):
 class DeliveryViewSet(viewsets.ModelViewSet):
     serializer_class = OrderSerializer
     permission_classes = [IsAuthenticated]
-    http_method_names = ["get", "post", "patch", "delete", "head", "options"]
+    http_method_names = ["get", "patch", "head", "options"]
 
     def get_permissions(self):
         """
@@ -670,7 +663,7 @@ class DeliveryViewSet(viewsets.ModelViewSet):
         - Others: Read-only access
         """
         editable_roles = ["delivery_driver", "manager"]
-        if self.action in ["create", "update", "partial_update", "destroy"]:
+        if self.action in ["partial_update"]:
             return [
                 IsAuthenticated(),
                 OR(IsSystemOwner(), IsEmployeeRolePermission(*editable_roles)),
@@ -687,12 +680,6 @@ class DeliveryViewSet(viewsets.ModelViewSet):
             order_type="delivery",
             status__in=["ready", "out_for_delivery"]
         ).select_related("waiter").prefetch_related("order_items__menu_item")
-
-    def perform_create(self, serializer):
-        """Create a new delivery order"""
-        system_id = self.kwargs.get("system_id")
-        system = get_object_or_404(System, id=system_id)
-        serializer.save(system=system, order_type="delivery")
 
     def partial_update(self, request, *args, **kwargs):
         """Update delivery order status with validation"""

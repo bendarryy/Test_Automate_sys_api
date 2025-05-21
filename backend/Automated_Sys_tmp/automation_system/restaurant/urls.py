@@ -8,14 +8,10 @@ router = DefaultRouter()
 router.register(r'(?P<system_id>\d+)/menu-items', MenuItemViewSet, basename="menu-items")
 # Register new Order routes
 router.register(r"(?P<system_id>\d+)/orders", OrderViewSet, basename="order")
-router.register(r"(?P<system_id>\d+)/orders/(?P<order_id>\d+)/items", OrderItemViewSet, basename="order-item")
 router.register(r'(?P<system_id>\d+)/kitchen/orders', KitchenOrderViewSet, basename='kitchen-orders')
 # Register Waiter Display System routes
-
 router.register(r'(?P<system_id>\d+)/waiter/orders', WaiterDisplayViewSet, basename='waiter-orders')
-
 # Register Delivery System routes
-
 router.register(r'(?P<system_id>\d+)/delivery/orders', DeliveryViewSet, basename='delivery-orders')
 
 # API URLs

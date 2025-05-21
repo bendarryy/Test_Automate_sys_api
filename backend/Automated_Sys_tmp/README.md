@@ -451,46 +451,137 @@ json
 ## 🧑‍🍳 Waiter Display System (WDS)
 
 **Description:**
-A dedicated interface for waiters to view and manage active orders in the restaurant.
+A dedicated interface for waiters to view and manage active orders in the restaurant. This system allows waiters to:
+- View all active orders in the restaurant
+- Check the status of all tables
+- Update the status of orders
 
-### Main Endpoints:
-- **List all active orders:**
-  `GET /api/restaurant/{system_id}/waiter/orders/`
-- **Get table status:**
-  `GET /api/restaurant/{system_id}/waiter/orders/tables/`
-- **Update order status:**
-  `PATCH /api/restaurant/{system_id}/waiter/orders/{order_id}/`
-- **Get order details:**
-  `GET /api/restaurant/{system_id}/waiter/orders/{order_id}/`
-- **Create new order:**
-  `POST /api/restaurant/{system_id}/waiter/orders/`
-- **Add item to order:**
-  `POST /api/restaurant/{system_id}/waiter/orders/{order_id}/items/`
-- **Remove item from order:**
-  `DELETE /api/restaurant/{system_id}/waiter/orders/{order_id}/items/{item_id}/`
+### API Endpoints
 
----
+#### GET Endpoints
+1. **List Active Orders**
+   ```http
+   GET /api/restaurant/{system_id}/waiter/orders/
+   ```
+   - Returns a list of all active orders in the restaurant
+   - Orders are filtered to show only those with status "ready" or "served"
+   - Response includes order details, customer info, and items
+
+2. **Get Table Status**
+   ```http
+   GET /api/restaurant/{system_id}/waiter/orders/tables/
+   ```
+   - Returns the current status of all tables in the restaurant
+   - Shows which tables are occupied and their current order status
+   - Response format:
+     ```json
+     {
+       "table_number": {
+         "status": "ready|served",
+         "current_order": {
+           "id": 123,
+           "customer_name": "John Doe",
+           "status": "ready"
+         }
+       }
+     }
+     ```
+
+#### PATCH Endpoint
+1. **Update Order Status**
+   ```http
+   PATCH /api/restaurant/{system_id}/waiter/orders/{order_id}/
+   ```
+   - Updates the status of a specific order
+   - Required body:
+     ```json
+     {
+       "status": "pending|preparing|ready|served|completed|canceled"
+     }
+     ```
+   - Returns the updated order details
+   - Only authorized roles (waiter, cashier, manager) can update status
 
 ## 🚚 Delivery System
 
 **Description:**
-APIs for managing delivery orders from the restaurant to customers outside the restaurant.
+APIs for managing delivery orders from the restaurant to customers outside the restaurant. This system allows delivery drivers to:
+- View all active delivery orders
+- Update the status of delivery orders
 
-### Main Endpoints:
-- **List all delivery orders:**
-  `GET /api/restaurant/{system_id}/delivery/orders/`
-- **Create new delivery order:**
-  `POST /api/restaurant/{system_id}/delivery/orders/`
-- **Update delivery order status:**
-  `PATCH /api/restaurant/{system_id}/delivery/orders/{order_id}/`
-- **Get delivery order details:**
-  `GET /api/restaurant/{system_id}/delivery/orders/{order_id}/`
+### API Endpoints
 
----
+#### GET Endpoints
+1. **List Active Delivery Orders**
+   ```http
+   GET /api/restaurant/{system_id}/delivery/orders/
+   ```
+   - Returns a list of all active delivery orders
+   - Orders are filtered to show only those with status "ready" or "out_for_delivery"
+   - Response includes order details, customer info, and items
+   - Example Response:
+     ```json
+     [
+       {
+         "id": 123,
+         "customer_name": "John Doe",
+         "status": "ready",
+         "order_items": [
+           {
+             "id": 1,
+             "menu_item_name": "Pizza",
+             "quantity": 2
+           }
+         ],
+         "total_price": "50.00",
+         "created_at": "2025-04-27T14:00:00Z"
+       }
+     ]
+     ```
 
-**Notes:**
-- All endpoints require authentication.
-- You can customize responses as needed (success, error, etc).
+2. **Get Active Orders**
+   ```http
+   GET /api/restaurant/{system_id}/delivery/orders/active/
+   ```
+   - Returns only orders with status "ready" or "out_for_delivery"
+   - Same response format as list endpoint
+
+3. **Get Completed Orders**
+   ```http
+   GET /api/restaurant/{system_id}/delivery/orders/completed/
+   ```
+   - Returns all completed delivery orders
+   - Same response format as list endpoint
+
+4. **Get Canceled Orders**
+   ```http
+   GET /api/restaurant/{system_id}/delivery/orders/canceled/
+   ```
+   - Returns all canceled delivery orders
+   - Same response format as list endpoint
+
+#### PATCH Endpoint
+1. **Update Delivery Order Status**
+   ```http
+   PATCH /api/restaurant/{system_id}/delivery/orders/{order_id}/
+   ```
+   - Updates the status of a specific delivery order
+   - Required body:
+     ```json
+     {
+       "status": "pending|preparing|ready|out_for_delivery|completed|canceled"
+     }
+     ```
+   - Returns the updated order details
+   - Only authorized roles (delivery_driver, manager) can update status
+
+### Authentication & Permissions
+- All endpoints require authentication
+- Roles with access:
+  - System Owner: Full access
+  - Delivery Driver: Can view orders and update status
+  - Manager: Full access
+  - Cashier: Can view orders only
 
 #update profile by ali
 ### Update Profile
