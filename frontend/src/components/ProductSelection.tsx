@@ -132,66 +132,66 @@ const ProductSelection = () => {
     return sorted;
   }, [products, searchTerm, sortOrder]);
 
-  const renderProductImage = (product: Product) => {
-    // Check if the image is an SVG with emoji (our category icon)
-    const isCategoryIcon =
-      product.image?.startsWith("data:image/svg+xml") || !product.image;
+  // const renderProductImage = (product: Product) => {
+  //   // Check if the image is an SVG with emoji (our category icon)
+  //   const isCategoryIcon =
+  //     product.image?.startsWith("data:image/svg+xml") || !product.image;
 
-    return (
-      <div
-        style={{
-          height: 160,
-          overflow: "hidden",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          backgroundColor: isCategoryIcon ? "#f0f2f5" : "#f5f5f5",
-        }}
-      >
-        {isCategoryIcon ? (
-          product.image ? (
-            <img
-              className="product-image"
-              alt={product.name}
-              src={product.image}
-              style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "contain",
-              }}
-            />
-          ) : (
-            <span style={{ fontSize: "64px" }}>
-              {getCategoryIcon(product.category || "")}
-            </span>
-          )
-        ) : (
-          <img
-            className="product-image"
-            alt={product.name}
-            src={product.image}
-            style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-            }}
-            onError={(e) => {
-              // If image fails to load, show category icon instead
-              const target = e.target as HTMLImageElement;
-              target.style.display = "none";
-              const parent = target.parentElement;
-              if (parent) {
-                const iconSpan = document.createElement("span");
-                iconSpan.style.fontSize = "64px";
-                iconSpan.textContent = getCategoryIcon(product.category || "");
-                parent.appendChild(iconSpan);
-              }
-            }}
-          />
-        )}
-      </div>
-    );
-  };
+  //   return (
+  //     <div
+  //       style={{
+  //         height: 160,
+  //         overflow: "hidden",
+  //         display: "flex",
+  //         alignItems: "center",
+  //         justifyContent: "center",
+  //         backgroundColor: isCategoryIcon ? "#f0f2f5" : "#f5f5f5",
+  //       }}
+  //     >
+  //       {isCategoryIcon ? (
+  //         product.image ? (
+  //           <img
+  //             className="product-image"
+  //             alt={product.name}
+  //             src={product.image}
+  //             style={{
+  //               width: "100%",
+  //               height: "100%",
+  //               objectFit: "contain",
+  //             }}
+  //           />
+  //         ) : (
+  //           <span style={{ fontSize: "64px" }}>
+  //             {getCategoryIcon(product.category || "")}
+  //           </span>
+  //         )
+  //       ) : (
+  //         <img
+  //           className="product-image"
+  //           alt={product.name}
+  //           src={product.image}
+  //           style={{
+  //             width: "100%",
+  //             height: "100%",
+  //             objectFit: "cover",
+  //           }}
+  //           onError={(e) => {
+  //             // If image fails to load, show category icon instead
+  //             const target = e.target as HTMLImageElement;
+  //             target.style.display = "none";
+  //             const parent = target.parentElement;
+  //             if (parent) {
+  //               const iconSpan = document.createElement("span");
+  //               iconSpan.style.fontSize = "64px";
+  //               iconSpan.textContent = getCategoryIcon(product.category || "");
+  //               parent.appendChild(iconSpan);
+  //             }
+  //           }}
+  //         />
+  //       )}
+  //     </div>
+  //   );
+  // };
 
   const handleTableButtonClick = () => {
     if (orderType === 'delivery') {
