@@ -27,7 +27,9 @@ import {
   RiInformationLine,
   RiInformationFill,
   RiShoppingBasketLine,
-  RiShoppingBasketFill
+  RiShoppingBasketFill,
+  RiStore2Line,
+  RiStore2Fill
 } from "react-icons/ri";
 
 // Define the navigation item interface
@@ -191,7 +193,15 @@ export const supermarketNavItems: NavItem[] = [
     systemCategory: 'supermarket',
     showInSidebar: true,
     requiredPermission: "access_about",
-  }
+  },
+  {
+    name: "Supplier Management",
+    icon: RiStore2Line,
+    activeIcon: RiStore2Fill,
+    href: "/supermarket/suppliers",
+    systemCategory: "supermarket",
+    showInSidebar: true
+  },
 ];
 
 // Common navigation items for all systems
