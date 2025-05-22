@@ -4,10 +4,10 @@ import styles from '../../styles/SupplierManagement.module.css';
 import { RiStore2Line } from 'react-icons/ri';
 
 interface Supplier {
-  supplier_id: number;
+  id: number;
   name: string;
   phone: string;
-  email: string;
+  email: string | null;
 }
 
 interface SupplierFormData {
@@ -29,12 +29,13 @@ const SupplierManagement: React.FC = () => {
   const [success, setSuccess] = useState<string | null>(null);
 
   const { callApi } = useApi<Supplier[]>();
-  const systemId = localStorage.getItem('selectedSystemId');
 
   const fetchSuppliers = async () => {
+    const currentSystemId = localStorage.getItem('selectedSystemId');
     try {
-      const response = await callApi('get', `supermarket/${systemId}/suppliers/`);
+      const response = await callApi('get', `supermarket/${currentSystemId}/suppliers/`);
       setSuppliers(response);
+      console.log('suppliers:', response);
     } catch (err) {
       setError('Failed to fetch suppliers');
     }
@@ -56,13 +57,13 @@ const SupplierManagement: React.FC = () => {
     e.preventDefault();
     setError(null);
     setSuccess(null);
-
+    const currentSystemId = localStorage.getItem('selectedSystemId');
     try {
       if (editingSupplier) {
-        await callApi('put', `supermarket/${systemId}/suppliers/${editingSupplier.supplier_id}/`, formData);
+        await callApi('put', `supermarket/${currentSystemId}/suppliers/${editingSupplier.id}/`, formData);
         setSuccess('Supplier updated successfully');
       } else {
-        await callApi('post', `supermarket/${systemId}/suppliers/`, formData);
+        await callApi('post', `supermarket/${currentSystemId}/suppliers/`, formData);
         setSuccess('Supplier added successfully');
       }
       setIsModalOpen(false);
@@ -84,9 +85,10 @@ const SupplierManagement: React.FC = () => {
   };
 
   const handleDelete = async (supplierId: number) => {
+    const currentSystemId = localStorage.getItem('selectedSystemId');
     if (window.confirm('Are you sure you want to delete this supplier?')) {
       try {
-        await callApi('delete', `supermarket/${systemId}/suppliers/${supplierId}/`);
+        await callApi('delete', `supermarket/${currentSystemId}/suppliers/${supplierId}/`);
         setSuccess('Supplier deleted successfully');
         fetchSuppliers();
       } catch (err) {
@@ -129,7 +131,7 @@ const SupplierManagement: React.FC = () => {
             اضغط على زر "Add New Supplier" لإضافة أول مورد
           </div>
         ) : suppliers.map((supplier) => (
-          <div key={supplier.supplier_id || supplier.name + supplier.phone} className={styles.supplierCard}>
+          <div key={supplier.id || supplier.name + supplier.phone} className={styles.supplierCard}>
             <h2 className={styles.supplierName}><RiStore2Line className={styles.supplierIcon} /> {supplier.name}</h2>
             <p className={styles.supplierInfo}>Phone: {supplier.phone}</p>
             <p className={styles.supplierInfo}>Email: {supplier.email}</p>
@@ -142,7 +144,7 @@ const SupplierManagement: React.FC = () => {
               </button>
               <button 
                 className={styles.deleteButton}
-                onClick={() => handleDelete(supplier.supplier_id)}
+                onClick={() => handleDelete(supplier.id)}
               >
                 Delete
               </button>
