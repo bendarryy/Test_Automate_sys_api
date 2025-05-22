@@ -6,19 +6,18 @@ import { addItem, setSelectedTable, setOrderType } from "../store/billSlice";
 import { useGetMenu, getCategoryIcon } from "../hooks/useGetMenu";
 // Import necessary Ant Design components
 import {
-  Card,
   Col,
   Row,
   Spin,
   Input,
   Select,
   Space,
-  Typography,
   Popover,
   Button,
   message,
   Badge,
 } from "antd";
+import Card from "./Card";
 import { MdTableRestaurant, MdDeliveryDining, MdStore } from "react-icons/md";
 import { RootState } from "../store";
 import TablesSection from "./TablesSection";
@@ -368,7 +367,7 @@ const ProductSelection = () => {
         ) : (
           <Row gutter={[16, 16]} style={{ margin: "0px", padding: "10px" }}>
             {displayedProducts.map((product) => (
-              <Col key={product.id} xs={24} sm={12} md={8} lg={4}>
+              <Col key={product.id} xs={24} sm={12} md={6} lg={4} xl={3}>
                 {/* Badge for product quantity in bill */}
                 {/* Badge in top-right */}
                 <div style={{ position: 'relative' }}>
@@ -384,8 +383,16 @@ const ProductSelection = () => {
                     ) : null;
                   })()}
                 <Card
-                  className="product-card"
-                  hoverable
+                  title={product.name}
+                  description={product.description}
+                  price={`$${product.price}`}
+                  badgeText={product.is_available ? '' : 'Unavailable'}
+                  accentColor={product.is_available ? '#1677ff' : '#aaa'}
+                  textColor="#1e293b"
+                  backgroundColor="#fff"
+                  imageGradient={product.is_available ? 'linear-gradient(45deg, #a78bfa, #8b5cf6)' : 'linear-gradient(45deg, #ccc, #eee)'}
+                  image={product.image}
+                  width="100%"
                   onClick={() => {
                     if (product.is_available) {
                       dispatch(
@@ -407,73 +414,8 @@ const ProductSelection = () => {
                     position: 'relative',
                     display: 'flex',
                     flexDirection: 'column',
-
                   }}
-                  cover={renderProductImage(product)}
-                  styles={{
-                    
-                    body: { padding: "12px" , position: 'static'}}
-                  }
-                >
-
-                  <Card.Meta
-                      title={
-                        <Popover
-                          content={product.name}
-                          trigger="hover"
-                          placement="topLeft"
-                        >
-                          <Typography.Text
-                            ellipsis
-                            style={{
-                              fontSize: "16px",
-                              fontWeight: "bold",
-                              marginBottom: "4px",
-                              display: "block",
-                              width: "100%",
-                            }}
-                          >
-                            {product.name}
-                          </Typography.Text>
-                        </Popover>
-                      }
-                      description={
-                        <div>
-                          <p
-                            style={{
-                              margin: 0,
-                              fontSize: "15px",
-                              fontWeight: "bold",
-                              color: "#1890ff",
-                            }}
-                          >
-                            ${product.price}
-                          </p>
-                          {product.description && (
-                            <Popover
-                              content={product.description}
-                              trigger="hover"
-                              placement="topLeft"
-                            >
-                              <Typography.Paragraph
-                                style={{
-                                  margin: "4px 0 0 0",
-                                  fontSize: "12px",
-                                  color: "#666",
-                                }}
-                                ellipsis={{
-                                  rows: 2,
-                                  expandable: false,
-                                }}
-                              >
-                                {product.description}
-                              </Typography.Paragraph>
-                            </Popover>
-                          )}
-                        </div>
-                      }
-                    />
-                  </Card>
+                />
                 </div>
               </Col>
             ))}
