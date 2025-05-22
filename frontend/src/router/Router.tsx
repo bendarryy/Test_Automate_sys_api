@@ -48,6 +48,7 @@ const Profile = lazy(() => import("../pages/Profile"));
 const Settings = lazy(() => import("../pages/Settings"));
 const ChangePassword = lazy(() => import("../pages/ChangePassword"));
 const ProductsManagement = lazy(() => import("../pages/supermarket/ProductsManagement"));
+const SupplierManagement = lazy(() => import("../pages/supermarket/SupplierManagement"));
 
 const ErrorBoundary = () => {
   return (
@@ -351,6 +352,16 @@ const supermarketRouter = createBrowserRouter([
               <ProtectedRoute permission="read_sales">
                 <SalesPage />
               </ProtectedRoute>
+            </ProtectLogin>
+          </Suspense>
+        ),
+      },
+      {
+        path: "/supermarket/suppliers",
+        element: (
+          <Suspense fallback={<div>Loading...</div>}>
+            <ProtectLogin>
+              <SupplierManagement />
             </ProtectLogin>
           </Suspense>
         ),
