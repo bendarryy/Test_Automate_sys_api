@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
-import { useWaiter, WaiterOrder } from '../../hooks/useWaiter';
-import { Button, Spin, Tooltip, Empty, message, Statistic, Row, Col, Space, Popover, Modal } from 'antd';
-import { ReloadOutlined, SwapRightOutlined } from '@ant-design/icons';
+import { useWaiter } from '../../hooks/useWaiter';
+import { Button, Tooltip, Empty, message, Statistic, Row, Col, Space, Modal } from 'antd';
+import { ReloadOutlined } from '@ant-design/icons';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import OrderCard from '../../components/OrderCard';
 import { ClockCircleTwoTone, CheckCircleTwoTone } from '@ant-design/icons';
@@ -11,16 +11,11 @@ import './waiterStyles.css';
 
 const SYSTEM_ID = localStorage.getItem('selectedSystemId') ?? '';
 
-const statusLabels: Record<string, string> = {
-  ready: 'Ready',
-  served: 'Served',
-  completed: 'Completed',
-};
 
 const WaiterDisplay: React.FC = () => {
   const [statusUpdatingId, setStatusUpdatingId] = React.useState<number | null>(null);
   
-  const { orders, orderLoading, orderError, patchOrderStatus, fetchOrders } = useWaiter(SYSTEM_ID);
+  const { orders, patchOrderStatus, fetchOrders } = useWaiter(SYSTEM_ID);
 
   // تصنيف الطلبات
   const [readyOrders, servedOrders] = useMemo(() => {

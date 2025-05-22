@@ -37,19 +37,18 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onStatusChange, isUpdating
     <Card
       title={
         <Space>
-          {statusIcons[order.status]}
+          {statusIcons[order.status as keyof typeof statusIcons]}
           <span style={{ fontWeight: 600 }}>Table {order.table_number}</span>
         </Space>
       }
       extra={
-        <Tag color={statusColors[order.status]} style={{ fontSize: 14, padding: '2px 12px' }}>
-          {statusText[order.status]}
+        <Tag color={statusColors[order.status as keyof typeof statusColors]} style={{ fontSize: 14, padding: '2px 12px' }}>
+          {statusText[order.status as keyof typeof statusText]}
         </Tag>
       }
-      bordered
+      variant="outlined"
       style={{ borderRadius: 12, boxShadow: '0 2px 12px #f0f1f3', minHeight: 320, maxHeight: 340 }}
-      headStyle={{ background: '#fafcff', borderRadius: '12px 12px 0 0', minHeight: 48 }}
-      bodyStyle={{ padding: 16, minHeight: 220, maxHeight: 260, overflow: 'hidden' }}
+      styles={{header:{ background: '#fafcff', borderRadius: '12px 12px 0 0', minHeight: 48} ,body:{ padding: 16, minHeight: 220, maxHeight: 260, overflow: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center' }}}
     >
       <div style={{ marginBottom: 8, fontSize: 15, color: '#888' }}>
         <span>Order #<b>{order.id}</b></span>
