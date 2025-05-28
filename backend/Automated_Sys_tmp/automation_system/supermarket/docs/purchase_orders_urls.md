@@ -1,27 +1,5 @@
 # Purchase Orders and Goods Receiving - API Endpoints
 
-## Suppliers
-
-### 1. List/Create Suppliers
-
-```
-GET/POST /api/systems/{system_id}/suppliers/
-```
-
-- GET: List all suppliers for the system
-- POST: Create a new supplier
-- Required fields: name, phone
-- Optional fields: email
-
-### 2. Retrieve/Update/Delete Supplier
-
-```
-GET/PUT/PATCH/DELETE /api/systems/{system_id}/suppliers/{id}/
-```
-
-- GET: Get details of a specific supplier
-- PUT/PATCH: Update a supplier
-- DELETE: Delete a supplier
 
 ## Purchase Orders
 
@@ -97,23 +75,6 @@ GET /api/systems/{system_id}/goods-receiving/by-purchase-order/?purchase_order_i
 - Query parameter: purchase_order_id (required)
 
 ## Example Usage
-
-### Create a Supplier
-
-```bash
-POST /api/systems/1/suppliers/
-{
-    "name": "ABC Supplies",
-    "phone": "+1234567890",
-    "email": "contact@abcsupplies.com"
-}
-```
-
-### Get Supplier Details
-
-```bash
-GET /api/systems/1/suppliers/1/
-```
 
 ### Create a Purchase Order
 
