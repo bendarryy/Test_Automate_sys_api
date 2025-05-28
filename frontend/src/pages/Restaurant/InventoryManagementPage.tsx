@@ -1,11 +1,11 @@
 // InventoryManagementPage.tsx
 import React, { useState, useEffect } from 'react';
 import { Table, Input, Button, Modal, Form, Progress, Space, Tag } from 'antd';
+import Header from '../../components/Header';
 import { SearchOutlined, PlusCircleOutlined, EditOutlined, SaveOutlined, DeleteOutlined } from '@ant-design/icons';
 import styles from '../../styles/InventoryManagementPage.module.css';
 import { useInventory, InventoryItem } from '../../hooks/useInventory';
 import { useSelectedSystemId } from '../../hooks/useSelectedSystemId';
-import { useNavigate } from 'react-router-dom';
 import type { ColumnsType } from 'antd/es/table';
 
 // Helper to calculate status and availability
@@ -22,7 +22,6 @@ function computeStatusAndAvailability(item: InventoryItem) {
 }
 
 const InventoryManagementPage: React.FC = () => {
-  const navigate = useNavigate();
   const [selectedSystemId] = useSelectedSystemId();
   const [editingKey, setEditingKey] = useState<string | null>(null);
   const [newItem, setNewItem] = useState<Omit<InventoryItem, 'id'>>({
@@ -51,10 +50,10 @@ const InventoryManagementPage: React.FC = () => {
     handleCloseModal();
   };
 
-  const isEditing = (record: InventoryItem) => record.id === editingKey;
+  const isEditing = (record: InventoryItem) => String(record.id) === editingKey;
 
   const edit = (record: InventoryItem) => {
-    setEditingKey(record.id);
+    setEditingKey(String(record.id));
   };
 
   const cancel = () => {
@@ -63,7 +62,7 @@ const InventoryManagementPage: React.FC = () => {
 
   const save = async (id: string) => {
     try {
-      const row = await (inventory || []).find(item => item.id === id);
+      const row = await (inventory || []).find(item => item.id === Number(id));
       if (!row || !selectedSystemId) return;
       await updateInventoryItem(selectedSystemId, id, row);
       setEditingKey(null);
@@ -96,7 +95,7 @@ const InventoryManagementPage: React.FC = () => {
               const newData = inventory?.map(item => 
                 item.id === record.id ? { ...item, name: e.target.value } : item
               );
-              if (newData) inventory.splice(0, inventory.length, ...newData);
+              if (newData) inventory?.splice(0, inventory.length, ...newData);
             }}
           />
         ) : (
@@ -155,7 +154,7 @@ const InventoryManagementPage: React.FC = () => {
               const newData = inventory?.map(item => 
                 item.id === record.id ? { ...item, quantity: e.target.value === '' ? null : Number(e.target.value) } : item
               );
-              if (newData) inventory.splice(0, inventory.length, ...newData);
+              if (newData) inventory?.splice(0, inventory.length, ...newData);
             }}
           />
         ) : (
@@ -177,7 +176,7 @@ const InventoryManagementPage: React.FC = () => {
               const newData = inventory?.map(item => 
                 item.id === record.id ? { ...item, unit: e.target.value } : item
               );
-              if (newData) inventory.splice(0, inventory.length, ...newData);
+              if (newData) inventory?.splice(0, inventory.length, ...newData);
             }}
           />
         ) : (
@@ -241,7 +240,7 @@ const InventoryManagementPage: React.FC = () => {
               type="primary"
               size="small"
               icon={<SaveOutlined />}
-              onClick={() => save(record.id)}
+              onClick={() => save(String(record.id))}
             >
               Save
             </Button>
@@ -268,7 +267,7 @@ const InventoryManagementPage: React.FC = () => {
               danger
               size="small"
               icon={<DeleteOutlined />}
-              onClick={() => handleDelete(record.id)}
+              onClick={() => handleDelete(String(record.id))}
               disabled={editingKey !== null}
             >
               Delete
@@ -281,19 +280,24 @@ const InventoryManagementPage: React.FC = () => {
 
   return (
     <div className={`container py-4 ${styles.customContainer}`}>
-      <h1 className="text-center mb-4 text-primary">Stock Management</h1>
+      <Header 
+        title="Stock Management"
+        breadcrumbs={[
+          { title: 'Restaurant', path: '/restaurant' },
+          { title: 'Inventory' }
+        ]}
+        actions={
+          <Button
+            type="primary"
+            icon={<PlusCircleOutlined />}
+            onClick={handleOpenModal}
+            size="large"
+          >
+            Add New Ingredient
+          </Button>
+        }
+      />
       {error && <div className="alert alert-danger">{error}</div>}
-      
-      <div className="d-flex justify-content-end mb-3">
-        <Button
-          type="primary"
-          icon={<PlusCircleOutlined />}
-          onClick={handleOpenModal}
-          size="large"
-        >
-          Add New Ingredient
-        </Button>
-      </div>
 
       <Table
         columns={columns}

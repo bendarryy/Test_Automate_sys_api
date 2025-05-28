@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useApi } from '../../hooks/useApi';
-import styles from '../../styles/SupplierManagement.module.css';
-import { RiStore2Line } from 'react-icons/ri';
+import { Button, Modal, Input, Form, Card, Typography, message, Space } from 'antd';
+import { PlusOutlined, PhoneOutlined, MailOutlined, EditOutlined, DeleteOutlined, ShopOutlined } from '@ant-design/icons';
+import Header from '../../components/Header';
 
 interface Supplier {
   id: number;
@@ -30,20 +31,29 @@ const SupplierManagement: React.FC = () => {
 
   const { callApi } = useApi<Supplier[]>();
 
-  const fetchSuppliers = async () => {
+  const fetchSuppliers = React.useCallback(async () => {
     const currentSystemId = localStorage.getItem('selectedSystemId');
     try {
-      const response = await callApi('get', `supermarket/${currentSystemId}/suppliers/`);
+      const response = await callApi('get', `/supermarket/${currentSystemId}/suppliers/`);
       setSuppliers(response);
       console.log('suppliers:', response);
-    } catch (err) {
+    } catch  {
       setError('Failed to fetch suppliers');
     }
-  };
+  }, [setError]);
 
   useEffect(() => {
     fetchSuppliers();
   }, []);
+  
+  // Display success/error messages
+  useEffect(() => {
+    if (error) message.error(error);
+  }, [error]);
+  
+  useEffect(() => {
+    if (success) message.success(success);
+  }, [success]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -69,7 +79,7 @@ const SupplierManagement: React.FC = () => {
       setIsModalOpen(false);
       fetchSuppliers();
       resetForm();
-    } catch (err) {
+    } catch  {
       setError('Operation failed. Please try again.');
     }
   };
@@ -91,7 +101,7 @@ const SupplierManagement: React.FC = () => {
         await callApi('delete', `supermarket/${currentSystemId}/suppliers/${supplierId}/`);
         setSuccess('Supplier deleted successfully');
         fetchSuppliers();
-      } catch (err) {
+      } catch  {
         setError('Failed to delete supplier');
       }
     }
@@ -107,114 +117,134 @@ const SupplierManagement: React.FC = () => {
   };
 
   return (
-    <div className={styles.supplierContainer}>
-      <div className={styles.supplierHeader}>
-        <h1 className={styles.supplierTitle}>Supplier Management</h1>
-        <button 
-          className={styles.addSupplierButton}
-          onClick={() => {
-            resetForm();
-            setIsModalOpen(true);
-          }}
-        >
-          <span style={{fontSize: '20px', fontWeight: 'bold', marginRight: '4px'}}>+</span> Add New Supplier
-        </button>
-      </div>
+    <div style={{ padding: 24 }}>
+      <Header
+        title="Supplier Management"
+        breadcrumbs={[
+          { title: 'Supermarket', path: '/supermarket' },
+          { title: 'Suppliers' }
+        ]}
+        actions={
+          <Button 
+            type="primary" 
+            icon={<PlusOutlined />} 
+            onClick={() => {
+              resetForm();
+              setIsModalOpen(true);
+            }}
+          >
+            Add Supplier
+          </Button>
+        }
+      />
 
-      {error && <div className={styles.errorMessage}>{error}</div>}
-      {success && <div className={styles.successMessage}>{success}</div>}
-
-      <div className={styles.supplierList}>
+      <div style={{ marginTop: 20, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '16px' }}>
         {suppliers.length === 0 ? (
-          <div className={styles.emptySuppliers}>
-            لا يوجد موردين حتى الآن<br />
-            اضغط على زر "Add New Supplier" لإضافة أول مورد
+          <div style={{ textAlign: 'center', padding: '40px', gridColumn: '1 / -1' }}>
+            <Typography.Title level={4}>No suppliers found</Typography.Title>
+            <Typography.Text>Click the "Add Supplier" button to add your first supplier</Typography.Text>
           </div>
         ) : suppliers.map((supplier) => (
-          <div key={supplier.id || supplier.name + supplier.phone} className={styles.supplierCard}>
-            <h2 className={styles.supplierName}><RiStore2Line className={styles.supplierIcon} /> {supplier.name}</h2>
-            <p className={styles.supplierInfo}>Phone: {supplier.phone}</p>
-            <p className={styles.supplierInfo}>Email: {supplier.email}</p>
-            <div className={styles.supplierActions}>
-              <button 
-                className={styles.editButton}
+          <Card 
+            key={supplier.id || supplier.name + supplier.phone}
+            title={
+              <Space>
+                <ShopOutlined /> 
+                <span>{supplier.name}</span>
+              </Space>
+            }
+            actions={[
+              <Button 
+                icon={<EditOutlined />} 
+                type="link"
                 onClick={() => handleEdit(supplier)}
               >
                 Edit
-              </button>
-              <button 
-                className={styles.deleteButton}
+              </Button>,
+              <Button 
+                icon={<DeleteOutlined />} 
+                type="link" 
+                danger
                 onClick={() => handleDelete(supplier.id)}
               >
                 Delete
-              </button>
-            </div>
-          </div>
+              </Button>
+            ]}
+          >
+            <p><PhoneOutlined /> {supplier.phone}</p>
+            <p><MailOutlined /> {supplier.email}</p>
+          </Card>
         ))}
       </div>
 
-      {isModalOpen && (
-        <div className={styles.modal}>
-          <div className={styles.modalContent}>
-            <h2 style={{textAlign: 'center', marginBottom: 18}}>{editingSupplier ? 'Edit Supplier' : 'Add New Supplier'}</h2>
-            <form onSubmit={handleSubmit}>
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Name:</label>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name || ""}
-                  onChange={handleInputChange}
-                  className={styles.formInput}
-                  required
-                />
-              </div>
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Phone:</label>
-                <input
-                  type="tel"
-                  name="phone"
-                  value={formData.phone || ""}
-                  onChange={handleInputChange}
-                  className={styles.formInput}
-                  required
-                />
-              </div>
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Email:</label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email || ""}
-                  onChange={handleInputChange}
-                  className={styles.formInput}
-                  required
-                />
-              </div>
-              <div className={styles.modalActions}>
-                <button 
-                  type="button" 
-                  className={styles.cancelButton}
-                  onClick={() => {
-                    setIsModalOpen(false);
-                    resetForm();
-                  }}
-                >
-                  Cancel
-                </button>
-                <button 
-                  type="submit" 
-                  className={styles.addSupplierButton}
-                >
-                  {editingSupplier ? 'Update' : 'Add'} Supplier
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <Modal
+        title={editingSupplier ? 'Edit Supplier' : 'Add New Supplier'}
+        open={isModalOpen}
+        onCancel={() => {
+          setIsModalOpen(false);
+          resetForm();
+        }}
+        footer={null}
+      >
+        <Form layout="vertical" onFinish={handleSubmit}>
+          <Form.Item 
+            label="Name"
+            required
+          >
+            <Input
+              name="name"
+              value={formData.name}
+              onChange={handleInputChange}
+              placeholder="Enter supplier name"
+            />
+          </Form.Item>
+          <Form.Item 
+            label="Phone"
+            required
+          >
+            <Input
+              name="phone"
+              value={formData.phone}
+              onChange={handleInputChange}
+              placeholder="Enter phone number"
+              prefix={<PhoneOutlined />}
+            />
+          </Form.Item>
+          <Form.Item 
+            label="Email"
+            required
+          >
+            <Input
+              name="email"
+              type="email"
+              value={formData.email}
+              onChange={handleInputChange}
+              placeholder="Enter email address"
+              prefix={<MailOutlined />}
+            />
+          </Form.Item>
+          <Form.Item style={{ marginBottom: 0, textAlign: 'right' }}>
+            <Space>
+              <Button 
+                onClick={() => {
+                  setIsModalOpen(false);
+                  resetForm();
+                }}
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="primary"
+                htmlType="submit"
+              >
+                {editingSupplier ? 'Update' : 'Add'} Supplier
+              </Button>
+            </Space>
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 };
 
-export default SupplierManagement; 
+export default SupplierManagement;

@@ -35,7 +35,7 @@ export interface WaiterTableStatus {
 export type WaiterTablesMap = Record<string, WaiterTableStatus>;
 
 export function useWaiter(systemId: string | number) {
-  const { callApi } = useApi<any>();
+  const { callApi } = useApi();
 
   // Orders state
   const [orders, setOrders] = useState<WaiterOrder[]>([]);
@@ -54,8 +54,9 @@ export function useWaiter(systemId: string | number) {
     try {
       const data = await callApi('get', `/restaurant/${systemId}/waiter/orders/`);
       setOrders(data || []);
-    } catch (err: any) {
-      setOrderError(err?.message || 'Failed to fetch orders');
+      throw new Error('Failed to fetch orders');
+    } catch (err) {
+      setOrderError(err as string);
       setOrders([]);
     } finally {
       setOrderLoading(false);
@@ -69,8 +70,8 @@ export function useWaiter(systemId: string | number) {
     try {
       const data = await callApi('get', `/restaurant/${systemId}/waiter/orders/tables/`);
       setTables(data || {});
-    } catch (err: any) {
-      setTablesError(err?.message || 'Failed to fetch tables');
+    } catch (err) {
+      setTablesError(err as string);
       setTables({});
     } finally {
       setTablesLoading(false);

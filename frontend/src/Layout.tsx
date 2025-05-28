@@ -1,4 +1,4 @@
-import { Navigate, Outlet, useNavigate } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import { Sidebar } from "./components/Sidebar";
 import { useEffect } from "react";
@@ -13,7 +13,6 @@ const Layout = () => {
   const loaded = useSelector((state: RootState) => state.permissions.loaded);
   const profile = useSelector((state: RootState) => state.profile.profile);
   const { loading, callApi } = useApi();
-  const navigate = useNavigate();
 
   useEffect(() => {
     if (!profile) {

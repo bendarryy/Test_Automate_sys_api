@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Modal, Input, Space, Tag, Spin, Table, Upload, message, Select, Popover, Typography } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
+import Header from '../../components/Header';
 import { Key } from 'antd/es/table/interface';
 import { useGetMenu } from '../../hooks/useGetMenu';
 import { useSelectedSystemId } from '../../hooks/useSelectedSystemId';
@@ -32,6 +33,7 @@ const MenuManagementPage: React.FC<MenuManagementProps> = () => {
   const [formData, setFormData] = useState(initialItem);
   const [editItem, setEditItem] = useState<MenuItem | null>(null);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [searchText, setSearchText] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -282,28 +284,59 @@ const MenuManagementPage: React.FC<MenuManagementProps> = () => {
     },
   ];
 
-  const filteredItems = selectedCategories.length > 0
-    ? items.filter(item => selectedCategories.includes(item.category))
-    : items;
+  // Filter items based on selected categories and search text
+  const filteredItems = React.useMemo(() => {
+    let filtered = items;
+    
+    // Filter by categories if any are selected
+    if (selectedCategories.length > 0) {
+      filtered = filtered.filter(item => selectedCategories.includes(item.category));
+    }
+    
+    // Filter by search text if present
+    if (searchText) {
+      const lowerSearchText = searchText.toLowerCase();
+      filtered = filtered.filter(item => 
+        item.name.toLowerCase().includes(lowerSearchText) ||
+        item.description.toLowerCase().includes(lowerSearchText) ||
+        item.category.toLowerCase().includes(lowerSearchText)
+      );
+    }
+    
+    return filtered;
+  }, [items, selectedCategories, searchText]);
 
   return (
     <div style={{ padding: 24 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <h2>Management Menu</h2>
-        <Space>
-          <Select
-            mode="multiple"
-            style={{ width: 300 }}
-            placeholder="Select Categories"
-            value={selectedCategories}
-            onChange={setSelectedCategories}
-            options={categories.map(cat => ({ label: cat, value: cat }))}
-            loading={loading}
-          />
-          <Button type="primary" onClick={handleAddClick}>
-            Add Item
-          </Button>
-        </Space>
+      <Header 
+        title="Menu Management"
+        breadcrumbs={[
+          { title: 'Restaurant', path: '/restaurant' },
+          { title: 'Menu' }
+        ]}
+        actions={
+          <Space>
+            <Input.Search
+              placeholder="Search items"
+              onSearch={value => setSearchText(value)}
+              style={{ width: 200 }}
+            />
+            <Button type="primary" onClick={handleAddClick} icon={<PlusOutlined />}>
+              Add Item
+            </Button>
+          </Space>
+        }
+      />
+      <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', marginBottom: 16, marginTop: 16 }}>
+        <Select
+          mode="multiple"
+          style={{ width: 300 }}
+          placeholder="Filter by Categories"
+          value={selectedCategories}
+          onChange={setSelectedCategories}
+          options={categories.map(cat => ({ label: cat, value: cat }))}
+          loading={loading}
+        />
       </div>
 
       {loading ? (

@@ -2,6 +2,7 @@ import { Drawer, Badge } from "antd";
 import ProductsSection from "../../components/ProductSelection";
 import { ShoppingCartOutlined } from "@ant-design/icons";
 import { useState } from "react";
+import Header from "../../components/Header";
 import OrdersSection from "../../components/BillSection";
 import { useSelector } from "react-redux";
 import { RootState } from "../../store";
@@ -12,7 +13,14 @@ const HomePage = () => {
 
   return (
     <main>
-      <div style={{ height: 'calc(100vh - 64px)' }}>
+      <Header
+        title="Restaurant Dashboard"
+        breadcrumbs={[
+          { title: 'Restaurant', path: '/restaurant' },
+          { title: 'Dashboard' }
+        ]}
+      />
+      <div style={{ height: 'calc(100vh - 120px)' }}>
         <div style={{ flex: 2, width: '100%' }}>
           <ProductsSection />
         </div>

@@ -1,9 +1,15 @@
-import React from 'react'
+import React from 'react';
+import Header from '../../components/Header';
 
 const HomePage = () => {
   return (
     <div>
-      <h1>Supermarket Page</h1>
+      <Header 
+        title="Supermarket Dashboard" 
+        breadcrumbs={[
+          { title: 'Supermarket' }
+        ]}
+      />
     </div>
   )
 }

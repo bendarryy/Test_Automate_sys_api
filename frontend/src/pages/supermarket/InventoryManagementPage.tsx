@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSupermarketInventory } from '../../hooks/useSupermarketInventory';
 import { useInventoryTable } from '../../hooks/useInventoryTable';
 import { getInventoryTableColumns } from '../../components/InventoryTableColumns';
+import Header from '../../components/Header';
 import {
   Table,
   Button,
@@ -46,12 +47,13 @@ const InventoryManagementPage = () => {
     data: products
   } = useSupermarketInventory(system_id);
 
-  const { form, editingId, handleEdit, handleCancel: handleCancelEdit } = useInventoryTable();
+  const [form] = Form.useForm();
+  const { editingId, handleEdit, handleCancel: handleCancelEdit } = useInventoryTable(form);
 
   const [expiringProducts, setExpiringProducts] = useState<Product[]>([]);
   const [lowStockProducts, setLowStockProducts] = useState<Product[]>([]);
   const [stockHistory, setStockHistory] = useState<StockHistoryItem[]>([]);
-  const [activeTab, setActiveTab] = useState('1');
+  const [activeKey, setActiveKey] = useState('1');
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [newProduct, setNewProduct] = useState({
     name: '',
@@ -63,59 +65,65 @@ const InventoryManagementPage = () => {
   const fetchProducts = useCallback(async () => {
     try {
       await getProducts();
-    } catch {
-      message.error('Failed to fetch products');
+    } catch (err) {
+      message.error(`Failed to fetch products: ${err}`);
     }
   }, []);
 
   useEffect(() => {
     fetchProducts();
-  }, [fetchProducts]);
+  }, []);
 
-  const handleSave = async (id: string) => {
+  const handleSave = useCallback((id: string) => {
     try {
       const values = form.getFieldsValue();
-      await updateProduct(id, {
+      updateProduct(id, {
         ...values,
         expiry_date: dayjs(values.expiry_date).format('YYYY-MM-DD')
+      }).then(() => {
+        handleCancelEdit();
+        message.success('Product updated successfully');
+        fetchProducts();
+      }).catch(() => {
+        message.error('Failed to update product');
       });
-      handleCancelEdit();
-      message.success('Product updated successfully');
-      fetchProducts();
     } catch {
       message.error('Failed to update product');
     }
-  };
+  }, [form, updateProduct, handleCancelEdit, fetchProducts]);
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = useCallback((id: string) => {
     try {
-      await deleteProduct(id);
-      message.success('Product deleted successfully');
-      fetchProducts();
+      deleteProduct(id).then(() => {
+        message.success('Product deleted successfully');
+        fetchProducts();
+      }).catch(() => {
+        message.error('Failed to delete product');
+      });
     } catch {
-      message.error('Delete failed');
+      message.error('Failed to delete product');
     }
-  };
+  }, [deleteProduct, fetchProducts]);
 
-  const handleGetExpiringSoon = async () => {
+  const handleGetExpiringSoon = useCallback(async () => {
     try {
       const data = await getExpiringSoonProducts();
       setExpiringProducts(data);
-    } catch {
-      message.error('Failed to load expiring products');
+    } catch (err) {
+      message.error(`Failed to load expiring products: ${err}`);
     }
-  };
+  }, [getExpiringSoonProducts]);
 
-  const handleGetLowStock = async () => {
+  const handleGetLowStock = useCallback(async () => {
     try {
       const data = await getLowStockProducts();
       setLowStockProducts(data);
-    } catch {
-      message.error('Failed to load low stock products');
+    } catch (err) {
+      message.error(`Failed to load low stock products: ${err}`);
     }
-  };
+  }, [getLowStockProducts]);
 
-  const handleGetStockHistory = async () => {
+  const handleGetStockHistory = useCallback(async () => {
     try {
       const response = await getStockHistory();
       if (Array.isArray(response)) {
@@ -123,26 +131,24 @@ const InventoryManagementPage = () => {
       } else {
         message.error('Invalid stock history data format');
       }
-    } catch {
-      message.error('Failed to load stock history');
+    } catch (err) {
+      message.error(`Failed to load stock history: ${err}`);
     }
-  };
+  }, [getStockHistory]);
 
-  const handleRefreshAllProducts = async () => {
+  const handleRefreshAllProducts = useCallback(async () => {
     try {
       await fetchProducts();
       message.success('Products refreshed successfully');
-    } catch {
-      message.error('Failed to refresh products');
+    } catch (err) {
+      message.error(`Failed to refresh products: ${err}`);
     }
-  };
+  }, [fetchProducts]);
 
-  const handleTabChange = (key: string) => {
-    setActiveTab(key);
-    
-    // Auto-refresh when switching tabs
-    switch(key) {
-      case '1': 
+  const handleTabChange = useCallback((key: string) => {
+    setActiveKey(key);
+    switch (key) {
+      case '1':
         fetchProducts();
         break;
       case '2':
@@ -155,7 +161,7 @@ const InventoryManagementPage = () => {
         handleGetStockHistory();
         break;
     }
-  };
+  }, [setActiveKey, fetchProducts, handleGetExpiringSoon, handleGetLowStock, handleGetStockHistory]);
 
   const showModal = () => {
     setIsModalVisible(true);
@@ -178,19 +184,21 @@ const InventoryManagementPage = () => {
 
   type SafeData<T> = T[];
 
-  const safeData = <T,>(data: SafeData<T> | unknown): SafeData<T> => {
+  const safeData = useCallback(<T,>(data: SafeData<T> | unknown): SafeData<T> => {
     return Array.isArray(data) ? data : [];
-  };
+  }, []);
 
-  const columns = getInventoryTableColumns({
+  // Memoize columns to avoid unnecessary re-renders
+  const columns = useMemo(() => getInventoryTableColumns({
     editingId,
     handleEdit,
     handleDelete,
     handleSave,
     handleCancel: handleCancelEdit
-  });
+  }), [editingId, handleEdit, handleCancelEdit, handleDelete, handleSave]);
 
-  const tabItems = [
+  // Memoize tab items to avoid expensive re-renders
+  const tabItems = useMemo(() => [
     {
       key: '1',
       label: 'All Products',
@@ -211,14 +219,19 @@ const InventoryManagementPage = () => {
             </Button>
           </Space>
           
-          <Form form={form}>
-            <Table 
+          <Table 
               columns={columns} 
               dataSource={safeData<Product>(products)} 
               loading={loading}
               rowKey="id"
+              pagination={{ 
+                pageSize: 10,
+                showSizeChanger: false,
+                position: ['bottomCenter']
+              }}
+              size="small"
+              scroll={{ y: 400 }}
             />
-          </Form>
         </Space>
       )
     },
@@ -228,7 +241,20 @@ const InventoryManagementPage = () => {
       children: (
         <Space direction="vertical" style={{ width: '100%' }}>
           <Button onClick={handleGetExpiringSoon}>Refresh</Button>
-          <Table columns={columns} dataSource={safeData<Product>(expiringProducts)} loading={loading} rowKey="id" />
+          <Table 
+            columns={columns} 
+            dataSource={safeData<Product>(expiringProducts)} 
+            loading={loading} 
+            rowKey="id" 
+            pagination={{ 
+              pageSize: 10,
+              showSizeChanger: false,
+              position: ['bottomCenter']
+            }}
+            size="small"
+            scroll={{ y: 400 }}
+            virtual={true}
+          />
         </Space>
       )
     },
@@ -238,7 +264,17 @@ const InventoryManagementPage = () => {
       children: (
         <Space direction="vertical" style={{ width: '100%' }}>
           <Button onClick={handleGetLowStock}>Refresh</Button>
-          <Table columns={columns} dataSource={safeData<Product>(lowStockProducts)} loading={loading} rowKey="id" />
+          <Table 
+            columns={columns} 
+            dataSource={safeData<Product>(lowStockProducts)} 
+            loading={loading} 
+            rowKey="id" 
+            pagination={{ 
+              pageSize: 10,
+              showSizeChanger: false,
+              position: ['bottomCenter']
+            }}
+          />
         </Space>
       )
     },
@@ -257,25 +293,54 @@ const InventoryManagementPage = () => {
             dataSource={safeData<StockHistoryItem>(stockHistory)} 
             loading={loading} 
             rowKey="date"
+            pagination={{ 
+              pageSize: 10,
+              showSizeChanger: false,
+              position: ['bottomCenter']
+            }}
           />
         </Space>
       )
     }
-  ];
+  ], [columns, products, expiringProducts, lowStockProducts, stockHistory, loading, handleRefreshAllProducts, handleGetExpiringSoon, handleGetLowStock, handleGetStockHistory, safeData]);
 
   if (error) {
     return <div>Error: {error}</div>;
   }
 
   return (
-    <div style={{ padding: '20px' }}>
+    <div className="container-fluid">
+      <Header 
+        title="Inventory Management"
+        breadcrumbs={[
+          { title: 'Supermarket', path: '/supermarket' },
+          { title: 'Inventory' }
+        ]}
+        actions={
+          <Button 
+            type="primary" 
+            onClick={showModal}
+          >
+            Add Product
+          </Button>
+        }
+      />
+      <Form form={form} component={false}>
+        <Tabs 
+          activeKey={activeKey}
+          onChange={handleTabChange}
+          items={tabItems} 
+          style={{ width: '100%' }} 
+        />
+      </Form>
+
       <Modal 
         title="Add New Product" 
-        visible={isModalVisible} 
+        open={isModalVisible} 
         onOk={handleOk}
         onCancel={handleCancel}
       >
-        <Form layout="vertical">
+        <Form layout="vertical" form={form}>
           <Form.Item label="Product Name">
             <Input 
               value={newProduct.name}
@@ -305,13 +370,8 @@ const InventoryManagementPage = () => {
           </Form.Item>
         </Form>
       </Modal>
-      
-      <Tabs 
-        defaultActiveKey="1" 
-        activeKey={activeTab}
-        onChange={handleTabChange}
-        items={tabItems} 
-      />
+
+      {/* Button moved to header actions */}
     </div>
   );
 };

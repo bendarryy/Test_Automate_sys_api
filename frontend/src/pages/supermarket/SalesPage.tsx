@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Drawer, Badge, Button, message } from 'antd';
-import { ShoppingCartOutlined, PrinterOutlined } from '@ant-design/icons';
+import { ShoppingCartOutlined, PrinterOutlined, PlusOutlined } from '@ant-design/icons';
+import Header from '../../components/Header';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../store';
 import { SalesProductSelection } from '../../components/SalesProductSelection';
@@ -61,9 +62,25 @@ export const SalesPage = () => {
 
   return (
     <main>
+      <Header
+        title="Sales Management"
+        breadcrumbs={[
+          { title: 'Supermarket', path: '/supermarket' },
+          { title: 'Sales' }
+        ]}
+        actions={
+          <Button 
+            type="primary" 
+            icon={<PlusOutlined />} 
+            onClick={handleNewSale}
+          >
+            New Sale
+          </Button>
+        }
+      />
       <div style={{ 
         display: 'flex', 
-        height: 'calc(100vh - 64px)',
+        height: 'calc(100vh - 120px)',
         padding: '16px'
       }}>
         <div style={{ 

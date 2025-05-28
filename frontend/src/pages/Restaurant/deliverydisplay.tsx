@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import { useApi } from '../../hooks/useApi';
-import { Button, Card, Spin, Empty, message, Row, Col, Tag, Space } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Card, Row, Col, Button, Space, message, Tag, Spin, Empty } from 'antd';
+import Header from '../../components/Header';
 import { CheckOutlined, CarOutlined } from '@ant-design/icons';
+import { useApi } from '../../hooks/useApi';
 
 const SYSTEM_ID = localStorage.getItem('selectedSystemId') ?? '';
 
@@ -78,25 +79,27 @@ const DeliveryDisplay: React.FC = () => {
     }
   };
 
-  let readyOrders = orders?.filter(o => o.status === 'ready') || [];
-  let outForDeliveryOrders = orders?.filter(o => o.status === 'out_for_delivery') || [];
-  let completedOrders = orders?.filter(o => o.status === 'completed') || [];
+  const readyOrders = orders?.filter(o => o.status === 'ready') || [];
+  const outForDeliveryOrders = orders?.filter(o => o.status === 'out_for_delivery') || [];
+  const completedOrders = orders?.filter(o => o.status === 'completed') || [];
 
-  return (
+  return (            
     <div style={{ maxWidth: 1200, margin: '0 auto', padding: 24 }}>
-      <Row justify="space-between" align="middle" style={{ marginBottom: 32 }} gutter={[16, 16]}>
-        <Col>
-          <h1 style={{ margin: 0, fontWeight: 700, fontSize: 32 }}>Delivery Display</h1>
-        </Col>
-        <Col>
+      <Header 
+        title="Delivery Display"
+        breadcrumbs={[
+          { title: 'Restaurant', path: '/restaurant' },
+          { title: 'Delivery' }
+        ]}
+        actions={
           <Space size="large">
             <Tag color="blue">Ready: {readyOrders.length}</Tag>
             <Tag color="orange">Out: {outForDeliveryOrders.length}</Tag>
             <Tag color="green">Completed: {completedOrders.length}</Tag>
             <Button icon={<CarOutlined />} onClick={fetchOrders} size="large">Refresh</Button>
           </Space>
-        </Col>
-      </Row>
+        }
+      />
       {loading && <Spin size="large" style={{ display: 'block', margin: '40px auto' }} />}
       {error && <Empty description={error} style={{ marginTop: 32 }} />}
       {!loading && !error && (

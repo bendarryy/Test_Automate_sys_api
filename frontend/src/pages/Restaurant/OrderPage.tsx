@@ -1,7 +1,8 @@
 import React from 'react';
 import { Button, Select, notification, Space, Input, Tag } from 'antd';
-import { DeleteOutlined, SearchOutlined } from '@ant-design/icons';
+import { DeleteOutlined, SearchOutlined, ReloadOutlined } from '@ant-design/icons';
 import { useOrders } from '../../hooks/useOrders';
+import Header from '../../components/Header';
 import { useNavigate } from 'react-router-dom';
 import { ReusableTable } from '../../components/ReusableTable';
 import type { ColumnsType } from 'antd/es/table';
@@ -42,6 +43,8 @@ const OrderPage: React.FC = () => {
   const { data: orders = [], loading, getOrders, updateOrderStatus, deleteOrder } = useOrders(systemId);
   const navigate = useNavigate();
   const [selectedRowKeys, setSelectedRowKeys] = React.useState<string[]>([]);
+  const [searchText, setSearchText] = React.useState('');
+  const [filteredOrders, setFilteredOrders] = React.useState<Order[]>([]);
 
   const handleBulkDelete = async () => {
     try {
@@ -63,6 +66,33 @@ const OrderPage: React.FC = () => {
   React.useEffect(() => {
     getOrders();
   }, [systemId]);
+  
+  // Update filtered orders when orders or search text changes
+  React.useEffect(() => {
+    // Set initial filtered orders from orders data
+    const ordersList = Array.isArray(orders) ? orders : [];
+    
+    if (!searchText) {
+      setFilteredOrders(ordersList as Order[]);
+      return;
+    }
+    
+    const filtered = ordersList.filter((order: Order) => {
+      const searchLower = searchText.toLowerCase();
+      return (
+        String(order.id).includes(searchLower) ||
+        (order.customer_name && order.customer_name.toLowerCase().includes(searchLower)) ||
+        (order.table_number && order.table_number.toLowerCase().includes(searchLower)) ||
+        order.status.toLowerCase().includes(searchLower)
+      );
+    });
+    
+    setFilteredOrders(filtered as Order[]);
+  }, [orders, searchText]);
+  
+  const handleSearch = (value: string) => {
+    setSearchText(value);
+  };
 
   const handleStatusChange = async (id: string, status: string) => {
     try {
@@ -173,7 +203,7 @@ const OrderPage: React.FC = () => {
     {
       title: 'Actions',
       key: 'actions',
-      render: (text: string, record: Order) => (
+      render: (record: Order) => (
         <Space size="middle">
           <Select
             value={record.status}
@@ -217,15 +247,37 @@ const OrderPage: React.FC = () => {
   );
 
   return (
-    <ReusableTable<Order>
-      data={orders as Order[]}
-      loading={loading}
-      columns={columns}
-      rowKey="id"
-      onRowSelectionChange={(keys: React.Key[]) => setSelectedRowKeys(keys as string[])}
-      selectedRowKeys={selectedRowKeys}
-      extraActions={extraActions}
-    />
+    <div style={{ padding: 20 }}>
+      <Header
+        title="Order Management"
+        breadcrumbs={[
+          { title: 'Restaurant', path: '/restaurant' },
+          { title: 'Orders' }
+        ]}
+        actions={
+          <Button 
+            icon={<ReloadOutlined />} 
+            onClick={getOrders}
+          >
+            Refresh Orders
+          </Button>
+        }
+        showSearch={true}
+        onSearch={handleSearch}
+        searchPlaceholder="Search orders..."
+      />
+      <div style={{ marginTop: 16 }}>
+        <ReusableTable<Order>
+          data={filteredOrders}
+          loading={loading}
+          columns={columns}
+          rowKey="id"
+          onRowSelectionChange={(keys: React.Key[]) => setSelectedRowKeys(keys as string[])} 
+          selectedRowKeys={selectedRowKeys}
+          extraActions={extraActions}
+        />
+      </div>
+    </div>
   );
 };
 

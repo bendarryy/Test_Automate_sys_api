@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 // import GridScrollX from "./GridScrollX"; // Removed unused import
 // import styles from "../styles/ProductsSection.module.css"; // Removed unused import
 import { useDispatch, useSelector } from "react-redux";

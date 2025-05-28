@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useApi } from '../../hooks/useApi';
 import { useEmployeeApi } from '../../hooks/useEmployeeApi';
+import Header from '../../components/Header';
 import {
   Table,
   Button,
@@ -184,18 +185,30 @@ const EmployeesPage: React.FC = () => {
   ];
 
   return (
-    <div style={{ padding: '24px' }}>
-      <Card>
-        <Space direction="vertical" size="large" style={{ width: '100%' }}>
+    <div style={{ padding: 20 }}>
+      <Header
+        title="Employee Management"
+        breadcrumbs={[
+          { title: 'Restaurant', path: '/restaurant' },
+          { title: 'Employees' }
+        ]}
+        actions={
+          <Button
+            type="primary"
+            icon={<UserAddOutlined />}
+            onClick={() => {
+              setShowInviteModal(true);
+              inviteForm.resetFields();
+            }}
+          >
+            Invite Employee
+          </Button>
+        }
+      />
+      <Card style={{ marginBottom: 20, marginTop: 16 }}>
+        <Space direction="vertical" style={{ width: '100%' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Title level={2} style={{ margin: 0 }}>Employees</Title>
-            <Button
-              type="primary"
-              icon={<UserAddOutlined />}
-              onClick={() => setShowInviteModal(true)}
-            >
-              Add Employee
-            </Button>
+            <Title level={4} style={{ margin: 0 }}>Staff Directory</Title>
           </div>
 
           <Table

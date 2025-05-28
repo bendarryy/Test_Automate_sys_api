@@ -18,6 +18,7 @@ export default defineConfig({
   ],
   // تحسين الكاشينج للصور والملفات الثابتة
   build: {
+    outDir: 'dist',
     assetsInlineLimit: 4096, // الصور الأقل من 4KB ستُضمّن مباشرة
     rollupOptions: {
       output: {
@@ -45,7 +46,7 @@ export default defineConfig({
           proxy.on('proxyReq', (proxyReq) => {
             proxyReq.setHeader('Origin', 'http://127.0.0.1:5173'); // Ensure correct origin header
           });
-          proxy.on('proxyRes', (proxyRes, req, res) => {
+          proxy.on('proxyRes', (proxyRes, _req, res) => {
             const cookies = proxyRes.headers['set-cookie'];
             if (cookies) {
               res.setHeader('set-cookie', cookies);
@@ -55,4 +56,6 @@ export default defineConfig({
       },
     },
   },
+  preview: {
+  }
 })

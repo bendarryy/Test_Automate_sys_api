@@ -7,12 +7,12 @@ import {
   message, 
   Input, 
   InputNumber, 
-  DatePicker, 
-  Typography 
+  DatePicker 
 } from 'antd';
 import dayjs from 'dayjs';
+import Header from '../../components/Header';
 import type { ColumnsType } from 'antd/es/table';
-import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useSelectedSystemId } from '../../hooks/useSelectedSystemId';
 import { useApi } from '../../hooks/useApi';
 
@@ -228,23 +228,18 @@ const ProductsManagement: React.FC = () => {
 
   return (
     <div style={{ border: '1px solid #d9d9d9', borderRadius: 8, padding: 24 }}>
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center', 
-        marginBottom: 16 
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <SearchOutlined style={{ fontSize: 20, marginRight: 8, color: '#1890ff' }} />
-          <Typography.Title level={4} style={{ margin: 0 }}>
-            Products Management
-          </Typography.Title>
-        </div>
-        
-        <Button type="primary" icon={<PlusOutlined />} onClick={handleAddClick}>
-          Add Product
-        </Button>
-      </div>
+      <Header 
+        title="Products Management"
+        breadcrumbs={[
+          { title: 'Supermarket', path: '/supermarket' },
+          { title: 'Products' }
+        ]}
+        actions={
+          <Button type="primary" icon={<PlusOutlined />} onClick={handleAddClick}>
+            Add Product
+          </Button>
+        }
+      />
 
       {loading ? (
         <div>Loading products...</div>

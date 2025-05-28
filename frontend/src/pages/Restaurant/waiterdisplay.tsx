@@ -1,7 +1,8 @@
 import React, { useMemo } from 'react';
 import { useWaiter } from '../../hooks/useWaiter';
-import { Button, Tooltip, Empty, message, Statistic, Row, Col, Space, Modal } from 'antd';
+import { Button, Tooltip, Empty, message, Statistic, Space, Modal } from 'antd';
 import { ReloadOutlined } from '@ant-design/icons';
+import Header from '../../components/Header';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import OrderCard from '../../components/OrderCard';
 import { ClockCircleTwoTone, CheckCircleTwoTone } from '@ant-design/icons';
@@ -66,11 +67,13 @@ const WaiterDisplay: React.FC = () => {
 
   return (
     <div style={{ maxWidth: 1200, margin: '0 auto', padding: 24, height: '100%' }}>
-      <Row justify="space-between" align="middle" style={{ marginBottom: 32 }} gutter={[16, 16]}>
-        <Col>
-          <h1 style={{ margin: 0, fontWeight: 700, fontSize: 32 }}>Waiter Display</h1>
-        </Col>
-        <Col>
+      <Header 
+        title="Waiter Display"
+        breadcrumbs={[
+          { title: 'Restaurant', path: '/restaurant' },
+          { title: 'Waiter' }
+        ]}
+        actions={
           <Space size="large">
             <Statistic title="Ready Orders" value={readyOrders.length} valueStyle={{ color: '#1890ff' }} />
             <Statistic title="Served Orders" value={servedOrders.length} valueStyle={{ color: '#faad14' }} />
@@ -78,8 +81,8 @@ const WaiterDisplay: React.FC = () => {
               <Button icon={<ReloadOutlined />} onClick={fetchOrders} size="large" />
             </Tooltip>
           </Space>
-        </Col>
-      </Row>
+        }
+      />
 
       <div style={{ display: 'flex', gap: 24, height: 'calc(100% - 100px)', alignItems: 'start' }}>
         {/* قسم الطلبات الجاهزة - أفقي (75%) */}

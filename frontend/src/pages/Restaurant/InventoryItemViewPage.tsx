@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button, Form, Input, Spin } from 'antd';
+import Header from '../../components/Header';
 import { useInventory, InventoryItem } from '../../hooks/useInventory';
 import useHasPermission from '../../hooks/useHasPermission';
 
@@ -68,12 +69,18 @@ const InventoryItemViewPage: React.FC = () => {
   if (!item) return <div className="alert alert-danger">Item not found</div>;
 
   return (
-    <div className="container d-flex justify-content-center align-items-center min-vh-100">
-      <div className="card shadow rounded-4 p-4" style={{ maxWidth: 480, width: '100%' }}>
-        <div className="d-flex align-items-center mb-4 gap-2">
-          <i className="bi bi-box-seam-fill text-primary fs-3"></i>
-          <h3 className="mb-0 fw-bold flex-grow-1">Inventory Item Details</h3>
-        </div>
+    <div className="container">
+      <Header 
+        title="Inventory Item Details" 
+        showBackButton={true}
+        onBack={() => navigate(-1)}
+        actions={hasUpdatePermission && (
+          <Button type="primary" onClick={handleSave} disabled={saving}>
+            Save
+          </Button>
+        )}
+      />
+      <div className="card shadow rounded-4 p-4" style={{ maxWidth: 480, width: '100%', margin: '0 auto' }}>
         {error && <div className={`alert ${error === 'Saved!' ? 'alert-success' : 'alert-danger'} py-2 px-3`}>{error}</div>}
         <Form>
           <Form.Item label="Name">
@@ -89,14 +96,8 @@ const InventoryItemViewPage: React.FC = () => {
             <Input name="min_threshold" type="number" value={item.min_threshold ?? ''} onChange={handleChange} />
           </Form.Item>
           <div className="d-flex gap-2 justify-content-between">
-            <Button type="primary" onClick={e => { e.preventDefault(); handleSave(); }} disabled={saving} className="rounded-pill px-4 d-flex align-items-center gap-2 fw-bold shadow">
-              <i className="bi bi-save2"></i> Save
-            </Button>
-            <Button danger onClick={e => { e.preventDefault(); handleDelete(); }} disabled={saving} className="rounded-pill px-4 d-flex align-items-center gap-2 fw-bold shadow">
-              <i className="bi bi-trash3"></i> Delete
-            </Button>
-            <Button type="default" onClick={() => navigate(-1)} className="rounded-pill px-4 d-flex align-items-center gap-2 fw-bold shadow">
-              <i className="bi bi-arrow-left"></i> Back
+            <Button danger onClick={e => { e.preventDefault(); handleDelete(); }} disabled={saving}>
+              Delete
             </Button>
           </div>
         </Form>

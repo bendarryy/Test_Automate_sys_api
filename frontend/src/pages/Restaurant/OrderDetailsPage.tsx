@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { Card, Descriptions, Select, notification, Divider, List, Tag, Typography, Button, Input, InputNumber, Skeleton } from 'antd';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Card, Descriptions, Select, notification, Divider, List, Tag, Button, Input, InputNumber, Skeleton } from 'antd';
+import Header from '../../components/Header';
 import { useOrders } from '../../hooks/useOrders';
 import { useGetMenuList } from '../../hooks/useGetMenuList';
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 
 const { Option } = Select;
-const { Title } = Typography;
 
 type OrderStatus = 'pending' | 'preparing' | 'ready' | 'completed' | 'canceled';
 
@@ -20,7 +20,7 @@ const statusColors: Record<OrderStatus, string> = {
 
 interface Order {
   id: string;
-  customer_name: string;
+  customer_name?: string | null | undefined;
   table_number: string;
   waiter?: number;
   status: OrderStatus;  // This must match the OrderStatus type
@@ -41,6 +41,7 @@ interface Order {
 const OrderDetailsPage: React.FC = () => {
   const { orderId } = useParams<{ orderId: string }>();
   const systemId = localStorage.getItem('selectedSystemId') || '';
+  const navigate = useNavigate();
   const { data: order, loading, getOrderDetails, updateOrderStatus, updateOrder, createOrderItem, deleteOrderItem } = useOrders(systemId);
   const { menuItems, getMenu } = useGetMenuList(Number(systemId));
 
@@ -49,7 +50,7 @@ const OrderDetailsPage: React.FC = () => {
       getOrderDetails(orderId);
     }
     getMenu();
-  }, [orderId]);
+  }, [orderId, getOrderDetails, getMenu]);
 
   const handleStatusChange = async (status: string) => {
     if (!orderId) return;
@@ -122,7 +123,20 @@ const OrderDetailsPage: React.FC = () => {
 
   if (loading || !order) return (
     <div style={{ padding: '24px' }}>
-      <Card>
+      <Header
+        title="Order Details"
+        breadcrumbs={[
+          { title: 'Restaurant', path: '/restaurant' },
+          { title: 'Orders', path: '/restaurant/orders' },
+          { title: 'Loading...' }
+        ]}
+        actions={
+          <Button onClick={() => navigate('/restaurant/orders')}>
+            Back to Orders
+          </Button>
+        }
+      />
+      <Card style={{ marginTop: 16 }}>
         <Skeleton active paragraph={{ rows: 4 }} />
         <Divider />
         <Skeleton active paragraph={{ rows: 3 }} />
@@ -134,8 +148,29 @@ const OrderDetailsPage: React.FC = () => {
 
   return (
     <div style={{ padding: '24px' }}>
+      <Header
+        title={`Order #${order.id}`}
+        breadcrumbs={[
+          { title: 'Restaurant', path: '/restaurant' },
+          { title: 'Orders', path: '/restaurant/orders' },
+          { title: `Order #${order.id}` }
+        ]}
+        actions={
+          <Button onClick={() => navigate('/restaurant/orders')}>
+            Back to Orders
+          </Button>
+        }
+      />
       <Card 
-        title={<Title level={2}>Order #{order.id}</Title>} 
+        style={{ marginTop: 16 }}
+        title={
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Tag color={statusColors[order.status]} style={{ textTransform: 'capitalize', fontSize: 14 }}>
+              {order.status}
+            </Tag>
+            <Tag color="cyan">${order.total_price}</Tag>
+          </div>
+        }
         headStyle={{ borderBottom: 0 }}
       >
         <Descriptions bordered column={1}>
@@ -145,7 +180,7 @@ const OrderDetailsPage: React.FC = () => {
           <Descriptions.Item label="Customer">
             {isEditing ? (
               <Input 
-                value={editedData.customer_name} 
+                value={editedData.customer_name || ''} 
                 onChange={(e) => setEditedData({...editedData, customer_name: e.target.value})}
               />
             ) : order?.customer_name}
@@ -169,11 +204,6 @@ const OrderDetailsPage: React.FC = () => {
               ) : `Waiter #${order.waiter}`}
             </Descriptions.Item>
           )}
-          <Descriptions.Item label="Status">
-            <Tag color={statusColors[order.status]} style={{ textTransform: 'capitalize', fontSize: 14 }}>
-              {order.status}
-            </Tag>
-          </Descriptions.Item>
           <Descriptions.Item label="Date">{new Date(order.created_at).toLocaleString()}</Descriptions.Item>
         </Descriptions>
 

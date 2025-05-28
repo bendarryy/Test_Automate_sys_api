@@ -8,7 +8,7 @@ export interface MenuItem {
   category: string;
   is_available: boolean;
   description: string;
-  image?: string | null | File | RcFile;
+  image?: string | null | File;
 }
 
 // نوع طاولة المطعم
@@ -29,4 +29,4 @@ interface ApiError extends Error {
   };
 }
 
-export type { ApiError, MenuItem };
+export type { ApiError };

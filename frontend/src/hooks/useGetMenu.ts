@@ -57,14 +57,16 @@ const createEmojiSvg = (emoji: string): string => {
 
 interface MenuItem {
   id: number;
+
   name: string;
   description: string;
   price: number;
   cost: number | null;
   category: string;
-  image: string | null;
   is_available: boolean;
+  image?: string | null | File;
 }
+
 
 export const useGetMenu = (systemId: number) => {
   const { callApi, data, loading, error } = useApi<MenuItem[]>();

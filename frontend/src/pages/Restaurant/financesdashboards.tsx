@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import ReactApexChart from 'react-apexcharts';
 import '../../styles/financesdashboards.css';
 import { useApi } from '../../hooks/useApi';
+import Header from '../../components/Header';
+import { Button } from 'antd';
 
 interface ProfitSummary {
   day_profit: number;
@@ -334,23 +336,29 @@ const FinancialDashboard = () => {
 
   return (
     <div className="dashboard">
-      <div className="header">
-        <h1>Financial Dashboard</h1>
-        <div className="nav">
-          <button 
-            className={activeSection === 'overview' ? 'active' : ''} 
-            onClick={() => setActiveSection('overview')}
-          >
-            Overview
-          </button>
-          <button 
-            className={activeSection === 'analytics' ? 'active' : ''} 
-            onClick={() => setActiveSection('analytics')}
-          >
-            Analytics
-          </button>
-          <button className="export" onClick={handleExportReport}>Export Report</button>
-        </div>
+      <Header
+        title="Financial Dashboard"
+        breadcrumbs={[
+          { title: 'Restaurant', path: '/restaurant' },
+          { title: 'Finance' }
+        ]}
+        actions={
+          <Button type="primary" onClick={handleExportReport}>Export Report</Button>
+        }
+      />
+      <div className="nav" style={{ marginTop: '16px', marginBottom: '24px' }}>
+        <button 
+          className={activeSection === 'overview' ? 'active' : ''} 
+          onClick={() => setActiveSection('overview')}
+        >
+          Overview
+        </button>
+        <button 
+          className={activeSection === 'analytics' ? 'active' : ''} 
+          onClick={() => setActiveSection('analytics')}
+        >
+          Analytics
+        </button>
       </div>
 
       {activeSection === 'overview' && renderOverviewSection()}

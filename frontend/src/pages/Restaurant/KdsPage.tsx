@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useApi } from '../../hooks/useApi';
 import { useParams, Link, Navigate } from 'react-router-dom';
+import Header from '../../components/Header';
 import { Table, Tag, Button, Space, Card, Typography, Alert, Spin, Modal } from 'antd';
 import { 
   EyeOutlined, 
@@ -11,7 +12,7 @@ import {
 import KdsOrderDetails from './KdsOrderDetails';
 import useHasPermission from '../../hooks/useHasPermission';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 interface KitchenOrder {
   id: number;
@@ -152,15 +153,23 @@ const KdsPage: React.FC = () => {
 
   return (
     <>
-    <Card 
-      title={
-        <Space>
-          <DashboardOutlined />
-          <Title level={4} style={{ margin: 0 }}>Kitchen Display System</Title>
-        </Space>
-      }
-      style={{ margin: 24 }}
-    >
+    <Card style={{ margin: 24 }}>
+      <Header 
+        title="Kitchen Display System"
+        breadcrumbs={[
+          { title: 'Restaurant', path: '/restaurant' },
+          { title: 'KDS' }
+        ]}
+        actions={
+          <Button 
+            type="primary" 
+            onClick={fetchOrders} 
+            icon={<DashboardOutlined />}
+          >
+            Refresh
+          </Button>
+        }
+      />
       {loading && <Spin size="large" className="center-spinner" />}
       {error && <Alert message={error} type="error" showIcon />}
       

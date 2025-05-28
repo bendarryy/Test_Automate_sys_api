@@ -1,9 +1,8 @@
 import React from 'react';
-import { Card, Typography, Descriptions, Tag, Spin, Alert } from 'antd';
+import { Card, Descriptions, Tag, Spin, Alert } from 'antd';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
-
-const { Title } = Typography;
+import Header from '../components/Header';
 
 
 
@@ -49,8 +48,13 @@ const Profile: React.FC = () => {
 
   return (
     <div style={{ padding: '24px', maxWidth: '800px', margin: '0 auto' }}>
+      <Header 
+        title="Profile Information"
+        breadcrumbs={[
+          { title: 'Profile' }
+        ]}
+      />
       <Card>
-        <Title level={2} style={{ marginBottom: '24px' }}>Profile Information</Title>
         
         <Descriptions bordered column={1}>
           <Descriptions.Item label="Username">{profileData.user.username}</Descriptions.Item>

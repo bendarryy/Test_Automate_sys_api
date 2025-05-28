@@ -1,19 +1,20 @@
 import { useState } from 'react';
-import { Form } from 'antd';
+import { FormInstance } from 'antd';
 import dayjs from 'dayjs';
 import { Product } from '../pages/supermarket/InventoryManagementPage';
 
-export const useInventoryTable = () => {
-  const [form] = Form.useForm();
+export const useInventoryTable = (form?: FormInstance) => {
   const [editingId, setEditingId] = useState<string | null>(null);
 
   const handleEdit = (record: Product) => {
-    form.setFieldsValue({
-      name: record.name,
-      price: record.price,
-      stock_quantity: record.stock_quantity,
-      expiry_date: dayjs(record.expiry_date)
-    });
+    if (form) {
+      form.setFieldsValue({
+        name: record.name,
+        price: record.price,
+        stock_quantity: record.stock_quantity,
+        expiry_date: record.expiry_date ? dayjs(record.expiry_date) : undefined
+      });
+    }
     setEditingId(record.id);
   };
 
@@ -22,7 +23,6 @@ export const useInventoryTable = () => {
   };
 
   return {
-    form,
     editingId,
     handleEdit,
     handleCancel
