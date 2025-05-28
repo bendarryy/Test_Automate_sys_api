@@ -76,8 +76,6 @@ GET /api/systems/{system_id}/goods-receiving/by-purchase-order/?purchase_order_i
 
 ## Example Usage
 
-
-
 ### Create a Purchase Order
 
 ```bash
