@@ -111,10 +111,7 @@ def login_user(request):
 	"username":  "user80",
 	"password": "password"   
 	}`
- Endpoints: 
- `/api/core/5/employees/`
-  
- """
+    """
     data = request.data
     username = data.get("username")
     password = data.get("password")
@@ -130,7 +127,7 @@ def login_user(request):
         return Response({"message": "Login successful"})
     else:
         return Response(
-            {"error": "Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST
+            {"error": "Invalid Username or Password"}, status=status.HTTP_400_BAD_REQUEST
         )
 
 
