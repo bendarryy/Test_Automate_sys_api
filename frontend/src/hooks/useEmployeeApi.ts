@@ -1,3 +1,4 @@
+import { useCallback, useMemo } from 'react';
 import { useApi } from './useApi';
 
 interface EmployeeData {
@@ -8,26 +9,40 @@ interface EmployeeData {
 }
 
 export const useEmployeeApi = () => {
-  const api = useApi();
+  const { callApi, data, loading, error, clearCache } = useApi<EmployeeData[]>();
+  const systemId = localStorage.getItem("selectedSystemId");
 
-  // Get employee by ID
-  const  systemId  = localStorage.getItem("selectedSystemId");
+  const getEmployee = useCallback(async (id: string | number) => {
+    return await callApi<EmployeeData>('get', `/core/systems/${systemId}/employees/${id}/`);
+  }, [systemId, callApi]);
 
-  const getEmployee = (id: string | number) =>
-    api.callApi('get', `/core/systems/${systemId}/employees/${id}/`);
+  const updateEmployee = useCallback(async (id: string | number, data: EmployeeData) => {
+    const result = await callApi<EmployeeData>('put', `/core/systems/${systemId}/employees/${id}/`, data);
+    clearCache(`/core/systems/${systemId}/employees/${id}/`);
+    clearCache(`/core/systems/${systemId}/employees/`);
+    return result;
+  }, [systemId, callApi, clearCache]);
 
-  // Update employee by ID
-  const updateEmployee = (id: string | number, data: EmployeeData) =>
-    api.callApi('put', `/core/systems/${systemId}/employees/${id}/`, data);
+  const deleteEmployee = useCallback(async (id: string | number) => {
+    const result = await callApi('delete', `/core/systems/${systemId}/employees/${id}/`);
+    clearCache(`/core/systems/${systemId}/employees/${id}/`);
+    clearCache(`/core/systems/${systemId}/employees/`);
+    return result;
+  }, [systemId, callApi, clearCache]);
 
-  // Delete employee by ID
-  const deleteEmployee = (id: string | number) =>
-    api.callApi('delete', `/core/systems/${systemId}/employees/${id}/`);
-
-  return {
-    ...api,
+  return useMemo(() => ({
+    data,
+    loading,
+    error,
     getEmployee,
     updateEmployee,
-    deleteEmployee,
-  };
+    deleteEmployee
+  }), [
+    data,
+    loading,
+    error,
+    getEmployee,
+    updateEmployee,
+    deleteEmployee
+  ]);
 };

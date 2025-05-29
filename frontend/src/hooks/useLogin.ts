@@ -7,8 +7,12 @@ interface LoginPayload {
   password: string;
 }
 
+interface LoginResponse {
+  token: string;
+}
+
 export const useLogin = () => {
-  const { callApi, data, loading, error } = useApi();
+  const { callApi, data, loading, error } = useApi<LoginResponse>();
 
   const login = async (payload: LoginPayload) => {
     const response = await callApi('post', '/core/login/', payload);

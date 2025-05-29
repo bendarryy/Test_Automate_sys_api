@@ -3,7 +3,7 @@ import { Navigate } from 'react-router-dom';
 import useHasPermission from '../hooks/useHasPermission';
 
 interface ProtectedRouteProps {
-  permission: string;
+  permission: string | string[];
   children: React.ReactElement;
 }
 

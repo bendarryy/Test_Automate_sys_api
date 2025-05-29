@@ -8,7 +8,6 @@ import { Table } from '../types';
 
 const { Text } = Typography;
 const { Search } = Input;
-const { TabPane } = Tabs;
 
 const tables: Table[] = [
   {
@@ -226,18 +225,17 @@ const TablesSection: React.FC<TablesSectionProps> = ({ onClose, orderType = 'in_
     </Col>
   );
 
-  const renderContent = () => (
-    <div style={{ padding: '16px' }}>
-      <Tabs defaultActiveKey="1">
-        <TabPane 
-          tab={
-            <Space>
-              <MdTableRestaurant />
-              <span>All Tables</span>
-            </Space>
-          } 
-          key="1"
-        >
+  const items = [
+    {
+      key: '1',
+      label: (
+        <Space>
+          <MdTableRestaurant />
+          <span>All Tables</span>
+        </Space>
+      ),
+      children: (
+        <>
           <div style={{ marginBottom: '16px' }}>
             <Row gutter={[16, 16]}>
               <Col xs={24} sm={12} md={8}>
@@ -279,40 +277,47 @@ const TablesSection: React.FC<TablesSectionProps> = ({ onClose, orderType = 'in_
                 />
               </Col>
             </Row>
-              </div>
-
+          </div>
           <Row gutter={[16, 16]}>
             {filteredTables.map(renderTableCard)}
           </Row>
-        </TabPane>
-        <TabPane 
-          tab={
-            <Space>
-              <MdEventSeat />
-              <span>Reservations</span>
-            </Space>
-          } 
-          key="2"
-        >
-          <Row gutter={[16, 16]}>
-            {tables.filter(t => t.status === 'reserved').map(renderTableCard)}
-          </Row>
-        </TabPane>
-        <TabPane 
-          tab={
-            <Space>
-              <MdEventAvailable />
-              <span>Occupied</span>
-            </Space>
-          } 
-          key="3"
-        >
-          <Row gutter={[16, 16]}>
-            {tables.filter(t => t.status === 'occupied').map(renderTableCard)}
-          </Row>
-        </TabPane>
-      </Tabs>
-            </div>
+        </>
+      ),
+    },
+    {
+      key: '2',
+      label: (
+        <Space>
+          <MdEventSeat />
+          <span>Reservations</span>
+        </Space>
+      ),
+      children: (
+        <Row gutter={[16, 16]}>
+          {tables.filter(t => t.status === 'reserved').map(renderTableCard)}
+        </Row>
+      ),
+    },
+    {
+      key: '3',
+      label: (
+        <Space>
+          <MdEventAvailable />
+          <span>Occupied</span>
+        </Space>
+      ),
+      children: (
+        <Row gutter={[16, 16]}>
+          {tables.filter(t => t.status === 'occupied').map(renderTableCard)}
+        </Row>
+      ),
+    },
+  ];
+
+  const renderContent = () => (
+    <div style={{ padding: '16px' }}>
+      <Tabs defaultActiveKey="1" items={items} />
+    </div>
   );
 
   return (

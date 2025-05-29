@@ -3,6 +3,7 @@ import ReactApexChart from 'react-apexcharts';
 import '../../styles/financesdashboards.css';
 import { useApi } from '../../hooks/useApi';
 import Header from '../../components/Header';
+import LoadingSpinner from '../../components/LoadingSpinner';
 import { Button } from 'antd';
 
 interface ProfitSummary {
@@ -331,7 +332,7 @@ const FinancialDashboard = () => {
     </div>
   );
 
-  if (loading) return <div className="dashboard"><div className="loading">Loading...</div></div>;
+  if (loading) return <div className="dashboard"><LoadingSpinner /></div>;
   if (error) return <div className="dashboard"><div className="error">{error}</div></div>;
 
   return (

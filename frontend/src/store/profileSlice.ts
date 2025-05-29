@@ -7,6 +7,7 @@ export interface Profile {
     first_name: string;
     last_name: string;
     date_joined: string;
+    phone: string;
   };
   role: string;
   systems: { name: string; category: string; id: number }[] | number;

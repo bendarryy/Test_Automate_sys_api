@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useApi } from '../../hooks/useApi';
 import { useEmployeeApi } from '../../hooks/useEmployeeApi';
 import Header from '../../components/Header';
+import LoadingSpinner from '../../components/LoadingSpinner';
 import {
   Table,
   Button,
@@ -230,7 +231,7 @@ const EmployeesPage: React.FC = () => {
         width={600}
       >
         {modalLoading ? (
-          <div style={{ textAlign: 'center', padding: '24px' }}>Loading...</div>
+          <LoadingSpinner />
         ) : (
           <Form
             form={viewForm}

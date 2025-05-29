@@ -3,10 +3,11 @@ import React, { Suspense, lazy } from "react";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import '../styles/error.css';
 import { authRoutes } from '../config/navigation.config';
-import { SalesPage } from "../pages/supermarket/SalesPage";
+import {SalesPage}  from "../pages/supermarket/SalesPage";
 import ProtectedRoute from '../components/ProtectedRoute';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 
 function RootUrlPage() {
@@ -33,7 +34,7 @@ const OrdersPage = lazy(() => import("../pages/Restaurant/OrderPage"));
 const OrderDetailsPage = lazy(() => import("../pages/Restaurant/OrderDetailsPage"));
 const MenuManagement = lazy(() => import("../pages/Restaurant/MenuManagementPage"));
 const InventoryManagementPage = lazy(() => import("../pages/Restaurant/InventoryManagementPage"));
-const InventoryManagementSMPage = lazy(() => import("../pages/supermarket/InventoryManagementPage"));
+const InventoryManagementSMPage = lazy(() => import("../pages/supermarket/ProductsManagementPage"));
 const InventoryItemViewPage = lazy(() => import("../pages/Restaurant/InventoryItemViewPage"));
 const EmployeeLogin = lazy(() => import("../pages/EmployeeLogin"));
 const OwnerLogin = lazy(() => import("../pages/OwnerLogin"));
@@ -47,8 +48,8 @@ const About = () => <h1>About Page</h1>;
 const Profile = lazy(() => import("../pages/Profile"));
 const Settings = lazy(() => import("../pages/Settings"));
 const ChangePassword = lazy(() => import("../pages/ChangePassword"));
-const ProductsManagement = lazy(() => import("../pages/supermarket/ProductsManagement"));
 const SupplierManagement = lazy(() => import("../pages/supermarket/SupplierManagement"));
+const PurchaseOrdersPage = lazy(() => import("../pages/supermarket/PurchaseOrdersPage"));
 
 const ErrorBoundary = () => {
   return (
@@ -93,7 +94,7 @@ const router = createBrowserRouter([
   {
     path: "/",
     element: (
-      <Suspense fallback={<div>Loading...</div>}>
+      <Suspense fallback={<LoadingSpinner />}>
         <Layout />
       </Suspense>
     ),
@@ -101,7 +102,7 @@ const router = createBrowserRouter([
       {
         path: "/",
         element: (
-          <Suspense fallback={<div>Loading...</div>}>
+          <Suspense fallback={<LoadingSpinner />}>
             <ProtectLogin>
               <RootUrlPage />
             </ProtectLogin>
@@ -111,7 +112,7 @@ const router = createBrowserRouter([
       {
         path: "/about",
         element: (
-          <Suspense fallback={<div>Loading...</div>}>
+          <Suspense fallback={<LoadingSpinner />}>
             <ProtectLogin>
               <About />
             </ProtectLogin>
@@ -121,7 +122,7 @@ const router = createBrowserRouter([
       {
         path: "/orders",
         element: (
-          <Suspense fallback={<div>Loading...</div>}>
+          <Suspense fallback={<LoadingSpinner />}>
             <ProtectLogin>
               <OrdersPage />
             </ProtectLogin>
@@ -131,7 +132,7 @@ const router = createBrowserRouter([
       {
         path: "/orders/:orderId",
         element: (
-          <Suspense fallback={<div>Loading...</div>}>
+          <Suspense fallback={<LoadingSpinner />}>
             <ProtectLogin>
               <OrderDetailsPage />
             </ProtectLogin>
@@ -141,7 +142,7 @@ const router = createBrowserRouter([
       {
         path: "/menu",
         element: (
-          <Suspense fallback={<div>Loading...</div>}>
+          <Suspense fallback={<LoadingSpinner />}>
             <ProtectLogin>
               <MenuManagement EditPermition />
             </ProtectLogin>
@@ -151,7 +152,7 @@ const router = createBrowserRouter([
       {
         path: "-management",
         element: (
-          <Suspense fallback={<div>Loading...</div>}>
+          <Suspense fallback={<LoadingSpinner />}>
             <ProtectLogin>
               <ProtectedRoute permission="create_order">
                 <MenuManagement />
@@ -163,7 +164,7 @@ const router = createBrowserRouter([
       {
         path: "/inventory",
         element: (
-          <Suspense fallback={<div>Loading...</div>}>
+          <Suspense fallback={<LoadingSpinner />}>
             <ProtectLogin>
               <ProtectedRoute permission="read_inventory">
                 <InventoryManagementPage />
@@ -175,7 +176,7 @@ const router = createBrowserRouter([
       {
         path: "/inventory/:itemId",
         element: (
-          <Suspense fallback={<div>Loading...</div>}>
+          <Suspense fallback={<LoadingSpinner />}>
             <ProtectLogin>
               <ProtectedRoute permission="read_inventory">
                 <InventoryItemViewPage />
@@ -187,7 +188,7 @@ const router = createBrowserRouter([
       {
         path: "/kds",
         element: (
-          <Suspense fallback={<div>Loading...</div>}>
+          <Suspense fallback={<LoadingSpinner />}>
             <ProtectLogin>
               <ProtectedRoute permission="read_kds">
                 <KdsPage />
@@ -199,7 +200,7 @@ const router = createBrowserRouter([
       {
         path: "/kds/order/:orderId",
         element: (
-          <Suspense fallback={<div>Loading...</div>}>
+          <Suspense fallback={<LoadingSpinner />}>
             <ProtectLogin>
               <ProtectedRoute permission="read_kds">
                 <KdsPage />
@@ -211,7 +212,7 @@ const router = createBrowserRouter([
       {
         path: "/employees",
         element: (
-          <Suspense fallback={<div>Loading...</div>}>
+          <Suspense fallback={<LoadingSpinner />}>
             <ProtectLogin>
               <ProtectedRoute permission="read_employee">
                 <EmployeesPage />
@@ -223,7 +224,7 @@ const router = createBrowserRouter([
       {
         path: "/financesdashboards",
         element: (
-          <Suspense fallback={<div>Loading...</div>}>
+          <Suspense fallback={<LoadingSpinner />}>
             <ProtectLogin>
               <ProtectedRoute permission="read_finance">
                 <Financesdashboards />
@@ -236,7 +237,7 @@ const router = createBrowserRouter([
         path: "/deliverydisplay",
         errorElement: <ErrorBoundary />,
         element: (
-          <Suspense fallback={<div>Loading...</div>}>
+          <Suspense fallback={<LoadingSpinner />}>
             <ProtectLogin>
               <ProtectedRoute permission="read_deliverydisplay">
                 <DeliveryDisplay />
@@ -249,7 +250,7 @@ const router = createBrowserRouter([
         path: "/waiterdisplay",
         errorElement: <ErrorBoundary />,
         element: (
-          <Suspense fallback={<div>Loading...</div>}>
+          <Suspense fallback={<LoadingSpinner />}>
             <ProtectLogin>
               <ProtectedRoute permission="read_waiterdisplay">
                 <WaiterDisplay />
@@ -261,7 +262,7 @@ const router = createBrowserRouter([
       {
         path: "/profile",
         element: (
-          <Suspense fallback={<div>Loading...</div>}>
+          <Suspense fallback={<LoadingSpinner />}>
             <ProtectLogin>
               <ProtectedRoute permission="read_profile">
                 <Profile />
@@ -273,22 +274,10 @@ const router = createBrowserRouter([
       {
         path: "/settings",
         element: (
-          <Suspense fallback={<div>Loading...</div>}>
+          <Suspense fallback={<LoadingSpinner />}>
             <ProtectLogin>
               <ProtectedRoute permission="read_settings">
                 <Settings />
-              </ProtectedRoute>
-            </ProtectLogin>
-          </Suspense>
-        ),
-      },
-      {
-        path: "/settings/change-password",
-        element: (
-          <Suspense fallback={<div>Loading...</div>}>
-            <ProtectLogin>
-              <ProtectedRoute permission="update_settings">
-                <ChangePassword />
               </ProtectedRoute>
             </ProtectLogin>
           </Suspense>
@@ -305,7 +294,7 @@ const supermarketRouter = createBrowserRouter([
   {
     path: "/",
     element: (
-      <Suspense fallback={<div>Loading...</div>}>
+      <Suspense fallback={<LoadingSpinner />}>
         <Layout />
       </Suspense>
     ),
@@ -313,7 +302,7 @@ const supermarketRouter = createBrowserRouter([
       {
         path: "/",
         element: (
-          <Suspense fallback={<div>Loading...</div>}>
+          <Suspense fallback={<LoadingSpinner />}>
             <ProtectLogin>
               <RootUrlPage />
             </ProtectLogin>
@@ -321,9 +310,9 @@ const supermarketRouter = createBrowserRouter([
         ),
       },
       {
-        path: "/inventory",
+        path: "/products",
         element: (
-          <Suspense fallback={<div>Loading...</div>}>
+          <Suspense fallback={<LoadingSpinner />}>
             <ProtectLogin>
               <ProtectedRoute permission="read_inventory">
                 <InventoryManagementSMPage />
@@ -333,21 +322,9 @@ const supermarketRouter = createBrowserRouter([
         ),
       },
       {
-        path: "/supermarket/products",
-        element: (
-          <Suspense fallback={<div>Loading...</div>}>
-            <ProtectLogin>
-              <ProtectedRoute permission="read_product">
-                <ProductsManagement />
-              </ProtectedRoute>
-            </ProtectLogin>
-          </Suspense>
-        ),
-      },
-      {
         path: "/supermarket/sales",
         element: (
-          <Suspense fallback={<div>Loading...</div>}>
+          <Suspense fallback={<LoadingSpinner />}>
             <ProtectLogin>
               <ProtectedRoute permission="read_sales">
                 <SalesPage />
@@ -357,9 +334,21 @@ const supermarketRouter = createBrowserRouter([
         ),
       },
       {
+        path: "/supermarket/purchase-orders",
+        element: (
+          <Suspense fallback={<LoadingSpinner />}>
+            <ProtectLogin>
+              <ProtectedRoute permission={["read_order", "create_order"]}>
+                <PurchaseOrdersPage />
+              </ProtectedRoute>
+            </ProtectLogin>
+          </Suspense>
+        ),
+      },
+      {
         path: "/supermarket/suppliers",
         element: (
-          <Suspense fallback={<div>Loading...</div>}>
+          <Suspense fallback={<LoadingSpinner />}>
             <ProtectLogin>
               <SupplierManagement />
             </ProtectLogin>
@@ -369,7 +358,7 @@ const supermarketRouter = createBrowserRouter([
       {
         path: "/profile",
         element: (
-          <Suspense fallback={<div>Loading...</div>}>
+          <Suspense fallback={<LoadingSpinner />}>
             <ProtectLogin>
               <Profile />
             </ProtectLogin>
@@ -379,9 +368,19 @@ const supermarketRouter = createBrowserRouter([
       {
         path: "/settings",
         element: (
-          <Suspense fallback={<div>Loading...</div>}>
+          <Suspense fallback={<LoadingSpinner />}>
             <ProtectLogin>
               <Settings />
+            </ProtectLogin>
+          </Suspense>
+        ),
+      },
+      {
+        path: "/change-password",
+        element: (
+          <Suspense fallback={<LoadingSpinner />}>
+            <ProtectLogin>
+              <ChangePassword />
             </ProtectLogin>
           </Suspense>
         ),
@@ -417,7 +416,7 @@ const DynamicRouter = () => {
 
   // Select the appropriate router based on system category
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<LoadingSpinner />}>
       {systemCategory === 'supermarket' ? (
         <RouterProvider router={supermarketRouter} />
       ) : (
@@ -430,7 +429,7 @@ const DynamicRouter = () => {
 // Keep these for backward compatibility
 const Router = DynamicRouter;
 const SupermarketRouter = () => (
-  <Suspense fallback={<div>Loading...</div>}>
+  <Suspense fallback={<LoadingSpinner />}>
     <RouterProvider router={supermarketRouter} />
   </Suspense>
 );

@@ -24,8 +24,6 @@ import {
   RiSettings4Fill,
   RiInformationLine,
   RiInformationFill,
-  RiShoppingBasketLine,
-  RiShoppingBasketFill,
   RiStore2Line,
   RiStore2Fill
 } from "react-icons/ri";
@@ -36,7 +34,7 @@ export interface NavItem {
   icon: IconType;
   activeIcon: IconType;
   href: string;
-  requiredPermission?: string;
+  requiredPermission?: string | string[];
   systemCategory?: "restaurant" | "supermarket" | "all";
   showInSidebar?: boolean; // Controls whether this item appears in the sidebar
 }
@@ -148,22 +146,13 @@ export const supermarketNavItems: NavItem[] = [
     requiredPermission: "read_home",
   },
   {
-    name: 'Inventory',
+    name: 'Products',
     icon: RiArchiveLine,
     activeIcon: RiArchiveFill,
-    href: '/inventory',
+    href: '/products',
     systemCategory: 'supermarket',
     showInSidebar: true,
     requiredPermission: "read_inventory",
-  },
-  {
-    name: 'Products Management',
-    icon: RiShoppingBasketLine,
-    activeIcon: RiShoppingBasketFill,
-    href: '/supermarket/products',
-    systemCategory: 'supermarket',
-    showInSidebar: true,
-    requiredPermission: "update_product",
   },
   {
     name: 'Sales',
@@ -173,6 +162,15 @@ export const supermarketNavItems: NavItem[] = [
     systemCategory: 'supermarket',
     showInSidebar: true,
     requiredPermission: "read_sales",
+  },
+  {
+    name: 'Purchase Orders',
+    icon: RiFileList2Line,
+    activeIcon: RiFileList2Fill,
+    href: '/supermarket/purchase-orders',
+    systemCategory: 'supermarket',
+    showInSidebar: true,
+    requiredPermission: "read_order",
   },
   {
     name: 'About',

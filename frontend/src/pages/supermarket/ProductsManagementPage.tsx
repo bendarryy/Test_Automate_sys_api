@@ -32,7 +32,7 @@ interface StockHistoryItem {
   quantity: number;
 }
 
-const InventoryManagementPage = () => {
+const ProductsManagementPage = () => {
   const system_id = localStorage.getItem('selectedSystemId') || '';
   const {
     getProducts,
@@ -220,18 +220,18 @@ const InventoryManagementPage = () => {
           </Space>
           
           <Table 
-              columns={columns} 
-              dataSource={safeData<Product>(products)} 
-              loading={loading}
-              rowKey="id"
-              pagination={{ 
-                pageSize: 10,
-                showSizeChanger: false,
-                position: ['bottomCenter']
-              }}
-              size="small"
-              scroll={{ y: 400 }}
-            />
+            columns={columns} 
+            dataSource={safeData<Product>(products)} 
+            loading={loading}
+            rowKey="id"
+            pagination={{ 
+              pageSize: 10,
+              showSizeChanger: false,
+              position: ['bottomCenter']
+            }}
+            size="small"
+            scroll={{ y: 400 }}
+          />
         </Space>
       )
     },
@@ -329,8 +329,7 @@ const InventoryManagementPage = () => {
         <Tabs 
           activeKey={activeKey}
           onChange={handleTabChange}
-          items={tabItems} 
-          style={{ width: '100%' }} 
+          items={tabItems}
         />
       </Form>
 
@@ -376,4 +375,4 @@ const InventoryManagementPage = () => {
   );
 };
 
-export default InventoryManagementPage;
+export default ProductsManagementPage;

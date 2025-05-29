@@ -50,7 +50,7 @@ const OrderDetailsPage: React.FC = () => {
       getOrderDetails(orderId);
     }
     getMenu();
-  }, [orderId, getOrderDetails, getMenu]);
+  }, [orderId]);
 
   const handleStatusChange = async (status: string) => {
     if (!orderId) return;

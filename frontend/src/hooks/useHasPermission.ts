@@ -1,4 +1,5 @@
 import { useSelector } from 'react-redux';
+import { useMemo } from 'react';
 import { RootState } from '../store';
 
 /**
@@ -7,8 +8,11 @@ import { RootState } from '../store';
  */
 export default function useHasPermission(permission: string | string[]): boolean {
   const actions = useSelector((state: RootState) => state.permissions.actions);
-  if (Array.isArray(permission)) {
-    return permission.some((perm) => actions.includes(perm));
-  }
-  return actions.includes(permission);
+  
+  return useMemo(() => {
+    if (Array.isArray(permission)) {
+      return permission.some((perm) => actions.includes(perm));
+    }
+    return actions.includes(permission);
+  }, [permission, actions]);
 }

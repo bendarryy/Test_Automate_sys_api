@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { useApi } from './useApi';
 
 // Types for order and table, matching the API
@@ -34,8 +34,12 @@ export interface WaiterTableStatus {
 }
 export type WaiterTablesMap = Record<string, WaiterTableStatus>;
 
+const DEBOUNCE_DELAY = 300; // 300ms debounce delay
+
 export function useWaiter(systemId: string | number) {
-  const { callApi } = useApi();
+  const { callApi: callOrdersApi, clearCache: clearOrdersCache } = useApi<WaiterOrder[]>();
+  const { callApi: callTablesApi, clearCache: clearTablesCache } = useApi<WaiterTablesMap>();
+  const debounceTimerRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   // Orders state
   const [orders, setOrders] = useState<WaiterOrder[]>([]);
@@ -47,59 +51,105 @@ export function useWaiter(systemId: string | number) {
   const [tablesLoading, setTablesLoading] = useState(false);
   const [tablesError, setTablesError] = useState<string | null>(null);
 
-  // Fetch all orders
+  // Fetch all orders with debouncing
   const fetchOrders = useCallback(async () => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    debounceTimerRef.current = setTimeout(async () => {
     setOrderLoading(true);
     setOrderError(null);
     try {
-      const data = await callApi('get', `/restaurant/${systemId}/waiter/orders/`);
+        const data = await callOrdersApi('get', `/restaurant/${systemId}/waiter/orders/`);
       setOrders(data || []);
-      throw new Error('Failed to fetch orders');
     } catch (err) {
-      setOrderError(err as string);
+        setOrderError(err instanceof Error ? err.message : 'Failed to fetch orders');
       setOrders([]);
     } finally {
       setOrderLoading(false);
     }
-  }, [ systemId]);
+    }, DEBOUNCE_DELAY);
+  }, [systemId, callOrdersApi]);
 
-  // Fetch all tables
+  // Fetch all tables with debouncing
   const fetchTables = useCallback(async () => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    debounceTimerRef.current = setTimeout(async () => {
     setTablesLoading(true);
     setTablesError(null);
     try {
-      const data = await callApi('get', `/restaurant/${systemId}/waiter/orders/tables/`);
+        const data = await callTablesApi('get', `/restaurant/${systemId}/waiter/orders/tables/`);
       setTables(data || {});
     } catch (err) {
-      setTablesError(err as string);
+        setTablesError(err instanceof Error ? err.message : 'Failed to fetch tables');
       setTables({});
     } finally {
       setTablesLoading(false);
     }
-  }, [ systemId]);
+    }, DEBOUNCE_DELAY);
+  }, [systemId, callTablesApi]);
 
   // Fetch a single order instance
   const fetchOrder = useCallback(async (orderId: number | string) => {
-    return callApi('get', `/restaurant/${systemId}/waiter/orders/${orderId}/`);
-  }, [ systemId]);
+    return callOrdersApi('get', `/restaurant/${systemId}/waiter/orders/${orderId}/`);
+  }, [systemId, callOrdersApi]);
 
-  // Patch order status
+  // Patch order status with optimistic updates
   const patchOrderStatus = useCallback(
     async (orderId: number | string, status: string) => {
-      const updated = await callApi('patch', `/restaurant/${systemId}/waiter/orders/${orderId}/`, { status });
-      // Optionally update orders in state if present
-      setOrders(prev => prev.map(o => (o.id === Number(orderId) ? { ...o, ...updated } : o)));
+      // Optimistically update the order status
+      setOrders(prev => prev.map(o => 
+        o.id === Number(orderId) ? { ...o, status } : o
+      ));
+
+      try {
+        const updated = await callOrdersApi('patch', `/restaurant/${systemId}/waiter/orders/${orderId}/`, { status });
+        // Update with actual response
+        setOrders(prev => prev.map(o => 
+          o.id === Number(orderId) ? { ...o, ...updated } : o
+        ));
       return updated;
+      } catch (error) {
+        // Revert on error
+        setOrders(prev => prev.map(o => 
+          o.id === Number(orderId) ? { ...o, status: o.status } : o
+        ));
+        throw error;
+      }
     },
-    [callApi, systemId]
+    [callOrdersApi, systemId]
   );
 
-  // Initial fetch
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
+
+  // Initial fetch with cleanup
   useEffect(() => {
     fetchOrders();
     fetchTables();
-    // Only on mount or systemId change
-  }, [fetchOrders, fetchTables]);
+
+    // Set up polling interval
+    const pollInterval = setInterval(() => {
+      fetchOrders();
+      fetchTables();
+    }, 30000); // Poll every 30 seconds
+
+    return () => {
+      clearInterval(pollInterval);
+      clearOrdersCache(`/restaurant/${systemId}/waiter/orders/`);
+      clearTablesCache(`/restaurant/${systemId}/waiter/orders/tables/`);
+    };
+  }, [fetchOrders, fetchTables, systemId, clearOrdersCache, clearTablesCache]);
 
   return useMemo(() => ({
     orders,
@@ -112,5 +162,16 @@ export function useWaiter(systemId: string | number) {
     fetchTables,
     fetchOrder,
     patchOrderStatus,
-  }), [orders, tables, orderLoading, tablesLoading, orderError, tablesError, fetchOrders, fetchTables, fetchOrder, patchOrderStatus]);
+  }), [
+    orders,
+    tables,
+    orderLoading,
+    tablesLoading,
+    orderError,
+    tablesError,
+    fetchOrders,
+    fetchTables,
+    fetchOrder,
+    patchOrderStatus,
+  ]);
 }

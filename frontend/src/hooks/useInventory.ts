@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useApi } from './useApi';
 
 export interface InventoryItem {
@@ -21,33 +21,66 @@ interface UseInventoryReturn {
 }
 
 export const useInventory = (): UseInventoryReturn => {
-  const { data, loading, error, callApi } = useApi<InventoryItem[] | InventoryItem | null>();
+  const { data, loading, error, callApi, clearCache } = useApi<InventoryItem[] | InventoryItem | null>();
 
   const fetchInventory = useCallback(async (systemId: string) => {
-    const result = await callApi('get', `/restaurant/${systemId}/inventory/`);
-    return result as InventoryItem[];
+    try {
+      const result = await callApi('get', `/restaurant/${systemId}/inventory/`);
+      return result as InventoryItem[];
+    } catch (error) {
+      console.error('Error fetching inventory:', error);
+      throw error;
+    }
   }, [callApi]);
 
   const addInventoryItem = useCallback(async (systemId: string, item: Omit<InventoryItem, 'id'>) => {
-    const result = await callApi('post', `/restaurant/${systemId}/inventory/`, item);
-    return result as InventoryItem;
-  }, [callApi]);
+    try {
+      const result = await callApi('post', `/restaurant/${systemId}/inventory/`, item);
+      // Clear inventory cache after adding new item
+      clearCache(`/restaurant/${systemId}/inventory/`);
+      return result as InventoryItem;
+    } catch (error) {
+      console.error('Error adding inventory item:', error);
+      throw error;
+    }
+  }, [callApi, clearCache]);
 
   const getInventoryItem = useCallback(async (systemId: string, itemId: string | number) => {
-    const result = await callApi('get', `/restaurant/${systemId}/inventory/${itemId}/`);
-    return result as InventoryItem;
+    try {
+      const result = await callApi('get', `/restaurant/${systemId}/inventory/${itemId}/`);
+      return result as InventoryItem;
+    } catch (error) {
+      console.error('Error getting inventory item:', error);
+      throw error;
+    }
   }, [callApi]);
 
   const updateInventoryItem = useCallback(async (systemId: string, itemId: string | number, item: Partial<InventoryItem>) => {
-    const result = await callApi('patch', `/restaurant/${systemId}/inventory/${itemId}/`, item);
-    return result as InventoryItem;
-  }, [callApi]);
+    try {
+      const result = await callApi('patch', `/restaurant/${systemId}/inventory/${itemId}/`, item);
+      // Clear both item and list caches
+      clearCache(`/restaurant/${systemId}/inventory/${itemId}/`);
+      clearCache(`/restaurant/${systemId}/inventory/`);
+      return result as InventoryItem;
+    } catch (error) {
+      console.error('Error updating inventory item:', error);
+      throw error;
+    }
+  }, [callApi, clearCache]);
 
   const deleteInventoryItem = useCallback(async (systemId: string, itemId: string | number) => {
-    await callApi('delete', `/restaurant/${systemId}/inventory/${itemId}/`);
-  }, [callApi]);
+    try {
+      await callApi('delete', `/restaurant/${systemId}/inventory/${itemId}/`);
+      // Clear both item and list caches
+      clearCache(`/restaurant/${systemId}/inventory/${itemId}/`);
+      clearCache(`/restaurant/${systemId}/inventory/`);
+    } catch (error) {
+      console.error('Error deleting inventory item:', error);
+      throw error;
+    }
+  }, [callApi, clearCache]);
 
-  return {
+  return useMemo(() => ({
     inventory: Array.isArray(data) ? (data as InventoryItem[]) : null,
     loading,
     error,
@@ -56,5 +89,14 @@ export const useInventory = (): UseInventoryReturn => {
     getInventoryItem,
     updateInventoryItem,
     deleteInventoryItem,
-  };
+  }), [
+    data,
+    loading,
+    error,
+    fetchInventory,
+    addInventoryItem,
+    getInventoryItem,
+    updateInventoryItem,
+    deleteInventoryItem,
+  ]);
 };

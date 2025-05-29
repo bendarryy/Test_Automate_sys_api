@@ -40,6 +40,15 @@ const Header: React.FC<HeaderProps> = ({
     }
   };
 
+  const breadcrumbItems = breadcrumbs?.map((item, index) => ({
+    title: item.path ? (
+      <a onClick={() => item.path && navigate(item.path)}>{item.title}</a>
+    ) : (
+      item.title
+    ),
+    key: index
+  }));
+
   return (
     <AntHeader className="app-header">
       <div className="header-left">
@@ -53,17 +62,10 @@ const Header: React.FC<HeaderProps> = ({
         )}
         <div className="header-content">
           {breadcrumbs && breadcrumbs.length > 0 && (
-            <Breadcrumb className="header-breadcrumbs">
-              {breadcrumbs.map((item, index) => (
-                <Breadcrumb.Item key={index}>
-                  {item.path ? (
-                    <a onClick={() => item.path && navigate(item.path)}>{item.title}</a>
-                  ) : (
-                    item.title
-                  )}
-                </Breadcrumb.Item>
-              ))}
-            </Breadcrumb>
+            <Breadcrumb 
+              className="header-breadcrumbs"
+              items={breadcrumbItems}
+            />
           )}
           <div className="header-titles">
             <Title level={4} className="header-title">{title}</Title>

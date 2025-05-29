@@ -26,13 +26,13 @@ const Settings: React.FC = () => {
       title: 'Account Settings',
       description: 'Manage your account information and password',
       icon: <UserOutlined style={{ fontSize: '24px', color: '#1677ff' }} />,
-      path: '/settings/account'
+      path: '/profile'
     },
     {
       title: 'Change Password',
       description: 'Update your password',
       icon: <LockOutlined style={{ fontSize: '24px', color: '#1677ff' }} />,
-      path: '/settings/change-password'
+      path: '/change-password'
     },
     {
       title: 'Notifications',

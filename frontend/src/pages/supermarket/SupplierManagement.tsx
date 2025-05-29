@@ -21,11 +21,6 @@ const SupplierManagement: React.FC = () => {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
-  const [formData, setFormData] = useState<SupplierFormData>({
-    name: '',
-    phone: '',
-    email: '',
-  });
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
@@ -55,25 +50,21 @@ const SupplierManagement: React.FC = () => {
     if (success) message.success(success);
   }, [success]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+  const handleEdit = (supplier: Supplier) => {
+    setEditingSupplier(supplier);
+    setIsModalOpen(true);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (values: SupplierFormData) => {
     setError(null);
     setSuccess(null);
     const currentSystemId = localStorage.getItem('selectedSystemId');
     try {
       if (editingSupplier) {
-        await callApi('put', `supermarket/${currentSystemId}/suppliers/${editingSupplier.id}/`, formData);
+        await callApi('put', `supermarket/${currentSystemId}/suppliers/${editingSupplier.id}/`, values);
         setSuccess('Supplier updated successfully');
       } else {
-        await callApi('post', `supermarket/${currentSystemId}/suppliers/`, formData);
+        await callApi('post', `supermarket/${currentSystemId}/suppliers/`, values);
         setSuccess('Supplier added successfully');
       }
       setIsModalOpen(false);
@@ -82,16 +73,6 @@ const SupplierManagement: React.FC = () => {
     } catch  {
       setError('Operation failed. Please try again.');
     }
-  };
-
-  const handleEdit = (supplier: Supplier) => {
-    setEditingSupplier(supplier);
-    setFormData({
-      name: supplier.name || "",
-      phone: supplier.phone || "",
-      email: supplier.email || "",
-    });
-    setIsModalOpen(true);
   };
 
   const handleDelete = async (supplierId: number) => {
@@ -108,11 +89,6 @@ const SupplierManagement: React.FC = () => {
   };
 
   const resetForm = () => {
-    setFormData({
-      name: '',
-      phone: '',
-      email: '',
-    });
     setEditingSupplier(null);
   };
 
@@ -171,8 +147,8 @@ const SupplierManagement: React.FC = () => {
               </Button>
             ]}
           >
-            <p><PhoneOutlined /> {supplier.phone}</p>
-            <p><MailOutlined /> {supplier.email}</p>
+            {supplier.phone && <p><PhoneOutlined /> {supplier.phone}</p>}
+            {supplier.email && <p><MailOutlined /> {supplier.email}</p>}
           </Card>
         ))}
       </div>
@@ -189,36 +165,48 @@ const SupplierManagement: React.FC = () => {
         <Form layout="vertical" onFinish={handleSubmit}>
           <Form.Item 
             label="Name"
-            required
+            name="name"
+            rules={[{ required: true, message: 'Please enter supplier name' }]}
           >
             <Input
-              name="name"
-              value={formData.name}
-              onChange={handleInputChange}
               placeholder="Enter supplier name"
             />
           </Form.Item>
           <Form.Item 
             label="Phone"
-            required
+            name="phone"
+            rules={[
+              ({ getFieldValue }) => ({
+                validator(_, value) {
+                  if (!value && !getFieldValue('email')) {
+                    return Promise.reject(new Error('Please enter either phone or email'));
+                  }
+                  return Promise.resolve();
+                },
+              }),
+            ]}
           >
             <Input
-              name="phone"
-              value={formData.phone}
-              onChange={handleInputChange}
               placeholder="Enter phone number"
               prefix={<PhoneOutlined />}
             />
           </Form.Item>
           <Form.Item 
             label="Email"
-            required
+            name="email"
+            rules={[
+              ({ getFieldValue }) => ({
+                validator(_, value) {
+                  if (!value && !getFieldValue('phone')) {
+                    return Promise.reject(new Error('Please enter either phone or email'));
+                  }
+                  return Promise.resolve();
+                },
+              }),
+            ]}
           >
             <Input
-              name="email"
               type="email"
-              value={formData.email}
-              onChange={handleInputChange}
               placeholder="Enter email address"
               prefix={<MailOutlined />}
             />

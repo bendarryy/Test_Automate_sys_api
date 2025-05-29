@@ -1,7 +1,7 @@
 import { TableColumnsType } from 'antd';
 import { Form, Input, InputNumber, DatePicker, Space, Button } from 'antd';
 import dayjs from 'dayjs';
-import { Product } from '../pages/supermarket/InventoryManagementPage';
+import { Product } from '../pages/supermarket/ProductsManagementPage';
 
 interface InventoryTableColumnsProps {
   editingId: string | null;

@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "../store";
-import { MdNotifications, MdNotificationsActive, MdAccountCircle } from "react-icons/md"; // react-icons Material Design
+import { MdNotifications, MdNotificationsActive } from "react-icons/md"; // react-icons Material Design
 import { useNavigate } from "react-router-dom";
 import { Layout, Badge, Dropdown, Space, Button, theme } from 'antd';
 import type { MenuProps } from 'antd';
 import { useApi } from "../hooks/useApi";
+import ProfileAvatar from "./ProfileAvatar";
 
 const { Header } = Layout;
 const { useToken } = theme;
@@ -199,12 +200,13 @@ const Navbar = () => {
             onMouseEnter={() => setAccountHover(true)}
             onMouseLeave={() => setAccountHover(false)}
             icon={
-              <MdAccountCircle 
-                size={32} 
+              <ProfileAvatar 
+                name={profile?.user?.username || ''} 
+                size={32}
                 style={{ 
-                  color: accountHover ? token.colorPrimaryHover : token.colorTextSecondary,
-                  transition: 'color 0.3s ease'
-                }} 
+                  transition: 'transform 0.3s ease',
+                  transform: accountHover ? 'scale(1.1)' : 'scale(1)'
+                }}
               />
             }
           />

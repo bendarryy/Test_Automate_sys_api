@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { FormInstance } from 'antd';
 import dayjs from 'dayjs';
-import { Product } from '../pages/supermarket/InventoryManagementPage';
+import { Product } from '../pages/supermarket/ProductsManagementPage';
 
 export const useInventoryTable = (form?: FormInstance) => {
   const [editingId, setEditingId] = useState<string | null>(null);

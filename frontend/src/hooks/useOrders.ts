@@ -1,3 +1,4 @@
+import { useCallback, useMemo } from 'react';
 import { useApi } from './useApi';
 
 type OrderStatus = 'pending' | 'preparing' | 'ready' | 'completed' | 'canceled';
@@ -33,40 +34,97 @@ interface OrderItem {
 export const useOrders = <T extends Order>(systemId: string) => {
   const api = useApi<T>();
 
-  const getOrders = async () => {
-    return api.callApi('get', `/restaurant/${systemId}/orders/`);
-  };
+  const getOrders = useCallback(async () => {
+    try {
+      return await api.callApi('get', `/restaurant/${systemId}/orders/`);
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+      throw error;
+    }
+  }, [systemId, api]);
 
-  const getOrderDetails = async (id: string) => {
-    return api.callApi('get', `/restaurant/${systemId}/orders/${id}/`);
-  };
+  const getOrderDetails = useCallback(async (id: string) => {
+    try {
+      return await api.callApi('get', `/restaurant/${systemId}/orders/${id}/`);
+    } catch (error) {
+      console.error('Error fetching order details:', error);
+      throw error;
+    }
+  }, [systemId, api]);
 
+  const updateOrderStatus = useCallback(async (id: string, status: string) => {
+    try {
+      const result = await api.callApi('patch', `/restaurant/${systemId}/orders/${id}/`, { status });
+      // Clear both order and list caches
+      api.clearCache(`/restaurant/${systemId}/orders/${id}/`);
+      api.clearCache(`/restaurant/${systemId}/orders/`);
+      return result;
+    } catch (error) {
+      console.error('Error updating order status:', error);
+      throw error;
+    }
+  }, [systemId, api]);
 
-  const updateOrderStatus = async (id: string, status: string) => {
-    return api.callApi('patch', `/restaurant/${systemId}/orders/${id}/`, { status });
-  };
+  const updateOrder = useCallback(async (id: string, data: Partial<Order>) => {
+    try {
+      const result = await api.callApi('patch', `/restaurant/${systemId}/orders/${id}/`, data);
+      // Clear both order and list caches
+      api.clearCache(`/restaurant/${systemId}/orders/${id}/`);
+      api.clearCache(`/restaurant/${systemId}/orders/`);
+      return result;
+    } catch (error) {
+      console.error('Error updating order:', error);
+      throw error;
+    }
+  }, [systemId, api]);
 
-  const updateOrder = async (id: string, data: Partial<Order>) => {
-    return api.callApi('patch', `/restaurant/${systemId}/orders/${id}/`, data);
-  };
+  const getOrderItems = useCallback(async (orderId: string) => {
+    try {
+      return await api.callApi('get', `/restaurant/${systemId}/orders/${orderId}/items/`);
+    } catch (error) {
+      console.error('Error fetching order items:', error);
+      throw error;
+    }
+  }, [systemId, api]);
 
-  const getOrderItems = async (orderId: string) => {
-    return api.callApi('get', `/restaurant/${systemId}/orders/${orderId}/items/`);
-  };
+  const createOrderItem = useCallback(async (orderId: string, item: Omit<OrderItem, 'id'>) => {
+    try {
+      const result = await api.callApi('post', `/restaurant/${systemId}/orders/${orderId}/items/`, item);
+      // Clear both order items and order caches
+      api.clearCache(`/restaurant/${systemId}/orders/${orderId}/items/`);
+      api.clearCache(`/restaurant/${systemId}/orders/${orderId}/`);
+      return result;
+    } catch (error) {
+      console.error('Error creating order item:', error);
+      throw error;
+    }
+  }, [systemId, api]);
 
-  const createOrderItem = async (orderId: string, item: Omit<OrderItem, 'id'>) => {
-    return api.callApi('post', `/restaurant/${systemId}/orders/${orderId}/items/`, item);
-  };
+  const deleteOrderItem = useCallback(async (orderId: string, itemId: string) => {
+    try {
+      await api.callApi('delete', `/restaurant/${systemId}/orders/${orderId}/items/${itemId}/`);
+      // Clear both order items and order caches
+      api.clearCache(`/restaurant/${systemId}/orders/${orderId}/items/`);
+      api.clearCache(`/restaurant/${systemId}/orders/${orderId}/`);
+    } catch (error) {
+      console.error('Error deleting order item:', error);
+      throw error;
+    }
+  }, [systemId, api]);
 
-  const deleteOrderItem = async (orderId: string, itemId: string) => {
-    return api.callApi('delete', `/restaurant/${systemId}/orders/${orderId}/items/${itemId}/`);
-  };
+  const deleteOrder = useCallback(async (id: string) => {
+    try {
+      await api.callApi('delete', `/restaurant/${systemId}/orders/${id}/`);
+      // Clear both order and list caches
+      api.clearCache(`/restaurant/${systemId}/orders/${id}/`);
+      api.clearCache(`/restaurant/${systemId}/orders/`);
+    } catch (error) {
+      console.error('Error deleting order:', error);
+      throw error;
+    }
+  }, [systemId, api]);
 
-  const deleteOrder = async (id: string) => {
-    return api.callApi('delete', `/restaurant/${systemId}/orders/${id}/`);
-  };
-
-  return {
+  return useMemo(() => ({
     ...api,
     getOrders,
     getOrderDetails,
@@ -76,5 +134,15 @@ export const useOrders = <T extends Order>(systemId: string) => {
     createOrderItem,
     deleteOrderItem,
     deleteOrder
-  };
+  }), [
+    api,
+    getOrders,
+    getOrderDetails,
+    updateOrderStatus,
+    updateOrder,
+    getOrderItems,
+    createOrderItem,
+    deleteOrderItem,
+    deleteOrder
+  ]);
 };
