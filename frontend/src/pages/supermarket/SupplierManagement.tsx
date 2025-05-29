@@ -61,7 +61,7 @@ const SupplierManagement: React.FC = () => {
     const currentSystemId = localStorage.getItem('selectedSystemId');
     try {
       if (editingSupplier) {
-        await callApi('put', `supermarket/${currentSystemId}/suppliers/${editingSupplier.id}/`, values);
+        await callApi('patch', `supermarket/${currentSystemId}/suppliers/${editingSupplier.id}/`, values);
         setSuccess('Supplier updated successfully');
       } else {
         await callApi('post', `supermarket/${currentSystemId}/suppliers/`, values);
@@ -166,7 +166,7 @@ const SupplierManagement: React.FC = () => {
           <Form.Item 
             label="Name"
             name="name"
-            rules={[{ required: true, message: 'Please enter supplier name' }]}
+            rules={[{ required: !editingSupplier, message: 'Please enter supplier name' }]}
           >
             <Input
               placeholder="Enter supplier name"
@@ -178,7 +178,7 @@ const SupplierManagement: React.FC = () => {
             rules={[
               ({ getFieldValue }) => ({
                 validator(_, value) {
-                  if (!value && !getFieldValue('email')) {
+                  if (!editingSupplier && !value && !getFieldValue('email')) {
                     return Promise.reject(new Error('Please enter either phone or email'));
                   }
                   return Promise.resolve();
@@ -197,7 +197,7 @@ const SupplierManagement: React.FC = () => {
             rules={[
               ({ getFieldValue }) => ({
                 validator(_, value) {
-                  if (!value && !getFieldValue('phone')) {
+                  if (!editingSupplier && !value && !getFieldValue('phone')) {
                     return Promise.reject(new Error('Please enter either phone or email'));
                   }
                   return Promise.resolve();
