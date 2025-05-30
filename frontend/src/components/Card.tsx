@@ -8,7 +8,6 @@ type CardProps = {
   price?: string;
   accentColor?: string;
   textColor?: string;
-  backgroundColor?: string;
   imageGradient?: string;
   image?: string;
   onClick?: React.MouseEventHandler<HTMLDivElement>;
@@ -23,7 +22,6 @@ const Card: React.FC<CardProps> = ({
   price = '$49.99',
   accentColor = '#7c3aed',
   textColor = '#1e293b',
-  backgroundColor = '#ffffff',
   imageGradient = 'linear-gradient(45deg, #a78bfa, #8b5cf6)',
   image,
   onClick,
@@ -34,7 +32,6 @@ const Card: React.FC<CardProps> = ({
     <StyledWrapper
       accentColor={accentColor}
       textColor={textColor}
-      backgroundColor={backgroundColor}
       imageGradient={imageGradient}
       style={style}
       onClick={onClick}
@@ -42,7 +39,7 @@ const Card: React.FC<CardProps> = ({
     >
       <div className="card">
         <div className="card__shine" />
-        <div className="card__glow" />
+        <div className="card__glow" style={{ backgroundImage: `url(${image})` }} />
         <div className="card__content">
           <div className="card__badge">{badgeText}</div>
           <div className="card__image" style={{ backgroundImage: `url(${image})` , backgroundPosition: 'center', backgroundSize: 'cover', backgroundRepeat: 'no-repeat' }} />
@@ -67,21 +64,18 @@ const Card: React.FC<CardProps> = ({
 type StyledProps = {
   accentColor: string;
   textColor: string;
-  backgroundColor: string;
   imageGradient: string;
   width?: string | number;
+  image?: string;
 };
 
 const StyledWrapper = styled.div<StyledProps>`
   .card {
-    --card-bg: ${(props) => props.backgroundColor};
     --card-accent: ${(props) => props.accentColor};
-    --card-text: ${(props) => props.textColor};
     --card-shadow: 0 10px 15px -3px rgba(12, 84, 117, 0.12);
 
     width: ${(props) => props.width ? (typeof props.width === 'number' ? `${props.width}px` : props.width) : '190px'};
     height: 254px;
-    background: var(--card-bg);
     border-radius: 20px;
     position: relative;
     overflow: hidden;
@@ -96,12 +90,6 @@ const StyledWrapper = styled.div<StyledProps>`
   .card__shine {
     position: absolute;
     inset: 0;
-    background: linear-gradient(
-      120deg,
-      rgba(255, 255, 255, 0) 40%,
-      rgba(255, 255, 255, 0.8) 50%,
-      rgba(255, 255, 255, 0) 60%
-    );
     opacity: 0;
     transition: opacity 0.3s ease;
   }
@@ -109,11 +97,13 @@ const StyledWrapper = styled.div<StyledProps>`
   .card__glow {
     position: absolute;
     inset: -10px;
-    background: radial-gradient(
-      circle at 50% 0%,
-      ${props => props.accentColor}ed 0%,
-      ${props => props.accentColor}00 70%
-    );
+    -webkit-mask-position: center;
+    mask-position: center;
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+    mask-image: linear-gradient(to top,transparent 50%,  rgb(0, 0, 0) );
+    filter: blur(10px);
     opacity: 0;
     transition: opacity 0.5s ease;
   }
@@ -133,7 +123,6 @@ const StyledWrapper = styled.div<StyledProps>`
     top: 12px;
     right: 12px;
     background: #10b981;
-    color: white;
     padding: 0.25em 0.5em;
     border-radius: 999px;
     font-size: 0.7em;
@@ -179,7 +168,6 @@ const StyledWrapper = styled.div<StyledProps>`
   }
 
   .card__title {
-    color: var(--card-text);
     font-size: 1.1em;
     margin: 0;
     font-weight: 700;
@@ -187,7 +175,6 @@ const StyledWrapper = styled.div<StyledProps>`
   }
 
   .card__description {
-    color: var(--card-text);
     font-size: 0.75em;
     margin: 0;
     opacity: 0.7;
@@ -202,7 +189,6 @@ const StyledWrapper = styled.div<StyledProps>`
   }
 
   .card__price {
-    color: var(--card-text);
     font-weight: 700;
     font-size: 1em;
     transition: all 0.3s ease;
@@ -216,7 +202,6 @@ const StyledWrapper = styled.div<StyledProps>`
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
     cursor: pointer;
     transition: all 0.3s ease;
     transform: scale(0.9);

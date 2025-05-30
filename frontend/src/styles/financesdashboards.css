@@ -44,7 +44,7 @@
 .nav button.export {
   margin-left: auto;
   background-color: #3b82f6;
-  color: white;
+
   border-radius: 4px;
 }
 
@@ -65,7 +65,6 @@ h2 {
 }
 
 .card {
-  background: white;
   padding: 24px;
   border-radius: 12px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
@@ -131,7 +130,6 @@ h2 {
 
 .trend-analysis {
   margin-bottom: 40px;
-  background: white;
   border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   padding: 20px;
@@ -167,14 +165,14 @@ h2 {
 .period-selector button.active {
   background-color: #10b981;
   border-color: #10b981;
-  color: white;
+
 }
 
 .chart-container {
   height: 300px;
   margin-top: 20px;
   padding: 16px;
-  background: white;
+
   border-radius: 12px;
   border: 1px solid #f0f0f0;
 }
@@ -182,7 +180,7 @@ h2 {
 .weekly-chart {
   grid-column: span 3;
   padding: 20px;
-  background: white;
+
   border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
@@ -246,7 +244,6 @@ h2 {
 }
 
 .metric-card {
-  background: white;
   padding: 20px;
   border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);

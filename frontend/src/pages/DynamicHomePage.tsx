@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { Suspense, lazy } from 'react';
-import LoadingSpinner from '../components/LoadingSpinner';
 
 // Lazy load the home pages
 const RestaurantHomePage = lazy(() => import('./Restaurant/HomePage'));
@@ -40,7 +39,7 @@ const DynamicHomePage: React.FC = () => {
 
   // Render the appropriate home page based on system category
   return (
-    <Suspense fallback={<LoadingSpinner />}>
+    <Suspense fallback={null}>
       {systemCategory === 'supermarket' ? <SupermarketHomePage /> : <RestaurantHomePage />}
     </Suspense>
   );

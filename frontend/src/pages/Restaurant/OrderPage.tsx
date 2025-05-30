@@ -72,12 +72,17 @@ const OrderPage: React.FC = () => {
     // Set initial filtered orders from orders data
     const ordersList = Array.isArray(orders) ? orders : [];
     
+    // Sort orders by date in descending order (newest first)
+    const sortedOrders = [...ordersList].sort((a: Order, b: Order) => 
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
+    
     if (!searchText) {
-      setFilteredOrders(ordersList as Order[]);
+      setFilteredOrders(sortedOrders as Order[]);
       return;
     }
     
-    const filtered = ordersList.filter((order: Order) => {
+    const filtered = sortedOrders.filter((order: Order) => {
       const searchLower = searchText.toLowerCase();
       return (
         String(order.id).includes(searchLower) ||

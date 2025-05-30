@@ -47,14 +47,14 @@ const OrdersSection = () => {
       };
 
       const orderResponse = await createOrder(orderData);
-      const orderId = orderResponse.id;
+      const orderId = orderResponse?.id;
       
       for (const item of billItems) {
         const payload = {
           menu_item: Number(item.id),
           quantity: item.quantity,
         };
-        await addItemToOrder(orderId, payload);
+        await addItemToOrder(orderId!, payload);
       }
 
       message.success("Order sent successfully!");

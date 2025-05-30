@@ -6,7 +6,6 @@
 }
 
 .display-header {
-  background: white;
   padding: 24px;
   border-radius: 12px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -60,7 +59,7 @@
 }
 
 .order-card {
-  background: white;
+
   border-radius: 12px;
   padding: 20px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -225,7 +224,7 @@
   width: 100%;
   padding: 12px;
   background-color: #3b82f6;
-  color: white;
+  
   border: none;
   border-radius: 8px;
   font-size: 14px;
@@ -262,7 +261,7 @@
 .create-order-button {
   padding: 12px 24px;
   background-color: #10b981;
-  color: white;
+  
   border: none;
   border-radius: 8px;
   font-size: 14px;
@@ -277,7 +276,6 @@
 }
 
 .new-order-form {
-  background: white;
   padding: 24px;
   border-radius: 12px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -343,7 +341,7 @@
 .remove-item-button {
   padding: 8px 12px;
   background-color: #ef4444;
-  color: white;
+  
   border: none;
   border-radius: 6px;
   font-size: 12px;
@@ -358,7 +356,7 @@
 .add-item-button {
   padding: 8px 16px;
   background-color: #3b82f6;
-  color: white;
+  
   border: none;
   border-radius: 6px;
   font-size: 14px;
@@ -380,7 +378,7 @@
 .submit-button {
   padding: 12px 24px;
   background-color: #10b981;
-  color: white;
+  
   border: none;
   border-radius: 8px;
   font-size: 14px;
@@ -397,7 +395,7 @@
 .cancel-button {
   padding: 12px 24px;
   background-color: #ef4444;
-  color: white;
+  
   border: none;
   border-radius: 8px;
   font-size: 14px;
@@ -449,7 +447,7 @@
   gap: 8px;
   padding: 8px 16px;
   background-color: #3b82f6;
-  color: white;
+  
   border: none;
   border-radius: 6px;
   font-size: 14px;
@@ -468,7 +466,6 @@
 }
 
 .items-table {
-  background: white;
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -531,7 +528,7 @@
 .remove-item-button {
   padding: 6px 12px;
   background-color: #ef4444;
-  color: white;
+  
   border: none;
   border-radius: 6px;
   font-size: 12px;

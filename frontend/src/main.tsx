@@ -6,12 +6,15 @@ import '@ant-design/v5-patch-for-react-19';
 import { Suspense, StrictMode, lazy } from "react";
 import LoadingSpinner from "./components/LoadingSpinner";
 const App = lazy(() => import("./App"));
+import { App as AntdApp } from 'antd';
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <Suspense fallback={<LoadingSpinner />}>
-      <Provider store={store}>
-        <App />
+      <Provider store={store}>  
+        <AntdApp>
+          <App />
+        </AntdApp>
       </Provider>
     </Suspense>
   </StrictMode>

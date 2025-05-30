@@ -1,13 +1,15 @@
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { RiArrowLeftSLine, RiArrowRightSLine, RiMoreFill } from "react-icons/ri";
-import { Layout, Menu, Button, theme, Typography, Dropdown } from 'antd';
+import { Layout, Menu, Button, Typography, Dropdown } from 'antd';
+import { theme } from 'antd';
 import styles from '../styles/Sidebar.module.css';
 import { getCommonNavItems, NavItem } from '../config/navigation.config';
 import useNavigationItems from '../hooks/useNavigationItems';
 
 const { Sider } = Layout;
 const { Text } = Typography;
+const { useToken } = theme;
 
 // ملاحظة: في الـ layout الرئيسي، أضف <Sidebar /> و <BottomNavBar /> معاً.
 // Sidebar يظهر فقط على الشاشات الكبيرة، وBottomNavBar يظهر فقط على الشاشات الصغيرة (راجع CSS).
@@ -22,8 +24,8 @@ export function Sidebar({ defaultIconsOnly = false, className = "" }: { defaultI
   const [overflowItems, setOverflowItems] = useState<NavItem[]>([]);
   const location = useLocation();
   const navigate = useNavigate();
-  const { token } = theme.useToken();
-
+  const { token } = useToken();
+  
   // Get system category from localStorage
   const systemCategory = localStorage.getItem('selectedSystemCategory');
   
@@ -88,6 +90,11 @@ export function Sidebar({ defaultIconsOnly = false, className = "" }: { defaultI
     onClick: () => navigate(item.href)
   }));
 
+  const sidebarStyle = {
+    backgroundColor: token.colorBgContainer,
+    color: token.colorText,
+  };
+
   if (isMobile) {
     const overflowMenuItems = [
       ...overflowItems.map(item => ({
@@ -151,11 +158,8 @@ export function Sidebar({ defaultIconsOnly = false, className = "" }: { defaultI
       collapsed={collapsed}
       onCollapse={toggleSidebar}
       trigger={null}
+      style={sidebarStyle}
       className={className}
-      style={{
-        background: token.colorBgContainer,
-        borderRight: `1px solid ${token.colorBorderSecondary}`,
-      }}
     >
       <div style={{ 
         padding: '16px', 
@@ -170,10 +174,10 @@ export function Sidebar({ defaultIconsOnly = false, className = "" }: { defaultI
             height: '36px',
             background: token.colorPrimary,
             borderRadius: '8px',
+            color: 'white',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: 'white',
             fontWeight: 'bold',
             fontSize: '16px',
             boxShadow: '0 2px 4px rgba(0,0,0,0.1)'

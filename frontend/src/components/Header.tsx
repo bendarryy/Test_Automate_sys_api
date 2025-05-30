@@ -17,6 +17,7 @@ interface HeaderProps {
   showSearch?: boolean;
   onSearch?: (value: string) => void;
   searchPlaceholder?: string;
+  style?: React.CSSProperties;
 }
 
 const Header: React.FC<HeaderProps> = ({ 
@@ -28,7 +29,8 @@ const Header: React.FC<HeaderProps> = ({
   breadcrumbs,
   showSearch = false,
   onSearch,
-  searchPlaceholder = 'Search...'
+  searchPlaceholder = 'Search...',
+  style
  }) => {
   const navigate = useNavigate();
   
@@ -50,7 +52,14 @@ const Header: React.FC<HeaderProps> = ({
   }));
 
   return (
-    <AntHeader className="app-header">
+    <AntHeader 
+      className="app-header custom-header"
+      style={{ 
+        ...(style || {}),
+        '--ant-prefix': 'custom-header',
+        background: 'unset'
+      } as React.CSSProperties & Record<string, string>}
+    >
       <div className="header-left">
         {showBackButton && (
           <Button 

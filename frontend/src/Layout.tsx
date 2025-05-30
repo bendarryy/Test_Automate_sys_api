@@ -77,7 +77,6 @@ const Layout = () => {
             style={{
               height: "calc(100vh - 64px)",
               overflow: "auto",
-              background: "white",
             }}
           >
             <Outlet />

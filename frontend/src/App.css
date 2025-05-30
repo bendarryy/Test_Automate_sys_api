@@ -4,3 +4,14 @@
   text-align: center;
 }
 
+* {
+  transition: background-color 0.3s ease, color 0.2s ease;
+}
+
+body {
+  transition: background-color 0.3s ease, color 0.2s ease;
+}
+
+.ant-layout-content {
+  transition: background-color 0.3s ease;
+}

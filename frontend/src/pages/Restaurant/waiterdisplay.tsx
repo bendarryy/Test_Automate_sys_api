@@ -1,12 +1,12 @@
 import React, { useMemo } from 'react';
 import { useWaiter } from '../../hooks/useWaiter';
-import { Button, Tooltip, Empty, message, Statistic, Space, Modal } from 'antd';
+import { Button, Tooltip, Empty,  Statistic, Space, Spin, Alert, Skeleton } from 'antd';
 import { ReloadOutlined } from '@ant-design/icons';
 import Header from '../../components/Header';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import OrderCard from '../../components/OrderCard';
 import { ClockCircleTwoTone, CheckCircleTwoTone } from '@ant-design/icons';
-
+import { App as AntdApp } from 'antd';
 import 'swiper/swiper-bundle.css';
 import './waiterStyles.css';
 
@@ -14,9 +14,20 @@ const SYSTEM_ID = localStorage.getItem('selectedSystemId') ?? '';
 
 
 const WaiterDisplay: React.FC = () => {
+  const { message, modal } = AntdApp.useApp();
+  console.log('SYSTEM_ID:', SYSTEM_ID);
   const [statusUpdatingId, setStatusUpdatingId] = React.useState<number | null>(null);
-  
-  const { orders, patchOrderStatus, fetchOrders } = useWaiter(SYSTEM_ID);
+  const { orders, patchOrderStatus, fetchOrders, orderLoading, orderError } = useWaiter(SYSTEM_ID);
+
+  // Fetch orders automatically on mount
+  React.useEffect(() => {
+    fetchOrders();
+  }, [fetchOrders]);
+
+  // Debugging logs
+  console.log('orders:', orders);
+  console.log('orderLoading:', orderLoading);
+  console.log('orderError:', orderError);
 
   // تصنيف الطلبات
   const [readyOrders, servedOrders] = useMemo(() => {
@@ -36,7 +47,6 @@ const WaiterDisplay: React.FC = () => {
     try {
       await patchOrderStatus(orderId, newStatus);
       message.success('Order status updated successfully');
-      fetchOrders();
     } catch {
       message.error('Failed to update order status');
     } finally {
@@ -45,7 +55,7 @@ const WaiterDisplay: React.FC = () => {
   };
 
   const handleRevertStatus = async (orderId: number) => {
-    Modal.confirm({
+    modal.confirm({
       title: 'Confirm Revert',
       content: 'This order will be moved back to Ready section',
       okText: 'Confirm',
@@ -55,7 +65,6 @@ const WaiterDisplay: React.FC = () => {
           setStatusUpdatingId(orderId);
           await patchOrderStatus(orderId, 'ready');
           message.success('Order reverted successfully');
-          fetchOrders();
         } catch {
           message.error('Error reverting order');
         } finally {
@@ -66,7 +75,17 @@ const WaiterDisplay: React.FC = () => {
   };
 
   return (
-    <div style={{ maxWidth: 1200, margin: '0 auto', padding: 24, height: '100%' }}>
+    <div style={{ margin: '0 auto', padding: 24, height: '100%' }}>
+      {/* Loading Spinner */}
+      {orderLoading && (
+        <div style={{ textAlign: 'center', margin: '20px 0' }}>
+          <Spin size="large" />
+        </div>
+      )}
+      {/* Error Alert */}
+      {orderError && (
+        <Alert message={orderError} type="error" showIcon style={{ marginBottom: 16 }} />
+      )}
       <Header 
         title="Waiter Display"
         breadcrumbs={[
@@ -86,13 +105,33 @@ const WaiterDisplay: React.FC = () => {
 
       <div style={{ display: 'flex', gap: 24, height: 'calc(100% - 100px)', alignItems: 'start' }}>
         {/* قسم الطلبات الجاهزة - أفقي (75%) */}
-        <div style={{ flex: 3, minWidth: 0 }}>
+        <div style={{ flex: 2, minWidth: 0 }}>
           <h2 style={{ color: '#1890ff', marginBottom: 16 }}>
             <ClockCircleTwoTone twoToneColor="#1890ff" style={{ marginLeft: 8 }} />
             Ready Orders
           </h2>
           
-          {readyOrders.length > 0 ? (
+          {orderLoading ? (
+            <div style={{
+              display: 'flex',
+              gap: 16,
+              padding: 16,
+              background: '#f0f9ff',
+              borderRadius: 12,
+              height: '100%',
+              width: '100%',
+              overflow: 'hidden',
+              maxHeight: 400
+            }}>
+              {[...Array(3)].map((_, idx) => (
+                <Skeleton.Button
+                  key={idx}
+                  active
+                  style={{ width: 300, height: 320, borderRadius: 12, overflow: 'hidden' }}
+                />
+              ))}
+            </div>
+          ) : readyOrders.length > 0 ? (
             <div style={{ 
               background: '#f0f9ff', 
               borderRadius: 12, 
@@ -108,7 +147,7 @@ const WaiterDisplay: React.FC = () => {
                 style={{ height: '100%', padding: '8px 0' }}
               >
                 {readyOrders.map(order => (
-                  <SwiperSlide key={order.id} style={{ width: 300, height: '100%' }}>
+                  <SwiperSlide key={order.id} style={{ width: 370, height: '100%' }}>
                     <div style={{ height: '100%', paddingRight: 16 }}>
                       <OrderCard 
                         order={order} 
@@ -126,13 +165,31 @@ const WaiterDisplay: React.FC = () => {
         </div>
 
         {/* قسم الطلبات المقدمة - عمودي (25%) */}
-        <div style={{ flex: 1, minWidth: 0 ,display: 'flex', flexDirection: 'column', height: '100%'}}>
+        <div style={{ flex: 1.5, minWidth: 0 ,display: 'flex', flexDirection: 'column', height: '100%'}}>
           <h2 style={{ color: '#faad14', marginBottom: 16 }}>
             <CheckCircleTwoTone twoToneColor="#faad14" style={{ marginLeft: 8 }} />
             Served Orders
           </h2>
           <div className="custom-scrollbar">
-          {servedOrders.length > 0 ? (
+          {orderLoading ? (
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr',
+              gap: 16,
+              height: '100%',
+              paddingRight: 4,
+              overflow: 'hidden',
+              maxHeight: 400
+            }}>
+              {[...Array(3)].map((_, idx) => (
+                <Skeleton.Button
+                  key={idx}
+                  active
+                  style={{ width: '100%', height: 120, borderRadius: 12, overflow: 'hidden' }}
+                />
+              ))}
+            </div>
+          ) : servedOrders.length > 0 ? (
             <div style={{ 
               display: 'grid',
               gridTemplateColumns: '1fr',

@@ -102,185 +102,153 @@ const router = createBrowserRouter([
       {
         path: "/",
         element: (
-          <Suspense fallback={<LoadingSpinner />}>
-            <ProtectLogin>
-              <RootUrlPage />
-            </ProtectLogin>
-          </Suspense>
+          <ProtectLogin>
+            <RootUrlPage />
+          </ProtectLogin>
         ),
       },
       {
         path: "/about",
         element: (
-          <Suspense fallback={<LoadingSpinner />}>
-            <ProtectLogin>
-              <About />
-            </ProtectLogin>
-          </Suspense>
+          <ProtectLogin>
+            <About />
+          </ProtectLogin>
         ),
       },
       {
         path: "/orders",
         element: (
-          <Suspense fallback={<LoadingSpinner />}>
-            <ProtectLogin>
-              <OrdersPage />
-            </ProtectLogin>
-          </Suspense>
+          <ProtectLogin>
+            <OrdersPage />
+          </ProtectLogin>
         ),
       },
       {
         path: "/orders/:orderId",
         element: (
-          <Suspense fallback={<LoadingSpinner />}>
-            <ProtectLogin>
-              <OrderDetailsPage />
-            </ProtectLogin>
-          </Suspense>
+          <ProtectLogin>
+            <OrderDetailsPage />
+          </ProtectLogin>
         ),
       },
       {
         path: "/menu",
         element: (
-          <Suspense fallback={<LoadingSpinner />}>
-            <ProtectLogin>
-              <MenuManagement EditPermition />
-            </ProtectLogin>
-          </Suspense>
+          <ProtectLogin>
+            <MenuManagement EditPermition />
+          </ProtectLogin>
         ),
       },
       {
         path: "-management",
         element: (
-          <Suspense fallback={<LoadingSpinner />}>
-            <ProtectLogin>
-              <ProtectedRoute permission="create_order">
-                <MenuManagement />
-              </ProtectedRoute>
-            </ProtectLogin>
-          </Suspense>
+          <ProtectLogin>
+            <ProtectedRoute permission="create_order">
+              <MenuManagement />
+            </ProtectedRoute>
+          </ProtectLogin>
         ),
       },
       {
         path: "/inventory",
         element: (
-          <Suspense fallback={<LoadingSpinner />}>
-            <ProtectLogin>
-              <ProtectedRoute permission="read_inventory">
-                <InventoryManagementPage />
-              </ProtectedRoute>
-            </ProtectLogin>
-          </Suspense>
+          <ProtectLogin>
+            <ProtectedRoute permission="read_inventory">
+              <InventoryManagementPage />
+            </ProtectedRoute>
+          </ProtectLogin>
         ),
       },
       {
         path: "/inventory/:itemId",
         element: (
-          <Suspense fallback={<LoadingSpinner />}>
-            <ProtectLogin>
-              <ProtectedRoute permission="read_inventory">
-                <InventoryItemViewPage />
-              </ProtectedRoute>
-            </ProtectLogin>
-          </Suspense>
+          <ProtectLogin>
+            <ProtectedRoute permission="read_inventory">
+              <InventoryItemViewPage />
+            </ProtectedRoute>
+          </ProtectLogin>
         ),
       },
       {
         path: "/kds",
         element: (
-          <Suspense fallback={<LoadingSpinner />}>
-            <ProtectLogin>
-              <ProtectedRoute permission="read_kds">
-                <KdsPage />
-              </ProtectedRoute>
-            </ProtectLogin>
-          </Suspense>
+          <ProtectLogin>
+            <ProtectedRoute permission="read_kds">
+              <KdsPage />
+            </ProtectedRoute>
+          </ProtectLogin>
         ),
       },
       {
         path: "/kds/order/:orderId",
         element: (
-          <Suspense fallback={<LoadingSpinner />}>
-            <ProtectLogin>
-              <ProtectedRoute permission="read_kds">
-                <KdsPage />
-              </ProtectedRoute>
-            </ProtectLogin>
-          </Suspense>
+          <ProtectLogin>
+            <ProtectedRoute permission="read_kds">
+              <KdsPage />
+            </ProtectedRoute>
+          </ProtectLogin>
         ),
       },
       {
         path: "/employees",
         element: (
-          <Suspense fallback={<LoadingSpinner />}>
-            <ProtectLogin>
-              <ProtectedRoute permission="read_employee">
-                <EmployeesPage />
-              </ProtectedRoute>
-            </ProtectLogin>
-          </Suspense>
+          <ProtectLogin>
+            <ProtectedRoute permission="read_employee">
+              <EmployeesPage />
+            </ProtectedRoute>
+          </ProtectLogin>
         ),
       },
       {
         path: "/financesdashboards",
         element: (
-          <Suspense fallback={<LoadingSpinner />}>
-            <ProtectLogin>
-              <ProtectedRoute permission="read_finance">
-                <Financesdashboards />
-              </ProtectedRoute>
-            </ProtectLogin>
-          </Suspense>
+          <ProtectLogin>
+            <ProtectedRoute permission="read_finance">
+              <Financesdashboards />
+            </ProtectedRoute>
+          </ProtectLogin>
         ),
       },
       {
         path: "/deliverydisplay",
         errorElement: <ErrorBoundary />,
         element: (
-          <Suspense fallback={<LoadingSpinner />}>
-            <ProtectLogin>
-              <ProtectedRoute permission="read_deliverydisplay">
-                <DeliveryDisplay />
-              </ProtectedRoute>
-            </ProtectLogin>
-          </Suspense>
+          <ProtectLogin>
+            <ProtectedRoute permission="read_deliverydisplay">
+              <DeliveryDisplay />
+            </ProtectedRoute>
+          </ProtectLogin>
         ),
       },
       {
         path: "/waiterdisplay",
         errorElement: <ErrorBoundary />,
         element: (
-          <Suspense fallback={<LoadingSpinner />}>
-            <ProtectLogin>
-              <ProtectedRoute permission="read_waiterdisplay">
-                <WaiterDisplay />
-              </ProtectedRoute>
-            </ProtectLogin>
-          </Suspense>
+          <ProtectLogin>
+            <ProtectedRoute permission="read_waiterdisplay">
+              <WaiterDisplay />
+            </ProtectedRoute>
+          </ProtectLogin>
         ),
       },
       {
         path: "/profile",
         element: (
-          <Suspense fallback={<LoadingSpinner />}>
-            <ProtectLogin>
-              <ProtectedRoute permission="read_profile">
-                <Profile />
-              </ProtectedRoute>
-            </ProtectLogin>
-          </Suspense>
+          <ProtectLogin>
+            <ProtectedRoute permission="read_profile">
+              <Profile />
+            </ProtectedRoute>
+          </ProtectLogin>
         ),
       },
       {
         path: "/settings",
         element: (
-          <Suspense fallback={<LoadingSpinner />}>
-            <ProtectLogin>
-              <ProtectedRoute permission="read_settings">
-                <Settings />
-              </ProtectedRoute>
-            </ProtectLogin>
-          </Suspense>
+          <ProtectLogin>
+            <ProtectedRoute permission="read_settings">
+              <Settings />
+            </ProtectedRoute>
+          </ProtectLogin>
         ),
       },
     ],
@@ -302,11 +270,9 @@ const supermarketRouter = createBrowserRouter([
       {
         path: "/",
         element: (
-          <Suspense fallback={<LoadingSpinner />}>
-            <ProtectLogin>
-              <RootUrlPage />
-            </ProtectLogin>
-          </Suspense>
+          <ProtectLogin>
+            <RootUrlPage />
+          </ProtectLogin>
         ),
       },
       {
@@ -348,41 +314,33 @@ const supermarketRouter = createBrowserRouter([
       {
         path: "/supermarket/suppliers",
         element: (
-          <Suspense fallback={<LoadingSpinner />}>
-            <ProtectLogin>
-              <SupplierManagement />
-            </ProtectLogin>
-          </Suspense>
+          <ProtectLogin>
+            <SupplierManagement />
+          </ProtectLogin>
         ),
       },
       {
         path: "/profile",
         element: (
-          <Suspense fallback={<LoadingSpinner />}>
-            <ProtectLogin>
-              <Profile />
-            </ProtectLogin>
-          </Suspense>
+          <ProtectLogin>
+            <Profile />
+          </ProtectLogin>
         ),
       },
       {
         path: "/settings",
         element: (
-          <Suspense fallback={<LoadingSpinner />}>
-            <ProtectLogin>
-              <Settings />
-            </ProtectLogin>
-          </Suspense>
+          <ProtectLogin>
+            <Settings />
+          </ProtectLogin>
         ),
       },
       {
         path: "/change-password",
         element: (
-          <Suspense fallback={<LoadingSpinner />}>
-            <ProtectLogin>
-              <ChangePassword />
-            </ProtectLogin>
-          </Suspense>
+          <ProtectLogin>
+            <ChangePassword />
+          </ProtectLogin>
         ),
       },
     ],

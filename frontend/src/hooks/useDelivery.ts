@@ -1,59 +1,58 @@
-import { useCallback, useMemo } from 'react';
-import { useApi } from './useApi';
+import { useState, useCallback } from 'react';
+import axios from 'axios';
 
-interface DeliveryOrder {
+export interface DeliveryOrder {
   id: number;
-  customer_name: string;
-  address: string;
-  phone: string;
-  status: 'pending' | 'in_progress' | 'delivered' | 'cancelled';
-  total_price: number;
-  created_at: string;
+  status: 'ready' | 'out_for_delivery' | 'completed';
+  updated_at: string;
+  customer_name?: string;
+  table_number?: string;
+  created_at?: string;
+  order_items: {
+    id: number;
+    menu_item_name: string;
+    quantity: number;
+    notes?: string;
+  }[];
+  total_price: string;
 }
 
-export const useDelivery = (systemId: number) => {
-  const { callApi, data, loading, error, clearCache } = useApi<DeliveryOrder[]>();
+export const useDelivery = (systemId: string) => {
+  const [orders, setOrders] = useState<DeliveryOrder[]>([]);
+  const [orderLoading, setOrderLoading] = useState(false);
+  const [orderError, setOrderError] = useState<string | null>(null);
 
-  const getDeliveryOrders = useCallback(async (status?: string) => {
-    let url = `/restaurant/${systemId}/delivery-orders/`;
-    if (status) {
-      url += `?status=${status}`;
+  const fetchOrders = useCallback(async () => {
+    setOrderLoading(true);
+    setOrderError(null);
+    try {
+      const response = await axios.get(`/api/restaurant/${systemId}/delivery/orders/`);
+      setOrders(response.data);
+    } catch (error) {
+      setOrderError('Failed to fetch orders');
+      console.error('Error fetching orders:', error);
+    } finally {
+      setOrderLoading(false);
     }
-    return await callApi('get', url);
-  }, [systemId, callApi]);
+  }, [systemId]);
 
-  const createDeliveryOrder = useCallback(async (orderData: Omit<DeliveryOrder, 'id' | 'created_at'>) => {
-    const result = await callApi('post', `/restaurant/${systemId}/delivery-orders/`, orderData);
-    clearCache(`/restaurant/${systemId}/delivery-orders/`);
-    return result;
-  }, [systemId, callApi, clearCache]);
+  const patchOrderStatus = useCallback(async (orderId: number, newStatus: string) => {
+    try {
+      await axios.patch(`/api/restaurant/${systemId}/delivery/orders/${orderId}/`, {
+        status: newStatus
+      });
+      await fetchOrders(); // Refresh orders after status update
+    } catch (error) {
+      console.error('Error updating order status:', error);
+      throw error;
+    }
+  }, [systemId, fetchOrders]);
 
-  const updateDeliveryStatus = useCallback(async (orderId: number, status: DeliveryOrder['status']) => {
-    const result = await callApi('patch', `/restaurant/${systemId}/delivery-orders/${orderId}/`, { status });
-    clearCache(`/restaurant/${systemId}/delivery-orders/`);
-    clearCache(`/restaurant/${systemId}/delivery-orders/${orderId}/`);
-    return result;
-  }, [systemId, callApi, clearCache]);
-
-  const getDeliveryOrderById = useCallback(async (orderId: number) => {
-    return await callApi<DeliveryOrder>('get', `/restaurant/${systemId}/delivery-orders/${orderId}/`);
-  }, [systemId, callApi]);
-
-  return useMemo(() => ({
-    data,
-    loading,
-    error,
-    getDeliveryOrders,
-    createDeliveryOrder,
-    updateDeliveryStatus,
-    getDeliveryOrderById
-  }), [
-    data,
-    loading,
-    error,
-    getDeliveryOrders,
-    createDeliveryOrder,
-    updateDeliveryStatus,
-    getDeliveryOrderById
-  ]);
+  return {
+    orders,
+    patchOrderStatus,
+    fetchOrders,
+    orderLoading,
+    orderError
+  };
 };

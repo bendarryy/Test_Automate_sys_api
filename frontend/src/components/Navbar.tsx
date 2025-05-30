@@ -3,10 +3,11 @@ import { useSelector } from "react-redux";
 import { RootState } from "../store";
 import { MdNotifications, MdNotificationsActive } from "react-icons/md"; // react-icons Material Design
 import { useNavigate } from "react-router-dom";
-import { Layout, Badge, Dropdown, Space, Button, theme } from 'antd';
+import { Layout, Badge, Dropdown, Space, Button, Switch, theme } from 'antd';
 import type { MenuProps } from 'antd';
 import { useApi } from "../hooks/useApi";
 import ProfileAvatar from "./ProfileAvatar";
+import { useThemeContext } from '../theme/ThemeContext';
 
 const { Header } = Layout;
 const { useToken } = theme;
@@ -22,7 +23,7 @@ const Navbar = () => {
   const [notificationHover, setNotificationHover] = useState(false);
   const [accountHover, setAccountHover] = useState(false);
 
-
+  const { theme, toggleTheme } = useThemeContext();
 
   const handleLogout = async () => {
     try {
@@ -211,6 +212,13 @@ const Navbar = () => {
             }
           />
         </Dropdown>
+
+        <Switch
+          checkedChildren="🌞"
+          unCheckedChildren="🌙"
+          checked={theme === 'dark'}
+          onChange={toggleTheme}
+        />
       </Space>
     </Header>
   );

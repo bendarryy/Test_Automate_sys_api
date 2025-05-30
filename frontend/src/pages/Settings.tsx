@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, List, Typography } from 'antd';
+import { Card, List, Typography, Switch } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { 
   UserOutlined, 
@@ -8,6 +8,7 @@ import {
   SafetyOutlined,
   RightOutlined 
 } from '@ant-design/icons';
+import { useThemeContext } from '../theme/ThemeContext';
 
 const { Title } = Typography;
 
@@ -20,6 +21,7 @@ interface SettingItem {
 
 const Settings: React.FC = () => {
   const navigate = useNavigate();
+  const { theme, toggleTheme } = useThemeContext();
 
   const settingsItems: SettingItem[] = [
     {
@@ -52,6 +54,17 @@ const Settings: React.FC = () => {
     <div style={{ padding: '24px', maxWidth: '800px', margin: '0 auto' }}>
       <Title level={2} style={{ marginBottom: '24px' }}>Settings</Title>
       
+      <div className="settings-page">
+        <h2>Theme Settings</h2>
+        <div className="theme-switch">
+          <span>Dark Mode: </span>
+          <Switch
+            checked={theme === 'dark'}
+            onChange={toggleTheme}
+          />
+        </div>
+      </div>
+
       <Card>
         <List
           itemLayout="horizontal"

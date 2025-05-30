@@ -96,6 +96,7 @@ export function useWaiter(systemId: string | number) {
   // Fetch a single order instance
   const fetchOrder = useCallback(async (orderId: number | string) => {
     return callOrdersApi('get', `/restaurant/${systemId}/waiter/orders/${orderId}/`);
+
   }, [systemId, callOrdersApi]);
 
   // Patch order status with optimistic updates

@@ -1,20 +1,24 @@
 import React from 'react';
 import { Card, Button, Tag, Tooltip, Space, Empty } from 'antd';
-import { CheckCircleTwoTone, ClockCircleTwoTone, CheckOutlined, RollbackOutlined } from '@ant-design/icons';
-import { WaiterOrder, WaiterOrderItem } from '../hooks/useWaiter';
+import { CarOutlined } from '@ant-design/icons';
+import { CheckOutlined, RollbackOutlined } from '@ant-design/icons';
+import { WaiterOrder } from '../hooks/useWaiter';
+import { DeliveryOrder } from '../hooks/useDelivery';
+
+interface OrderItem {
+  id: number;
+  menu_item_name: string;
+  quantity: number;
+  notes?: string;
+}
 
 interface OrderCardProps {
-  order: WaiterOrder;
+  order: WaiterOrder | DeliveryOrder;
   onStatusChange: (newStatus: string) => void;
   isUpdating: boolean;
   showRevertButton?: boolean;
+  orderType?: 'waiter' | 'delivery';
 }
-
-const statusIcons = {
-  ready: <ClockCircleTwoTone twoToneColor="#1890ff" style={{ fontSize: 20 }} />,
-  served: <CheckCircleTwoTone twoToneColor="#faad14" style={{ fontSize: 20 }} />,
-  completed: <CheckCircleTwoTone twoToneColor="#52c41a" style={{ fontSize: 20 }} />,
-};
 
 const statusColors = {
   ready: 'blue',
@@ -28,61 +32,171 @@ const statusText = {
   completed: 'Completed',
 };
 
-const OrderCard: React.FC<OrderCardProps> = ({ order, onStatusChange, isUpdating, showRevertButton }) => {
+const statusAccent = {
+  ready: 'linear-gradient(135deg, #1890ff 60%, #e6f7ff 100%)',
+  served: 'linear-gradient(135deg, #faad14 60%, #fffbe6 100%)',
+  completed: 'linear-gradient(135deg, #52c41a 60%, #f6ffed 100%)',
+};
+
+const OrderCard: React.FC<OrderCardProps> = ({ order, onStatusChange, isUpdating, showRevertButton, orderType = 'waiter' }) => {
   const [expanded, setExpanded] = React.useState(false);
-  
   const totalItems = order.order_items?.reduce((sum, item) => sum + item.quantity, 0) || 0;
-  
+
   return (
     <Card
-      title={
-        <Space>
-          {statusIcons[order.status as keyof typeof statusIcons]}
-          <span style={{ fontWeight: 600 }}>Table {order.table_number}</span>
-        </Space>
-      }
-      extra={
-        <Tag color={statusColors[order.status as keyof typeof statusColors]} style={{ fontSize: 14, padding: '2px 12px' }}>
-          {statusText[order.status as keyof typeof statusText]}
-        </Tag>
-      }
-      variant="outlined"
-      style={{ borderRadius: 12, boxShadow: '0 2px 12px #f0f1f3', minHeight: 320, maxHeight: 340 }}
-      styles={{header:{ background: '#fafcff', borderRadius: '12px 12px 0 0', minHeight: 48} ,body:{ padding: 16, minHeight: 220, maxHeight: 260, overflow: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center' }}}
+      style={{
+        borderRadius: 16,
+        boxShadow: '0 4px 24px rgba(0, 0, 0, 0.1)',
+        backdropFilter: 'blur(10px)',
+        background: 'rgba(255, 255, 255, 0.2)',
+        border: 'none',
+        overflow: 'hidden',
+      }}
     >
-      <div style={{ marginBottom: 8, fontSize: 15, color: '#888' }}>
-        <span>Order #<b>{order.id}</b></span>
-        <span style={{ float: 'right' }}>{new Date(order.created_at).toLocaleTimeString()}</span>
+      <div
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: 8,
+          height: '100%',
+          background: statusAccent[order.status as keyof typeof statusAccent],
+          borderRadius: '16px 0 0 16px',
+        }}
+      />
+      <div
+        style={{
+          position: 'absolute',
+          top: 10,
+          right: 16,
+          padding: '4px 8px',
+          background: 'rgba(255, 255, 255, 0.2)',
+          borderRadius: 8,
+          boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+        }}
+      >
+        <span
+          style={{
+            fontSize: 17,
+            fontWeight: 700,
+            color: '#52c41a',
+          }}
+        >
+          {Number(order.total_price || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+          <span style={{ fontSize: 15, color: '#888', marginLeft: 2 }}> USD</span>
+        </span>
       </div>
-      
-      <div style={{ marginBottom: 10 }}>
-        <Button 
-          type="text" 
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          padding: '16px 24px',
+          borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
+        }}
+      >
+        <Space size="middle">
+          <span
+            style={{
+              fontSize: 18,
+              fontWeight: 700,
+            }}
+          >
+            {orderType === 'waiter' ? `Table ${order.table_number}` : order.customer_name}
+          </span>
+          <Tag
+            color={statusColors[order.status as keyof typeof statusColors]}
+            style={{ fontSize: 14, padding: '2px 12px' }}
+          >
+            {statusText[order.status as keyof typeof statusText]}
+          </Tag>
+          <span
+            style={{
+              fontSize: 14,
+              color: '#888',
+            }}
+          >
+            {order.created_at ? new Date(order.created_at).toLocaleTimeString() : ''}
+          </span>
+        </Space>
+        <span
+          style={{
+            fontSize: 14,
+            color: '#888',
+          }}
+        >
+          Order #{order.id}
+        </span>
+      </div>
+      <div
+        style={{
+          padding: '16px 24px',
+        }}
+      >
+        <Button
+          type="link"
           size="small"
           onClick={() => setExpanded(!expanded)}
-          style={{ padding: '0 4px', marginBottom: 8 }}
+          style={{ padding: 0, marginBottom: 8, fontWeight: 600 }}
           aria-label={expanded ? 'Hide details' : 'Show details'}
         >
           {expanded ? 'Hide details' : `Show details (${totalItems} items)`}
         </Button>
-        
         {expanded && (
-          <div style={{ maxHeight: 200, overflowY: 'auto' }}>
+          <div
+            style={{
+              maxHeight: 140,
+              overflowY: 'auto',
+              background: 'rgba(255, 255, 255, 0.2)',
+              borderRadius: 8,
+              padding: 8,
+            }}
+          >
             <b>Items:</b>
-            <ul style={{ paddingLeft: 20, margin: 0 }}>
-              {order.order_items?.map((item: WaiterOrderItem) => (
-                <li key={item.id} style={{ marginBottom: 4, fontSize: 15 }}>
-                  <span style={{ fontWeight: 500 }}>{item.menu_item_name}</span>
-                  <span style={{ marginLeft: 8, color: '#888' }}>×{item.quantity}</span>
+            <ul
+              style={{
+                paddingLeft: 20,
+                margin: 0,
+              }}
+            >
+              {order.order_items?.map((item: OrderItem) => (
+                <li
+                  key={item.id}
+                  style={{
+                    marginBottom: 4,
+                    fontSize: 15,
+                  }}
+                >
+                  <span
+                    style={{
+                      fontWeight: 500,
+                    }}
+                  >
+                    {item.menu_item_name}
+                  </span>
+                  <span
+                    style={{
+                      marginLeft: 8,
+                      color: '#888',
+                    }}
+                  >
+                    ×{item.quantity}
+                  </span>
                 </li>
               )) || <Empty description="No items" />}
             </ul>
           </div>
         )}
       </div>
-      
-      <div style={{ textAlign: 'right', marginTop: 18 }}>
-        {order.status === 'ready' && (
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'flex-end',
+          gap: 8,
+          padding: '16px 24px',
+        }}
+      >
+        {orderType === 'waiter' && order.status === 'ready' && (
           <Tooltip title="Mark as served">
             <Button
               type="primary"
@@ -96,7 +210,7 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onStatusChange, isUpdating
             </Button>
           </Tooltip>
         )}
-        {order.status === 'served' && (
+        {orderType === 'waiter' && order.status === 'served' && (
           <Tooltip title="Complete order">
             <Button
               type="primary"
@@ -111,16 +225,61 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onStatusChange, isUpdating
             </Button>
           </Tooltip>
         )}
-        {showRevertButton && order.status === 'served' && (
+        {orderType === 'waiter' && showRevertButton && order.status === 'served' && (
           <Tooltip title="Revert to Ready">
-            <Button 
-              type="text" 
+            <Button
+              type="default"
               danger
               icon={<RollbackOutlined />}
               onClick={() => onStatusChange('ready')}
               loading={isUpdating}
-              style={{ marginTop: 8 }}
-            />
+              style={{ marginLeft: 8 }}
+            >
+              Revert
+            </Button>
+          </Tooltip>
+        )}
+        {orderType === 'delivery' && order.status === 'ready' && (
+          <Tooltip title="Mark as Out for Delivery">
+            <Button
+              type="primary"
+              icon={<CarOutlined />}
+              loading={isUpdating}
+              onClick={() => onStatusChange('out_for_delivery')}
+              style={{ borderRadius: 8, fontWeight: 600 }}
+              aria-label="Mark as Out for Delivery"
+            >
+              Mark as Out for Delivery
+            </Button>
+          </Tooltip>
+        )}
+        {orderType === 'delivery' && order.status === 'out_for_delivery' && (
+          <Tooltip title="Mark as Completed">
+            <Button
+              type="primary"
+              danger
+              icon={<CheckOutlined />}
+              loading={isUpdating}
+              onClick={() => onStatusChange('completed')}
+              style={{ borderRadius: 8, fontWeight: 600 }}
+              aria-label="Mark as Completed"
+            >
+              Mark as Completed
+            </Button>
+          </Tooltip>
+        )}
+        {orderType === 'delivery' && showRevertButton && order.status === 'out_for_delivery' && (
+          <Tooltip title="Revert to Ready">
+            <Button
+              type="default"
+              danger
+              icon={<RollbackOutlined />}
+              onClick={() => onStatusChange('ready')}
+              loading={isUpdating}
+              style={{ marginLeft: 8 }}
+            >
+              Revert
+            </Button>
           </Tooltip>
         )}
       </div>
