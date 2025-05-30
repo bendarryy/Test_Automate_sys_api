@@ -1,18 +1,27 @@
-import { Drawer, Badge } from "antd";
+import { Badge, Layout } from "antd";
 import ProductsSection from "../../components/ProductSelection";
-import { ShoppingCartOutlined } from "@ant-design/icons";
-import { useState } from "react";
+import { ArrowRightOutlined, ArrowLeftOutlined } from "@ant-design/icons";
+import { useState, useEffect } from "react";
 import Header from "../../components/Header";
 import OrdersSection from "../../components/BillSection";
 import { useSelector } from "react-redux";
 import { RootState } from "../../store";
 
+const { Sider } = Layout;
+
 const HomePage = () => {
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
+    const saved = localStorage.getItem('sidebarOpen');
+    return saved ? JSON.parse(saved) : false;
+  });
   const billItems = useSelector((state: RootState) => state.bill.items);
 
+  useEffect(() => {
+    localStorage.setItem('sidebarOpen', JSON.stringify(isSidebarOpen));
+  }, [isSidebarOpen]);
+
   return (
-    <main>
+    <main style={{ overflow: 'hidden' }}>
       <Header
         title="Restaurant Dashboard"
         breadcrumbs={[
@@ -20,58 +29,67 @@ const HomePage = () => {
           { title: 'Dashboard' }
         ]}
       />
-      <div style={{ height: 'calc(100vh - 120px)' }}>
-        <div style={{ flex: 2, width: '100%' }}>
+      <Layout style={{ height: 'calc(100vh - 130px)' }}>
+        <Layout.Content style={{ padding: '24px', overflow: 'auto' }}>
           <ProductsSection />
-        </div>
-      </div>
-
-      <Drawer
-        title="Orders"
-        placement="right"
-        onClose={() => setIsDrawerOpen(false)}
-        open={isDrawerOpen}
-        width={400}
-      >
-        <OrdersSection />
-      </Drawer>
-
-      <div style={{ 
-        position: 'fixed',
-        right: '24px',
-        bottom: '24px',
-        zIndex: 1000
-      }}>
-        <Badge count={billItems.length} size="default">
-          <button
-            onClick={() => setIsDrawerOpen(true)}
-            style={{
-              width: '60px',
-              height: '60px',
-              borderRadius: '50%',
-              border: 'none',
-              backgroundColor: '#1890ff',
-              color: 'white',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-              transition: 'all 0.3s',
-            }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.backgroundColor = '#40a9ff';
-              e.currentTarget.style.transform = 'scale(1.05)';
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.backgroundColor = '#1890ff';
-              e.currentTarget.style.transform = 'scale(1)';
-            }}
-          >
-            <ShoppingCartOutlined style={{ fontSize: '24px' }} />
-          </button>
-        </Badge>
-      </div>
+        </Layout.Content>
+        
+        <Sider
+          width={400}
+          collapsed={!isSidebarOpen}
+          collapsedWidth={0}
+          trigger={null}
+          style={{
+            background: '#fff',
+            borderLeft: '1px solid #f0f0f0',
+            transition: 'all 0.3s',
+            position: 'relative',
+          }}
+        >
+          <div style={{
+            position: 'absolute',
+            left: '-20px',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            zIndex: 1000,
+          }}>
+            <Badge count={billItems.length} size="default">
+              <button
+                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '50%',
+                  border: 'none',
+                  backgroundColor: '#1890ff',
+                  color: 'white',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                  transition: 'all 0.3s',
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.backgroundColor = '#40a9ff';
+                  e.currentTarget.style.transform = 'scale(1.05)';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.backgroundColor = '#1890ff';
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
+              >
+                {isSidebarOpen ? (
+                  <ArrowRightOutlined style={{ fontSize: '16px' }} />
+                ) : (
+                  <ArrowLeftOutlined style={{ fontSize: '16px' }} />
+                )}
+              </button>
+            </Badge>
+          </div>
+          <OrdersSection />
+        </Sider>
+      </Layout>
     </main>
   );
 };

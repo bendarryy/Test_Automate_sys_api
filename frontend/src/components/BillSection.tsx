@@ -75,16 +75,36 @@ const OrdersSection = () => {
 
   return (
     <Card 
-      style={{ height: '100%', display: 'flex', flexDirection: 'column' }}
-      styles={{ body: { height: '100%', padding: '12px', display: 'flex', flexDirection: 'column' } }}
+      style={{ 
+        height: '100%', 
+        display: 'flex', 
+        flexDirection: 'column',
+        borderRadius: 0,
+        borderLeft: '1px solid #f0f0f0'
+      }}
+      styles={{ 
+        body: { 
+          height: '100%', 
+          padding: '12px', 
+          display: 'flex', 
+          flexDirection: 'column',
+          overflow: 'hidden'
+        } 
+      }}
     >
-      <Title level={4}>
+      <Title level={4} style={{ marginBottom: '16px' }}>
         {orderType === 'in_house' 
           ? (selectedTable ? `Orders for Table: ${selectedTable}` : "Select Table")
           : "Delivery Order"}
       </Title>
       
-      <div style={{ flex: 1, overflowY: 'auto', justifyContent: billItems.length === 0 ? 'center' : 'space-between', flexDirection: "column", display: 'flex'}}>
+      <div style={{ 
+        flex: 1, 
+        overflowY: 'auto', 
+        marginBottom: '16px',
+        display: 'flex',
+        flexDirection: 'column'
+      }}>
         {billItems.length === 0 ? (
           <Empty
             image={Empty.PRESENTED_IMAGE_SIMPLE}
@@ -132,9 +152,9 @@ const OrdersSection = () => {
       </div>
 
       <div style={{ marginTop: 'auto' }}>
-        <Divider />
+        <Divider style={{ margin: '12px 0' }} />
         <Space direction="vertical" style={{ width: '100%' }}>
-          <Form layout="vertical">
+          <Form layout="vertical" size="small">
             <Form.Item 
               label="Customer Name" 
               required={orderType === 'delivery'}
