@@ -308,11 +308,18 @@ class EmployeeLoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True)
 
-    def validate_email(self, value):
-        """Ensure the email exists in the User model and is linked to an active Employee"""
-        if not User.objects.filter(email=value, employee_profile__is_active=True).exists():
-            raise ValidationError("No active employee with this email found.")
-        return value
+    def validate(self, data):
+        """
+        Validate the login credentials without revealing whether the email exists
+        """
+        email = data.get('email')
+        password = data.get('password')
+
+        # Basic format validation only
+        if not email or not password:
+            raise serializers.ValidationError("Invalid email or password.")
+        
+        return data
 
 class EmployeeSerializer(serializers.ModelSerializer):
     """Used for listing and showing employees"""

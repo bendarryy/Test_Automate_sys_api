@@ -29,8 +29,18 @@ const EmployeeLogin: React.FC = () => {
 
       setSuccess(true);
       navigate('/');
-    } catch {
+    } catch (err: any) {
       setSuccess(false);
+      // Clear password field on error
+      form.setFieldsValue({ password: '' });
+      
+      // Handle both 400 and 401 status codes
+      const errorMessage = err?.response?.data?.error || 'Invalid email or password.';
+      
+      // Focus on password field if it's a password error
+      if (errorMessage.includes('password')) {
+        form.getFieldInstance('password')?.focus();
+      }
     }
   };
 
@@ -58,11 +68,6 @@ const EmployeeLogin: React.FC = () => {
               <Alert message="Login successful! Welcome." type="success" showIcon style={{ marginBottom: 16 }} />
             </Form.Item>
           )}
-          {error && (
-            <Form.Item>
-              <Alert message={error} type="error" showIcon style={{ marginBottom: 16 }} />
-            </Form.Item>
-          )}
           <Form.Item
             label="Email"
             name="email"
@@ -83,6 +88,17 @@ const EmployeeLogin: React.FC = () => {
           >
             <Input.Password placeholder="Enter password" disabled={loading} />
           </Form.Item>
+
+          {error && (
+            <Form.Item>
+              <Alert
+                message="Invalid Email or Password"
+                type="error"
+                showIcon
+                style={{ marginBottom: 16 }}
+              />
+            </Form.Item>
+          )}
 
           <Form.Item>
             <Button type="primary" htmlType="submit" className="w-100 custom-btn" loading={loading} disabled={loading}>

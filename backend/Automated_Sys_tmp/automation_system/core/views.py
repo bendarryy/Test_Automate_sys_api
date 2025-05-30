@@ -40,6 +40,7 @@ from django.contrib.auth.hashers import make_password, check_password
 from drf_yasg.utils import swagger_auto_schema
 from django.conf import settings
 from drf_yasg import openapi
+from rest_framework import serializers
 
 @csrf_exempt
 @api_view(["POST"])
@@ -127,7 +128,8 @@ def login_user(request):
         return Response({"message": "Login successful"})
     else:
         return Response(
-            {"error": "Invalid Username or Password"}, status=status.HTTP_400_BAD_REQUEST
+            {"error": "Invalid Username or Password"}, 
+            status=status.HTTP_401_UNAUTHORIZED
         )
 
 
@@ -357,38 +359,59 @@ class EmployeeLoginView(APIView):
 
     @swagger_auto_schema(request_body=EmployeeLoginSerializer)
     def post(self, request, *args, **kwargs):
-        serializer = EmployeeLoginSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        email = serializer.validated_data['email']
-        password = serializer.validated_data['password']
-
-        # Authenticate using Django's auth system
-        user = authenticate(request, username=email, password=password)
-        if user is None:
-            return Response({"error": "Invalid email or password."}, status=status.HTTP_400_BAD_REQUEST)
-
-        # Check if the user is an employee
         try:
-            employee = Employee.objects.get(user=user)
-            if not employee.is_active:
-                return Response({"error": "Employee account is not active."}, status=status.HTTP_400_BAD_REQUEST)
-        except Employee.DoesNotExist:
-            return Response({"error": "User is not an employee."}, status=status.HTTP_400_BAD_REQUEST)
+            serializer = EmployeeLoginSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
 
-        # Log in the user for session-based auth
-        login(request, user)
+            email = serializer.validated_data['email']
+            password = serializer.validated_data['password']
 
-        # Return employee information
-        return Response({
-            "employee": {
-                "id": employee.id,
-                "name": employee.name,
-                "email": user.email,
-                "role": employee.role,
-                "system": employee.system.name,
-            }
-        }, status=status.HTTP_200_OK)
+            # Authenticate using Django's auth system
+            user = authenticate(request, username=email, password=password)
+            if user is None:
+                return Response(
+                    {"error": "Invalid email or password."}, 
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+
+            # Check if the user is an employee
+            try:
+                employee = Employee.objects.get(user=user)
+                if not employee.is_active:
+                    return Response(
+                        {"error": "Invalid email or password."}, 
+                        status=status.HTTP_401_UNAUTHORIZED
+                    )
+            except Employee.DoesNotExist:
+                return Response(
+                    {"error": "Invalid email or password."}, 
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+
+            # Log in the user for session-based auth
+            login(request, user)
+
+            # Return employee information
+            return Response({
+                "employee": {
+                    "id": employee.id,
+                    "name": employee.name,
+                    "email": user.email,
+                    "role": employee.role,
+                    "system": employee.system.name,
+                }
+            }, status=status.HTTP_200_OK)
+            
+        except serializers.ValidationError:
+            return Response(
+                {"error": "Invalid email or password."}, 
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+        except Exception as e:
+            return Response(
+                {"error": "Invalid email or password."}, 
+                status=status.HTTP_401_UNAUTHORIZED
+            )
         
 class EmployeeLogoutView(APIView):
     """
