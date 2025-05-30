@@ -127,11 +127,11 @@ const OrderDetailsPage: React.FC = () => {
         title="Order Details"
         breadcrumbs={[
           { title: 'Restaurant', path: '/restaurant' },
-          { title: 'Orders', path: '/restaurant/orders' },
+          { title: 'Orders', path: '/orders' },
           { title: 'Loading...' }
         ]}
         actions={
-          <Button onClick={() => navigate('/restaurant/orders')}>
+          <Button onClick={() => navigate('/orders')}>
             Back to Orders
           </Button>
         }
@@ -152,11 +152,11 @@ const OrderDetailsPage: React.FC = () => {
         title={`Order #${order.id}`}
         breadcrumbs={[
           { title: 'Restaurant', path: '/restaurant' },
-          { title: 'Orders', path: '/restaurant/orders' },
+          { title: 'Orders', path: '/orders' },
           { title: `Order #${order.id}` }
         ]}
         actions={
-          <Button onClick={() => navigate('/restaurant/orders')}>
+          <Button onClick={() => navigate('/orders')}>
             Back to Orders
           </Button>
         }
