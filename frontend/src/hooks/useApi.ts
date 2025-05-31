@@ -91,10 +91,17 @@ export const useApi = <T,>() => {
       ) {
         navigate('/ownerLogin');
       }
+      
+      // Extract error message from response data if available
+      const errorMessage = apiError.response?.data?.error || 
+                          apiError.response?.data?.detail || 
+                          apiError.message || 
+                          'An unknown error occurred';
+                          
       setState({ 
         data: null, 
         loading: false, 
-        error: apiError.message || 'An unknown error occurred'
+        error: errorMessage
       });
       throw err;
     } finally {
