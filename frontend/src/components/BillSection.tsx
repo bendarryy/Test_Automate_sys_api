@@ -23,7 +23,7 @@ const OrdersSection = () => {
   const [selectedSystemId] = useSelectedSystemId();
   const { createOrder, addItemToOrder, loading: apiLoading } = useSendOrders(Number(selectedSystemId));
 
-  const total = React.useMemo(() => billItems.reduce((total, item) => total + item.price, 0), [billItems]);
+  const total = React.useMemo(() => billItems.reduce((total, item) => total + (item.price * item.quantity), 0), [billItems]);
   const discountedTotal = React.useMemo(() => total - (total * discount) / 100, [total, discount]);
 
   const handleSendBill = React.useCallback(async () => {

@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useApi } from '../../hooks/useApi';
-import { useParams, Navigate, useLocation } from 'react-router-dom';
+import { useParams, Navigate } from 'react-router-dom';
 import Header from '../../components/Header';
 import { 
   Card, 
@@ -60,9 +60,8 @@ const statusLabels = {
 
 const KdsPage: React.FC = () => {
   const params = useParams<{ systemId?: string }>();
-  const location = useLocation();
   const systemId = params.systemId || localStorage.getItem('selectedSystemId') || '5';
-  const { loading, error, callApi } = useApi<KitchenOrder[]>();
+  const { loading, error, callApi, clearCache } = useApi<KitchenOrder[]>();
   const [orders, setOrders] = useState<KitchenOrder[]>([]);
   const [updating, setUpdating] = useState<number | null>(null);
   const [searchText, setSearchText] = useState('');
@@ -72,6 +71,8 @@ const KdsPage: React.FC = () => {
   const fetchOrders = useCallback(async () => {
     if (systemId) {
       try {
+        // Clear the cache for this endpoint before fetching
+        clearCache(`/restaurant/${systemId}/kitchen/orders/`);
         const data = await callApi('get', `/restaurant/${systemId}/kitchen/orders/`);
         if (data) {
           // Filter orders to only include pending and preparing
@@ -91,12 +92,12 @@ const KdsPage: React.FC = () => {
         console.error('Error fetching orders:', error);
       }
     }
-  }, [systemId, callApi]);
+  }, [systemId, callApi, clearCache]);
 
-  // Initial load and navigation
+  // Initial load only
   useEffect(() => {
     fetchOrders();
-  }, [fetchOrders, location.pathname]);
+  }, [fetchOrders]);
 
   const handleStatusUpdate = async (id: number, newStatus: 'preparing' | 'ready') => {
     if (!systemId) return;

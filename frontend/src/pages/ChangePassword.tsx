@@ -45,6 +45,7 @@ const ChangePassword: React.FC = () => {
             ]}
           >
             <Input.Password
+              data-testid="current-password"
               prefix={<LockOutlined />}
               placeholder="Enter your current password"
             />
@@ -59,6 +60,7 @@ const ChangePassword: React.FC = () => {
             ]}
           >
             <Input.Password
+              data-testid="new-password"
               prefix={<LockOutlined />}
               placeholder="Enter your new password"
             />
@@ -81,6 +83,7 @@ const ChangePassword: React.FC = () => {
             ]}
           >
             <Input.Password
+              data-testid="confirm-password"
               prefix={<LockOutlined />}
               placeholder="Confirm your new password"
             />
@@ -88,6 +91,7 @@ const ChangePassword: React.FC = () => {
 
           <Form.Item>
             <Button
+              data-testid="change-password-button"
               type="primary"
               htmlType="submit"
               loading={loading}

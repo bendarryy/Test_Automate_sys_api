@@ -1,3 +1,6 @@
 **/__pycache__/
 .vscode/
 **/.vscode/
+# Cypress reports and screenshots
+reports overwrite=false html=true json=true
+frontend/cypress/screenshots/

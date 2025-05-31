@@ -175,25 +175,22 @@ const WaiterDisplay: React.FC = () => {
             <div style={{
               display: 'grid',
               gridTemplateColumns: '1fr',
+              gridTemplateRows: 'repeat(3, 1fr)',
               gap: 16,
-              height: '100%',
+              height: 'calc(100vh - 200px)',
               paddingRight: 4,
               overflow: 'hidden',
-              maxHeight: 400
             }}>
               {[...Array(3)].map((_, idx) => (
                 <Skeleton.Button
                   key={idx}
                   active
-                  style={{ width: '100%', height: 120, borderRadius: 12, overflow: 'hidden' }}
+                  style={{ width: '100%', height: "100%", borderRadius: 12, overflow: 'hidden' }}
                 />
               ))}
             </div>
           ) : servedOrders.length > 0 ? (
             <div style={{ 
-              display: 'grid',
-              gridTemplateColumns: '1fr',
-              gap: 16,
               height: '100%',
               paddingRight: 4
             }}>

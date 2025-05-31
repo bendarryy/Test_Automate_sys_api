@@ -50,7 +50,7 @@ const OwnerLogin: React.FC = () => {
               { min: 3, message: 'Username must be at least 3 characters' },
             ]}
           >
-            <Input placeholder="Enter username" disabled={loading} autoFocus />
+            <Input data-testid="email-input" placeholder="Enter username" disabled={loading} autoFocus />
           </Form.Item>
 
           <Form.Item
@@ -61,7 +61,7 @@ const OwnerLogin: React.FC = () => {
               { min: 6, message: 'Password must be at least 6 characters' },
             ]}
           >
-            <Input.Password placeholder="Password" disabled={loading} />
+            <Input.Password data-testid="password-input" placeholder="Password" disabled={loading} />
           </Form.Item>
 
           {error && (
@@ -71,7 +71,7 @@ const OwnerLogin: React.FC = () => {
           )}
 
           <Form.Item>
-            <Button type="primary" htmlType="submit" className="w-100 custom-btn" loading={loading} disabled={loading}>
+            <Button data-testid="login-button" type="primary" htmlType="submit" className="w-100 custom-btn" loading={loading} disabled={loading}>
               Sign In
             </Button>
           </Form.Item>

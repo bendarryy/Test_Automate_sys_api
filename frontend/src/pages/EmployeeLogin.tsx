@@ -7,6 +7,12 @@ import { useNavigate } from 'react-router-dom';
 
 const { Title } = Typography;
 
+interface profile {
+    systems: {
+        id: string;
+        category: string;
+    };
+}
 const EmployeeLogin: React.FC = () => {
   const { loading, error, callApi } = useApi();
   const [success, setSuccess] = useState(false);
@@ -21,7 +27,7 @@ const EmployeeLogin: React.FC = () => {
       });
       
       // Get and store profile data
-      const profileData = await callApi('get', '/core/profile/');
+      const profileData = await callApi<profile>('get', '/core/profile/');
       if (profileData?.systems) {
         localStorage.setItem('selectedSystemId', profileData.systems.id);
         localStorage.setItem('selectedSystemCategory', profileData.systems.category);
@@ -71,7 +77,7 @@ const EmployeeLogin: React.FC = () => {
               { type: 'email', message: 'Invalid email' },
             ]}
           >
-            <Input type="email" placeholder="Enter company email" disabled={loading} autoFocus />
+            <Input data-testid="email-input" type="email" placeholder="Enter company email" disabled={loading} autoFocus />
           </Form.Item>
 
           <Form.Item
@@ -81,11 +87,11 @@ const EmployeeLogin: React.FC = () => {
               { required: true, message: 'Password is required' },
             ]}
           >
-            <Input.Password placeholder="Enter password" disabled={loading} />
+            <Input.Password data-testid="password-input" placeholder="Enter password" disabled={loading} />
           </Form.Item>
 
           <Form.Item>
-            <Button type="primary" htmlType="submit" className="w-100 custom-btn" loading={loading} disabled={loading}>
+            <Button data-testid="login-button" type="primary" htmlType="submit" className="w-100 custom-btn" loading={loading} disabled={loading}>
               Login
             </Button>
           </Form.Item>

@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { ReusableTable } from '../../components/ReusableTable';
 import type { ColumnsType } from 'antd/es/table';
 
-type OrderStatus = 'pending' | 'preparing' | 'ready' | 'completed' | 'canceled';
+type OrderStatus = 'pending' | 'preparing' | 'ready' | 'completed' | 'canceled' | 'served' | 'out_for_delivery';
 
 interface Order {
   id: string;
@@ -35,7 +35,9 @@ const statusColors: Record<OrderStatus, string> = {
   preparing: 'blue',
   ready: 'green',
   completed: 'purple',
-  canceled: 'red'
+  canceled: 'red',
+  served: 'cyan',
+  out_for_delivery: 'geekblue'
 };
 
 const OrderPage: React.FC = () => {
@@ -59,6 +61,26 @@ const OrderPage: React.FC = () => {
       notification.error({
         message: 'Error',
         description: 'Failed to delete selected orders'
+      });
+    }
+  };
+
+  const handleBulkStatusChange = async (newStatus: string) => {
+    try {
+      // Process orders sequentially instead of in parallel
+      for (const id of selectedRowKeys) {
+        await updateOrderStatus(id, newStatus);
+      }
+      notification.success({ 
+        message: 'Success', 
+        description: `Updated status for ${selectedRowKeys.length} orders successfully` 
+      });
+      setSelectedRowKeys([]);
+      getOrders();
+    } catch  {
+      notification.error({ 
+        message: 'Error', 
+        description: 'Failed to update status for selected orders' 
       });
     }
   };
@@ -218,6 +240,11 @@ const OrderPage: React.FC = () => {
             <Select.Option value="pending">Pending</Select.Option>
             <Select.Option value="preparing">Preparing</Select.Option>
             <Select.Option value="ready">Ready</Select.Option>
+            {record.order_type === 'delivery' ? (
+              <Select.Option value="out_for_delivery">Out for Delivery</Select.Option>
+            ) : (
+              <Select.Option value="served">Served</Select.Option>
+            )}
             <Select.Option value="completed">Completed</Select.Option>
             <Select.Option value="canceled">Canceled</Select.Option>
           </Select>
@@ -242,13 +269,33 @@ const OrderPage: React.FC = () => {
   ];
 
   const extraActions = selectedRowKeys.length > 0 && (
-    <Button 
-      danger 
-      onClick={handleBulkDelete}
-      style={{ marginLeft: 8 }}
-    >
-      Delete Selected
-    </Button>
+    <Space>
+      <Select
+        style={{ width: 120 }}
+        placeholder="Change Status"
+        onChange={handleBulkStatusChange}
+      >
+        <Select.Option value="pending">Pending</Select.Option>
+        <Select.Option value="preparing">Preparing</Select.Option>
+        <Select.Option value="ready">Ready</Select.Option>
+        {selectedRowKeys.some(key => {
+          const order = (orders as Order[])?.find((o: Order) => o.id === key);
+          return order?.order_type === 'delivery';
+        }) ? (
+          <Select.Option value="out_for_delivery">Out for Delivery</Select.Option>
+        ) : (
+          <Select.Option value="served">Served</Select.Option>
+        )}
+        <Select.Option value="completed">Completed</Select.Option>
+        <Select.Option value="canceled">Canceled</Select.Option>
+      </Select>
+      <Button 
+        danger 
+        onClick={handleBulkDelete}
+      >
+        Delete Selected
+      </Button>
+    </Space>
   );
 
   return (

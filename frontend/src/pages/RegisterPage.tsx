@@ -1,18 +1,25 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useRegister } from '../hooks/useRegister';
 import { Link, useNavigate } from 'react-router-dom';
-import styles from '../styles/Auth.module.css';
+import { Form, Input, Button, Card, Alert, Typography, Row, Col } from 'antd';
+import '../styles/Login.css';
+
+const { Title } = Typography;
 
 const RegisterPage: React.FC = () => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
   const { register, loading, error } = useRegister();
   const navigate = useNavigate();
+  const [form] = Form.useForm();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (values: any) => {
     try {
-      await register({ username, password });
+      await register({
+        username: values.username,
+        email: values.email,
+        password: values.password,
+        first_name: values.first_name,
+        last_name: values.last_name
+      });
       navigate('/ownerLogin');
     } catch (err) {
       console.error(err);
@@ -20,39 +27,133 @@ const RegisterPage: React.FC = () => {
   };
 
   return (
-    <div className={styles.container}>
-      <div className={styles.formWrapper}>
-        <h2 className={styles.title}>Register</h2>
-        <form onSubmit={handleSubmit}>
-          <div className={styles.inputGroup}>
-            <label className={styles.label}>Username</label>
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              required
-              className={styles.input}
-            />
-          </div>
-          <div className={styles.inputGroup}>
-            <label className={styles.label}>Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className={styles.input}
-            />
-          </div>
-          {error && <p className={styles.error}>{error}</p>}
-          <button type="submit" disabled={loading} className={styles.button}>
-            {loading ? 'Registering...' : 'Register'}
-          </button>
-        </form>
-        <p className={styles.link}>
-          Already have an account? <Link to="/login">Login</Link>
-        </p>
-      </div>
+    <div
+      style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <Card className={`login-card shadow ${error ? 'error' : ''}`} style={{ width: 500 }}>
+        <Title level={2} className="text-center mb-4 logo-text" style={{ textAlign: 'center', marginBottom: 24 }}>
+          Register
+        </Title>
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleSubmit}
+          noValidate
+        >
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                label="First Name"
+                name="first_name"
+              >
+                <Input data-testid="first-name-input" placeholder="Enter first name" disabled={loading} />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                label="Last Name"
+                name="last_name"
+              >
+                <Input data-testid="last-name-input" placeholder="Enter last name" disabled={loading} />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Form.Item
+            label="Username"
+            name="username"
+            rules={[
+              { required: true, message: 'Username is required' },
+              { min: 3, message: 'Username must be at least 3 characters' },
+              { max: 50, message: 'Username cannot exceed 50 characters' },
+              { 
+                pattern: /^[a-zA-Z0-9_-]+$/,
+                message: 'Username can only contain letters, numbers, underscores, and hyphens'
+              }
+            ]}
+          >
+            <Input data-testid="username-input" placeholder="Enter username" disabled={loading} autoFocus />
+          </Form.Item>
+
+          <Form.Item
+            label="Email"
+            name="email"
+            rules={[
+              { required: true, message: 'Email is required' },
+              { type: 'email', message: 'Invalid email' },
+            ]}
+          >
+            <Input data-testid="email-input" type="email" placeholder="Enter email" disabled={loading} />
+          </Form.Item>
+
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                label="Password"
+                name="password"
+                rules={[
+                  { required: true, message: 'Password is required' },
+                  { min: 6, message: 'Password must be at least 6 characters' },
+                  { max: 50, message: 'Password cannot exceed 50 characters' }
+                ]}
+              >
+                <Input.Password data-testid="password-input" placeholder="Enter password" disabled={loading} />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                label="Confirm Password"
+                name="confirmPassword"
+                dependencies={['password']}
+                rules={[
+                  { required: true, message: 'Please confirm your password' },
+                  ({ getFieldValue }) => ({
+                    validator(_, value) {
+                      if (!value || getFieldValue('password') === value) {
+                        return Promise.resolve();
+                      }
+                      return Promise.reject(new Error('Passwords do not match'));
+                    },
+                  }),
+                ]}
+              >
+                <Input.Password data-testid="confirm-password-input" placeholder="Confirm password" disabled={loading} />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          {error && (
+            <Form.Item>
+              <Alert message={error} type="error" showIcon style={{ marginBottom: 16 }} />
+            </Form.Item>
+          )}
+
+          <Form.Item>
+            <Button 
+              data-testid="register-button" 
+              type="primary" 
+              htmlType="submit" 
+              className="w-100 custom-btn"
+              loading={loading}
+              disabled={loading}
+            >
+              Register
+            </Button>
+          </Form.Item>
+        </Form>
+        <Button
+          type="link"
+          style={{ marginTop: 16, width: '100%' }}
+          onClick={() => navigate('/login')}
+        >
+          Already have an account? Login
+        </Button>
+      </Card>
     </div>
   );
 };

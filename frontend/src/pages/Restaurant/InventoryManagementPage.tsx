@@ -1,5 +1,5 @@
 // InventoryManagementPage.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Table, Input, Button, Modal, Form, Progress, Space, Tag } from 'antd';
 import Header from '../../components/Header';
 import { SearchOutlined, PlusCircleOutlined, EditOutlined, SaveOutlined, DeleteOutlined } from '@ant-design/icons';
@@ -24,6 +24,7 @@ function computeStatusAndAvailability(item: InventoryItem) {
 const InventoryManagementPage: React.FC = () => {
   const [selectedSystemId] = useSelectedSystemId();
   const [editingKey, setEditingKey] = useState<string | null>(null);
+  const [editingData, setEditingData] = useState<InventoryItem | null>(null);
   const [newItem, setNewItem] = useState<Omit<InventoryItem, 'id'>>({
     name: '',
     quantity: null,
@@ -54,20 +55,27 @@ const InventoryManagementPage: React.FC = () => {
 
   const edit = (record: InventoryItem) => {
     setEditingKey(String(record.id));
+    setEditingData({ ...record });
   };
 
   const cancel = () => {
     setEditingKey(null);
+    setEditingData(null);
   };
 
   const save = async (id: string) => {
     try {
-      const row = await (inventory || []).find(item => item.id === Number(id));
-      if (!row || !selectedSystemId) return;
-      await updateInventoryItem(selectedSystemId, id, row);
+      if (!editingData || !selectedSystemId) return;
+      await updateInventoryItem(selectedSystemId, id, editingData);
       setEditingKey(null);
+      setEditingData(null);
+      
     } catch (errInfo) {
       console.log('Validate Failed:', errInfo);
+    } finally {
+      if (selectedSystemId) {
+        fetchInventory(selectedSystemId);
+      }
     }
   };
 
@@ -81,7 +89,7 @@ const InventoryManagementPage: React.FC = () => {
     }
   };
 
-  const columns: ColumnsType<InventoryItem> = [
+  const columns: ColumnsType<InventoryItem> = useMemo(() => [
     {
       title: 'Item Name',
       dataIndex: 'name',
@@ -90,12 +98,9 @@ const InventoryManagementPage: React.FC = () => {
         const editable = isEditing(record);
         return editable ? (
           <Input
-            value={text}
+            defaultValue={text}
             onChange={e => {
-              const newData = inventory?.map(item => 
-                item.id === record.id ? { ...item, name: e.target.value } : item
-              );
-              if (newData) inventory?.splice(0, inventory.length, ...newData);
+              setEditingData(prev => prev ? { ...prev, name: e.target.value } : null);
             }}
           />
         ) : (
@@ -149,12 +154,12 @@ const InventoryManagementPage: React.FC = () => {
         return editable ? (
           <Input
             type="number"
-            value={quantity ?? ''}
+            defaultValue={quantity ?? ''}
             onChange={e => {
-              const newData = inventory?.map(item => 
-                item.id === record.id ? { ...item, quantity: e.target.value === '' ? null : Number(e.target.value) } : item
-              );
-              if (newData) inventory?.splice(0, inventory.length, ...newData);
+              setEditingData(prev => prev ? { 
+                ...prev, 
+                quantity: e.target.value === '' ? null : Number(e.target.value) 
+              } : null);
             }}
           />
         ) : (
@@ -171,12 +176,9 @@ const InventoryManagementPage: React.FC = () => {
         const editable = isEditing(record);
         return editable ? (
           <Input
-            value={text}
+            defaultValue={text}
             onChange={e => {
-              const newData = inventory?.map(item => 
-                item.id === record.id ? { ...item, unit: e.target.value } : item
-              );
-              if (newData) inventory?.splice(0, inventory.length, ...newData);
+              setEditingData(prev => prev ? { ...prev, unit: e.target.value } : null);
             }}
           />
         ) : (
@@ -276,7 +278,15 @@ const InventoryManagementPage: React.FC = () => {
         );
       }
     }
-  ];
+  ], [editingKey, editingData]);
+
+  const tableData = useMemo(() => {
+    if (!inventory) return [];
+    return inventory.map(item => ({
+      ...item,
+      key: item.id
+    }));
+  }, [inventory]);
 
   return (
     <div className={`container py-4 ${styles.customContainer}`}>
@@ -301,7 +311,7 @@ const InventoryManagementPage: React.FC = () => {
 
       <Table
         columns={columns}
-        dataSource={inventory || []}
+        dataSource={tableData}
         loading={loading}
         rowKey="id"
         pagination={{ pageSize: 10 }}
