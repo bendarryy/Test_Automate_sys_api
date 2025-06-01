@@ -8,6 +8,7 @@ import { useSelectedSystemId } from '../../hooks/useSelectedSystemId';
 import type { MenuItem } from '../../types';
 import { ColumnGroupType, ColumnType } from 'antd/es/table';
 
+
 interface MenuManagementProps {
   EditPermition?: boolean;
 }
@@ -17,7 +18,7 @@ const initialItem: MenuItem = {
   name: '',
   category: '',
   price: 0,
-  cost: 0,
+  cost: 0 ,
   is_available: true,
   description: '',
   image: null,
@@ -43,7 +44,7 @@ const MenuManagementPage: React.FC<MenuManagementProps> = () => {
           getCategories()
         ]);
         
-        setItems((fetchedItems || []).map((item: MenuItem) => ({
+        setItems((fetchedItems || []).map((item) => ({
           id: item.id,
           name: item.name,
           category: item.category,
@@ -106,7 +107,7 @@ const MenuManagementPage: React.FC<MenuManagementProps> = () => {
       return;
     }
 
-    let resultItem;
+    let resultItem:MenuItem | null;
     if (formData.image && (formData.image instanceof File || (typeof formData.image === 'object' && formData.image !== null && 'type' in formData.image))) {
       const fd = new FormData();
       fd.append('name', formData.name);
@@ -117,7 +118,7 @@ const MenuManagementPage: React.FC<MenuManagementProps> = () => {
       fd.append('description', formData.description || '');
       fd.append('image', formData.image);
       if (editItem) {
-        resultItem = await updateMenuItem(editItem.id, fd);
+        resultItem = await updateMenuItem(editItem.id, fd) ;
       } else {
         resultItem = await createMenuItem(fd);
       }
@@ -149,7 +150,7 @@ const MenuManagementPage: React.FC<MenuManagementProps> = () => {
               cost: Number(formData.cost),
               is_available: formData.is_available,
               description: formData.description,
-              image: resultItem.image,
+              image: resultItem?.image ?? null,
             }
           : item
       )));
@@ -319,7 +320,16 @@ const MenuManagementPage: React.FC<MenuManagementProps> = () => {
             <Input.Search
               placeholder="Search items"
               onSearch={value => setSearchText(value)}
-              style={{ width: 200 }}
+              style={{ width: 200, display: 'flex' }}
+            />
+            <Select
+              mode="multiple"
+              style={{ width: 100 }}
+              placeholder="Category"
+              value={selectedCategories}
+              onChange={setSelectedCategories}
+              options={categories.map(cat => ({ label: cat, value: cat }))}
+              loading={loading}
             />
             <Button type="primary" onClick={handleAddClick} icon={<PlusOutlined />}>
               Add Item
@@ -327,18 +337,6 @@ const MenuManagementPage: React.FC<MenuManagementProps> = () => {
           </Space>
         }
       />
-      <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', marginBottom: 16, marginTop: 16 }}>
-        <Select
-          mode="multiple"
-          style={{ width: 300 }}
-          placeholder="Filter by Categories"
-          value={selectedCategories}
-          onChange={setSelectedCategories}
-          options={categories.map(cat => ({ label: cat, value: cat }))}
-          loading={loading}
-        />
-      </div>
-
       {loading ? (
         <div style={{ textAlign: 'center', padding: 24 }}>
           <Spin size="large" />

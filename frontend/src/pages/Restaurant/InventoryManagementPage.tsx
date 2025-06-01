@@ -44,7 +44,7 @@ const InventoryManagementPage: React.FC = () => {
   const handleCloseModal = () => setShowModal(false);
 
   const handleAddNewIngredient = async () => {
-    if (!newItem.name || newItem.quantity === null || !newItem.unit || !selectedSystemId) return;
+    if (!newItem.name || newItem.quantity === null || !selectedSystemId) return;
     await addInventoryItem(selectedSystemId, newItem);
     fetchInventory(selectedSystemId);
     setNewItem({ name: '', quantity: null, unit: '', min_threshold: null });
@@ -352,7 +352,7 @@ const InventoryManagementPage: React.FC = () => {
               placeholder="Enter quantity"
             />
           </Form.Item>
-          <Form.Item label="Unit" required>
+          <Form.Item label="Unit">
             <Input
               value={newItem.unit}
               onChange={e => setNewItem({ ...newItem, unit: e.target.value })}

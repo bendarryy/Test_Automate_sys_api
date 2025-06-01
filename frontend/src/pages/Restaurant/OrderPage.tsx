@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button, Select, notification, Space, Input, Tag } from 'antd';
-import { DeleteOutlined, SearchOutlined, ReloadOutlined } from '@ant-design/icons';
+import { DeleteOutlined, SearchOutlined, ReloadOutlined, ShopOutlined, CarOutlined } from '@ant-design/icons';
 import { useOrders } from '../../hooks/useOrders';
 import Header from '../../components/Header';
 import { useNavigate } from 'react-router-dom';
@@ -137,7 +137,16 @@ const OrderPage: React.FC = () => {
       title: 'Order type',
       dataIndex: 'order_type',
       key: 'order_type',
-      render: (order_type: Order['order_type']) => (order_type === 'delivery' ? 'delivery' : 'in_house'),
+      render: (order_type: Order['order_type']) => (
+        <Space>
+          {order_type === 'delivery' ? (
+            <CarOutlined style={{ color: '#1890ff' }} />
+          ) : (
+            <ShopOutlined style={{ color: '#52c41a' }} />
+          )}
+          {order_type === 'delivery' ? 'Delivery' : 'In House'}
+        </Space>
+      ),
       filters: [
         { text: 'In House', value: 'in_house' },
         { text: 'Delivery', value: 'delivery' },

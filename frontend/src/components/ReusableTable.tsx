@@ -1,5 +1,5 @@
 import React from 'react';
-import { Table, Input, Space, Tag } from 'antd';
+import { Table, Input, Tag } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { SearchOutlined } from '@ant-design/icons';
 
@@ -12,7 +12,6 @@ interface ReusableTableProps<T extends Record<string, unknown>> {
   rowKey?: keyof T;
   onRowSelectionChange?: (selectedRowKeys: React.Key[]) => void;
   selectedRowKeys?: React.Key[];
-  showSearch?: boolean;
   showRowSelection?: boolean;
   extraActions?: React.ReactNode;
 }
@@ -24,9 +23,7 @@ export function ReusableTable<T extends Record<string, unknown>>({
   rowKey,
   onRowSelectionChange,
   selectedRowKeys,
-  showSearch = true,
   showRowSelection = true,
-  extraActions,
 }: ReusableTableProps<T>) {
   // Example usage of permission-based action buttons:
   // Place this in the parent component using ReusableTable, not inside the table itself.
@@ -49,14 +46,8 @@ export function ReusableTable<T extends Record<string, unknown>>({
   //   },
   // ];
 
-  const [searchText, setSearchText] = React.useState('');
 
-  const filteredData = React.useMemo(() => {
-    if (!searchText) return data;
-    return data.filter(item => 
-      JSON.stringify(item).toLowerCase().includes(searchText.toLowerCase())
-    );
-  }, [data, searchText]);
+
 
   const rowSelection = showRowSelection
     ? {
@@ -67,24 +58,10 @@ export function ReusableTable<T extends Record<string, unknown>>({
 
   return (
     <>
-      {showSearch && (
-        <div style={{ marginBottom: 16 }}>
-          <Input
-            placeholder="Search..."
-            prefix={<SearchOutlined />}
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            style={{ width: 200 }}
-          />
-          <Space style={{ marginLeft: 8 }}>
-            {extraActions}
-          </Space>
-        </div>
-      )}
       <Table
         rowKey={rowKey}
         columns={columns}
-        dataSource={filteredData}
+        dataSource={data}
         loading={loading}
         rowSelection={rowSelection}
         pagination={{ pageSize: 10 }}

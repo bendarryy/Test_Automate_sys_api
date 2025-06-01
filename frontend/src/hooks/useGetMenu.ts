@@ -61,7 +61,7 @@ interface MenuItem {
   name: string;
   description: string;
   price: number;
-  cost: number | null;
+  cost: number;
   category: string;
   is_available: boolean;
   image?: string | null | File;
@@ -72,7 +72,8 @@ export const useGetMenu = (systemId: number) => {
 
   const getCategories = useCallback(async () => {
     const url = `/restaurant/${systemId}/menu-items/categories/`;
-    return await callApi('get', url);
+    const response = await callApi<string[]>('get', url);
+    return response;
   }, [systemId, callApi]);
 
   const getMenu = useCallback(async (category?: string) => {
@@ -92,11 +93,11 @@ export const useGetMenu = (systemId: number) => {
     return response;
   }, [systemId, callApi]);
 
-  const createMenuItem = useCallback(async (menuItem: MenuItem | FormData) => {
+  const createMenuItem = useCallback(async (menuItem: MenuItem | FormData): Promise<MenuItem | null> => {
     const url = `/restaurant/${systemId}/menu-items/`;
     const result = await (menuItem instanceof FormData 
-      ? callApi('post', url, menuItem, true)
-      : callApi('post', url, menuItem));
+      ? callApi<MenuItem>('post', url, menuItem, true)
+      : callApi<MenuItem>('post', url, menuItem));
     
     // Clear menu cache after creating new item
     clearCache(`/restaurant/${systemId}/menu-items/`);
@@ -115,11 +116,11 @@ export const useGetMenu = (systemId: number) => {
     return response;
   }, [systemId, callApi]);
 
-  const updateMenuItem = useCallback(async (id: number, menuItem: Partial<MenuItem> | FormData) => {
+  const updateMenuItem = useCallback(async (id: number, menuItem: Partial<MenuItem> | FormData): Promise<MenuItem | null> => {
     const url = `/restaurant/${systemId}/menu-items/${id}/`;
     const result = await (menuItem instanceof FormData 
-      ? callApi('put', url, menuItem, true)
-      : callApi('put', url, menuItem));
+      ? callApi<MenuItem>('put', url, menuItem, true)
+      : callApi<MenuItem>('put', url, menuItem));
     
     // Clear menu cache after updating item
     clearCache(`/restaurant/${systemId}/menu-items/`);

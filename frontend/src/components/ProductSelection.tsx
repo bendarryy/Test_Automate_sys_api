@@ -6,8 +6,6 @@ import { addItem, setSelectedTable, setOrderType } from "../store/billSlice";
 import { useGetMenu, getCategoryIcon } from "../hooks/useGetMenu";
 // Import necessary Ant Design components
 import {
-  Col,
-  Row,
   Spin,
   Input,
   Select,
@@ -62,7 +60,7 @@ const ProductSelection = () => {
     const fetchCategories = async () => {
       const categoriesData = await getCategories();
       if (categoriesData) {
-        setCategories(categoriesData);
+        setCategories(categoriesData.map((category) => category.name));
       }
     };
     fetchCategories();
@@ -82,16 +80,16 @@ const ProductSelection = () => {
             .flat()
             .filter(
               (item, index, self) =>
-                index === self.findIndex((t) => t.id === item.id)
+                index === self.findIndex((t) => t?.id === item?.id)
             );
           // Update the data state with combined results
           if (combinedResults) {
-            setProducts(combinedResults);
+            setProducts(combinedResults as Product[]);
           }
         } else {
           const result = await getMenu();
           if (result) {
-            setProducts(result);
+            setProducts(result as Product[]);
           }
         }
       } catch (error) {
@@ -365,9 +363,15 @@ const ProductSelection = () => {
             <Spin size="large" />
           </div>
         ) : (
-          <Row gutter={[16, 16]} style={{ margin: "0px", padding: "10px" }}>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+            gap: '16px',
+            padding: '10px',
+            margin: '0px'
+          }}>
             {displayedProducts.map((product) => (
-              <Col key={product.id} xs={24} sm={12} md={6} lg={4} xl={3}>
+              <div key={product.id}>
                 {/* Badge for product quantity in bill */}
                 {/* Badge in top-right */}
                 <div style={{ position: 'relative' }}>
@@ -389,7 +393,6 @@ const ProductSelection = () => {
                   badgeText={product.is_available ? '' : 'Unavailable'}
                   accentColor={product.is_available ? '#1677ff' : '#aaa'}
                   textColor="#1e293b"
-                  backgroundColor="#fff"
                   imageGradient={product.is_available ? 'linear-gradient(45deg, #a78bfa, #8b5cf6)' : 'linear-gradient(45deg, #ccc, #eee)'}
                   image={product.image}
                   width="100%"
@@ -417,9 +420,9 @@ const ProductSelection = () => {
                   }}
                 />
                 </div>
-              </Col>
+              </div>
             ))}
-          </Row>
+          </div>
         )}
       </div>
       {showTables && <TablesSection onClose={() => setShowTables(false)} />}

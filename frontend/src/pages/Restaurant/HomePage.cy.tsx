@@ -1,9 +1,9 @@
 import React from 'react'
-import App from './App'
+import HomePage from './HomePage'
 
-describe('<App />', () => {
+describe('<HomePage />', () => {
   it('renders', () => {
     // see: https://on.cypress.io/mounting-react
-    cy.mount(<App />)
+    cy.mount(<HomePage />)
   })
 })

@@ -11,6 +11,7 @@ export interface MenuItem {
   image?: string | null | File;
 }
 
+
 // نوع طاولة المطعم
 export interface Table {
   id: number;

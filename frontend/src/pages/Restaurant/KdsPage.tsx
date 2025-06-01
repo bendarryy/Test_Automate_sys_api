@@ -174,7 +174,7 @@ const KdsPage: React.FC = () => {
 
       {/* Statistics Cards */}
       <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
-        <Col span={8}>
+        <Col xs={24} sm={24} md={8} lg={8} xl={8}>
           <Card>
             <Statistic 
               title="Total Orders" 
@@ -183,7 +183,7 @@ const KdsPage: React.FC = () => {
             />
           </Card>
         </Col>
-        <Col span={8}>
+        <Col xs={24} sm={24} md={8} lg={8} xl={8}>
           <Card>
             <Statistic 
               title="Pending" 
@@ -193,7 +193,7 @@ const KdsPage: React.FC = () => {
             />
           </Card>
         </Col>
-        <Col span={8}>
+        <Col xs={24} sm={24} md={8} lg={8} xl={8}>
           <Card>
             <Statistic 
               title="Preparing" 
@@ -239,7 +239,7 @@ const KdsPage: React.FC = () => {
       {/* Orders Grid */}
       <Row gutter={[16, 16]}>
         {filteredOrders.map(order => (
-          <Col span={8} key={order.id}>
+          <Col xs={24} sm={12} md={8} lg={8} xl={8} key={order.id}>
             <Card
               title={
                 <Space>
