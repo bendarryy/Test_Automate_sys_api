@@ -666,3 +666,16 @@ class ProfileUpdateView(APIView):
             return Response(profile_serializer.data, status=status.HTTP_200_OK)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class CheckAuthView(APIView):
+    """
+    Lightweight endpoint to check authentication status
+    Returns minimal data for quick checks
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        return Response({
+            "is_authenticated": True,
+            "user_id": request.user.id
+        }, status=status.HTTP_200_OK)

@@ -10,7 +10,7 @@ urlpatterns = [
     path('profile/', views.ProfileView.as_view(), name='profile'),
     path('profile/update/', views.ProfileUpdateView.as_view(), name='profile-update'),
     path('change-password/', views.ChangePasswordView.as_view(), name='change-password'),
-   
+    path('check-auth/', views.CheckAuthView.as_view(), name='check-auth'),
     # System management endpoints
     path('systems/', views.SystemRetrieveView.as_view(), name='system-list'),
     path('systems/create/', views.SystemCreateView.as_view(), name='system-create'),
