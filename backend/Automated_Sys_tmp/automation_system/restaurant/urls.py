@@ -14,6 +14,12 @@ router.register(r'(?P<system_id>\d+)/kitchen/orders', KitchenOrderViewSet, basen
 router.register(r'(?P<system_id>\d+)/waiter/orders', WaiterDisplayViewSet, basename='waiter-orders')
 # Register Delivery System routes
 router.register(r'(?P<system_id>\d+)/delivery/orders', DeliveryViewSet, basename='delivery-orders')
+# Add the tables endpoint
+router.register(
+    r"systems/(?P<system_id>\d+)/tables",
+    TableViewSet,
+    basename="system-tables",
+)
 
 # API URLs
 api_urlpatterns = [
