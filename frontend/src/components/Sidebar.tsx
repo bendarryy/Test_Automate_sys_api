@@ -26,8 +26,22 @@ export function Sidebar({ defaultIconsOnly = false, className = "" }: { defaultI
   const navigate = useNavigate();
   const { token } = useToken();
   
-  // Get system category from localStorage
-  const systemCategory = localStorage.getItem('selectedSystemCategory');
+  // Get system category from localStorage and make it reactive
+  const [systemCategory, setSystemCategory] = useState<string | null>(
+    localStorage.getItem('selectedSystemCategory')
+  );
+  
+  // Listen for system category changes
+  useEffect(() => {
+    const handleSystemCategoryChange = () => {
+      setSystemCategory(localStorage.getItem('selectedSystemCategory'));
+    };
+
+    window.addEventListener('systemCategoryChanged', handleSystemCategoryChange);
+    return () => {
+      window.removeEventListener('systemCategoryChanged', handleSystemCategoryChange);
+    };
+  }, []);
   
   // Get navigation items based on system category
   // Filter navigation items by permissions using the custom hook

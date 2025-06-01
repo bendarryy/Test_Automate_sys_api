@@ -7,12 +7,19 @@ import { useNavigate } from 'react-router-dom';
 
 const { Title } = Typography;
 
-interface profile {
-    systems: {
-        id: string;
-        category: string;
-    };
+interface System {
+    id: number;
+    category: string;
+    name: string;
+    is_active: boolean;
+    subdomain: string;
+    custom_domain: string | null;
 }
+
+interface Profile {
+    systems: System;
+}
+
 const EmployeeLogin: React.FC = () => {
   const { loading, error, callApi } = useApi();
   const [success, setSuccess] = useState(false);
@@ -27,10 +34,20 @@ const EmployeeLogin: React.FC = () => {
       });
       
       // Get and store profile data
-      const profileData = await callApi<profile>('get', '/core/profile/');
+      const profileData = await callApi<Profile>('get', '/core/profile/');
+      console.log('Profile Data:', profileData); // Debug log
+
       if (profileData?.systems) {
-        localStorage.setItem('selectedSystemId', profileData.systems.id);
+        console.log('Selected System:', profileData.systems); // Debug log
+        
+        localStorage.setItem('selectedSystemId', profileData.systems.id.toString());
         localStorage.setItem('selectedSystemCategory', profileData.systems.category);
+        
+        // Dispatch the system category change event
+        window.dispatchEvent(new CustomEvent('systemCategoryChanged'));
+      } else {
+        console.error('No system found in profile data:', profileData);
+        throw new Error('No system found in profile data');
       }
 
       setSuccess(true);
@@ -41,12 +58,14 @@ const EmployeeLogin: React.FC = () => {
       form.setFieldsValue({ password: '' });
       
       // Handle both 400 and 401 status codes
-      const errorMessage = err?.response?.data?.error || 'Invalid email or password.';
+      const errorMessage = err?.response?.data?.error || err?.message || 'Invalid email or password.';
       
       // Focus on password field if it's a password error
       if (errorMessage.includes('password')) {
         form.getFieldInstance('password')?.focus();
       }
+    } finally {
+        navigate('/');
     }
   };
 

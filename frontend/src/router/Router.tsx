@@ -357,28 +357,32 @@ const DynamicRouter = () => {
   // Listen for changes to localStorage
   React.useEffect(() => {
     const handleStorageChange = () => {
-      setSystemCategory(localStorage.getItem('selectedSystemCategory'));
+      const newCategory = localStorage.getItem('selectedSystemCategory');
+      if (newCategory !== systemCategory) {
+        setSystemCategory(newCategory);
+        // Force a router recreation by updating the key
+        setRouterKey(prev => prev + 1);
+      }
     };
 
     // Listen for custom event when system category changes
     window.addEventListener('systemCategoryChanged', handleStorageChange);
     
-    // Also check periodically for changes (fallback)
-    const intervalId = setInterval(handleStorageChange, 500);
-
     return () => {
       window.removeEventListener('systemCategoryChanged', handleStorageChange);
-      clearInterval(intervalId);
     };
-  }, []);
+  }, [systemCategory]);
+
+  // Add a key state to force router recreation
+  const [routerKey, setRouterKey] = React.useState(0);
 
   // Select the appropriate router based on system category
   return (
     <Suspense fallback={<LoadingSpinner />}>
       {systemCategory === 'supermarket' ? (
-        <RouterProvider router={supermarketRouter} />
+        <RouterProvider key={`supermarket-${routerKey}`} router={supermarketRouter} />
       ) : (
-        <RouterProvider router={router} />
+        <RouterProvider key={`restaurant-${routerKey}`} router={router} />
       )}
     </Suspense>
   );

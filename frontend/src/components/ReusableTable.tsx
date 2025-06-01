@@ -24,6 +24,7 @@ export function ReusableTable<T extends Record<string, unknown>>({
   onRowSelectionChange,
   selectedRowKeys,
   showRowSelection = true,
+  extraActions,
 }: ReusableTableProps<T>) {
   // Example usage of permission-based action buttons:
   // Place this in the parent component using ReusableTable, not inside the table itself.
@@ -58,6 +59,11 @@ export function ReusableTable<T extends Record<string, unknown>>({
 
   return (
     <>
+      {extraActions && (
+        <div style={{ marginBottom: 16 }}>
+          {extraActions}
+        </div>
+      )}
       <Table
         rowKey={rowKey}
         columns={columns}

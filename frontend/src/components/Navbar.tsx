@@ -29,11 +29,13 @@ const Navbar = () => {
     try {
       console.log(userRole);
       if (userRole !== 'owner') {
-        await callApi('get', '/core/employee/logout/');
+        await callApi('post', '/core/employee/logout/');
         navigate('/employeelogin');
+        localStorage.removeItem("loginViaOwner");
       } else {
         await callApi('get', '/core/logout/');
         navigate('/ownerlogin');
+        localStorage.removeItem("loginViaOwner");
       }
     } catch (error) {
       console.error('Logout failed:', error);

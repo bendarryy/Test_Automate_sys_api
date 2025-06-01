@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import ReactApexChart from 'react-apexcharts';
-import '../../styles/financesdashboards.css';
+import styles from '../../styles/financesdashboards.module.css';
 import { useApi } from '../../hooks/useApi';
 import Header from '../../components/Header';
 import LoadingSpinner from '../../components/LoadingSpinner';
@@ -131,9 +131,9 @@ const FinancialDashboard = () => {
     setLoading(true);
     setError(null);
     Promise.all([
-      callApi('get', `/restaurant/${systemId}/orders/analytics/profit-summary/`),
-      callApi('get', `/restaurant/${systemId}/orders/analytics/profit-trend/?view=${trendView}`),
-      callApi('get', `/restaurant/${systemId}/orders/analytics/order-summary/`)
+      callApi('get', `/restaurant/${systemId}/orders/analytics/profit-summary/`) as Promise<ProfitSummary>,
+      callApi('get', `/restaurant/${systemId}/orders/analytics/profit-trend/?view=${trendView}`) as Promise<ProfitTrendPoint[]>,
+      callApi('get', `/restaurant/${systemId}/orders/analytics/order-summary/`) as Promise<OrderSummary>
     ])
       .then(([profitSummaryRes, profitTrendRes, orderSummaryRes]: [ProfitSummary, ProfitTrendPoint[], OrderSummary]) => {
         setProfitSummary(profitSummaryRes);
@@ -155,7 +155,7 @@ const FinancialDashboard = () => {
   };
 
   const renderChangeIndicator = (change: number) => (
-    <div className={`change ${change >= 0 ? 'positive' : 'negative'}`}>  
+    <div className={`${styles.change} ${change >= 0 ? styles.positive : styles.negative}`}>  
       <span>{Math.abs(change)}%</span>
     </div>
   );
@@ -202,41 +202,41 @@ const FinancialDashboard = () => {
 
   const renderOverviewSection = () => (
     <>
-      <div className="profit-section">
-        <h2>Total Profit Overview</h2>
-        <div className="cards">
-          <div className="card">
+      <div className={styles.profitSection}>
+        <h2 className={styles.sectionTitle}>Total Profit Overview</h2>
+        <div className={styles.cards}>
+          <div className={styles.card}>
             <h3>Today's Profit</h3>
-            <div className="amount">${formatNumber(profitSummary?.day_profit ?? 0)}</div>
+            <div className={styles.amount}>${formatNumber(profitSummary?.day_profit ?? 0)}</div>
             {renderChangeIndicator(profitSummary?.day_change ?? 0)}
-            <div className="vs">vs yesterday</div>
+            <div className={styles.vs}>vs yesterday</div>
           </div>
 
-          <div className="card">
+          <div className={styles.card}>
             <h3>This Week's Profit</h3>
-            <div className="amount">${formatNumber(profitSummary?.week_profit ?? 0)}</div>
+            <div className={styles.amount}>${formatNumber(profitSummary?.week_profit ?? 0)}</div>
             {renderChangeIndicator(profitSummary?.week_change ?? 0)}
-            <div className="vs">vs last week</div>
+            <div className={styles.vs}>vs last week</div>
           </div>
 
-          <div className="card">
+          <div className={styles.card}>
             <h3>This Month's Profit</h3>
-            <div className="amount">${formatNumber(profitSummary?.month_profit ?? 0)}</div>
+            <div className={styles.amount}>${formatNumber(profitSummary?.month_profit ?? 0)}</div>
             {renderChangeIndicator(profitSummary?.month_change ?? 0)}
-            <div className="vs">vs last month</div>
+            <div className={styles.vs}>vs last month</div>
           </div>
         </div>
       </div>
 
-      <div className="trend-analysis">
-        <div className="section-header">
-          <h2>Profit Trend Analysis</h2>
-          <div className="period-selector">
-            <button className={trendView === 'daily' ? 'active' : ''} onClick={() => setTrendView('daily')}>Daily (30 Days)</button>
-            <button className={trendView === 'monthly' ? 'active' : ''} onClick={() => setTrendView('monthly')}>Monthly (12 Months)</button>
+      <div className={styles.trendAnalysis}>
+        <div className={styles.sectionHeader}>
+          <h2 className={styles.sectionTitle}>Profit Trend Analysis</h2>
+          <div className={styles.periodSelector}>
+            <button className={trendView === 'daily' ? styles.active : ''} onClick={() => setTrendView('daily')}>Daily (30 Days)</button>
+            <button className={trendView === 'monthly' ? styles.active : ''} onClick={() => setTrendView('monthly')}>Monthly (12 Months)</button>
           </div>
         </div>
-        <div className="chart-container">
+        <div className={styles.chartContainer}>
           <ReactApexChart
             type="area"
             height={260}
@@ -256,28 +256,28 @@ const FinancialDashboard = () => {
         </div>
       </div>
 
-      <div className="orders-section">
-        <h2>Order Volume</h2>
-        <div className="cards">
-          <div className="card">
+      <div className={styles.ordersSection}>
+        <h2 className={styles.sectionTitle}>Order Volume</h2>
+        <div className={styles.cards}>
+          <div className={styles.card}>
             <h3>Orders Today</h3>
-            <div className="amount">{orderSummary?.today_orders ?? 0}</div>
+            <div className={styles.amount}>{orderSummary?.today_orders ?? 0}</div>
             {renderChangeIndicator(orderSummary?.today_change ?? 0)}
-            <div className="vs">vs yesterday</div>
+            <div className={styles.vs}>vs yesterday</div>
           </div>
 
-          <div className="card">
+          <div className={styles.card}>
             <h3>Orders This Week</h3>
-            <div className="amount">{orderSummary?.week_orders ?? 0}</div>
+            <div className={styles.amount}>{orderSummary?.week_orders ?? 0}</div>
             {renderChangeIndicator(orderSummary?.week_change ?? 0)}
-            <div className="vs">vs last week</div>
+            <div className={styles.vs}>vs last week</div>
           </div>
 
-          <div className="card">
+          <div className={styles.card}>
             <h3>Orders This Month</h3>
-            <div className="amount">{orderSummary?.month_orders ?? 0}</div>
+            <div className={styles.amount}>{orderSummary?.month_orders ?? 0}</div>
             {renderChangeIndicator(orderSummary?.month_change ?? 0)}
-            <div className="vs">vs last month</div>
+            <div className={styles.vs}>vs last month</div>
           </div>
         </div>
       </div>
@@ -285,58 +285,58 @@ const FinancialDashboard = () => {
   );
 
   const renderAnalyticsSection = () => (
-    <div className="analytics-section">
-      <h2>Detailed Analytics</h2>
-      <div className="cards">
-        <div className="card">
+    <div className={styles.analyticsSection}>
+      <h2 className={styles.sectionTitle}>Detailed Analytics</h2>
+      <div className={styles.cards}>
+        <div className={styles.card}>
           <h3>Average Order Value</h3>
-          <div className="amount">
+          <div className={styles.amount}>
             ${formatNumber((profitSummary?.day_profit ?? 0) / (orderSummary?.today_orders || 1))}
           </div>
-          <div className="vs">per order today</div>
+          <div className={styles.vs}>per order today</div>
         </div>
 
-        <div className="card">
+        <div className={styles.card}>
           <h3>Peak Hours</h3>
-          <div className="amount">12:00 - 14:00</div>
-          <div className="vs">Most active period</div>
+          <div className={styles.amount}>12:00 - 14:00</div>
+          <div className={styles.vs}>Most active period</div>
         </div>
 
-        <div className="card">
+        <div className={styles.card}>
           <h3>Customer Retention</h3>
-          <div className="amount">75%</div>
-          <div className="vs">Returning customers</div>
+          <div className={styles.amount}>75%</div>
+          <div className={styles.vs}>Returning customers</div>
         </div>
       </div>
 
-      <div className="trend-analysis">
-        <h2>Performance Metrics</h2>
-        <div className="metrics-grid">
-          <div className="metric-card">
+      <div className={styles.trendAnalysis}>
+        <h2 className={styles.sectionTitle}>Performance Metrics</h2>
+        <div className={styles.metricsGrid}>
+          <div className={styles.metricCard}>
             <h3>Revenue Growth</h3>
-            <div className="amount">+15%</div>
-            <div className="vs">vs last month</div>
+            <div className={styles.amount}>+15%</div>
+            <div className={styles.vs}>vs last month</div>
           </div>
-          <div className="metric-card">
+          <div className={styles.metricCard}>
             <h3>Order Growth</h3>
-            <div className="amount">+8%</div>
-            <div className="vs">vs last month</div>
+            <div className={styles.amount}>+8%</div>
+            <div className={styles.vs}>vs last month</div>
           </div>
-          <div className="metric-card">
+          <div className={styles.metricCard}>
             <h3>Customer Growth</h3>
-            <div className="amount">+12%</div>
-            <div className="vs">vs last month</div>
+            <div className={styles.amount}>+12%</div>
+            <div className={styles.vs}>vs last month</div>
           </div>
         </div>
       </div>
     </div>
   );
 
-  if (loading) return <div className="dashboard"><LoadingSpinner /></div>;
-  if (error) return <div className="dashboard"><div className="error">{error}</div></div>;
+  if (loading) return <div className={styles.dashboard}><LoadingSpinner /></div>;
+  if (error) return <div className={styles.dashboard}><div className={styles.error}>{error}</div></div>;
 
   return (
-    <div className="dashboard">
+    <div className={styles.dashboard}>
       <Header
         title="Financial Dashboard"
         breadcrumbs={[
@@ -347,15 +347,15 @@ const FinancialDashboard = () => {
           <Button type="primary" onClick={handleExportReport}>Export Report</Button>
         }
       />
-      <div className="nav" style={{ marginTop: '16px', marginBottom: '24px' }}>
+      <div className={styles.nav}>
         <button 
-          className={activeSection === 'overview' ? 'active' : ''} 
+          className={activeSection === 'overview' ? styles.active : ''} 
           onClick={() => setActiveSection('overview')}
         >
           Overview
         </button>
         <button 
-          className={activeSection === 'analytics' ? 'active' : ''} 
+          className={activeSection === 'analytics' ? styles.active : ''} 
           onClick={() => setActiveSection('analytics')}
         >
           Analytics
