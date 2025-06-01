@@ -30,8 +30,7 @@ const SupplierManagement: React.FC = () => {
     const currentSystemId = localStorage.getItem('selectedSystemId');
     try {
       const response = await callApi('get', `/supermarket/${currentSystemId}/suppliers/`);
-      setSuppliers(response);
-      console.log('suppliers:', response);
+      setSuppliers(response ?? []);
     } catch  {
       setError('Failed to fetch suppliers');
     }

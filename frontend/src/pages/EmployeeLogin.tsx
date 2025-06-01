@@ -35,10 +35,8 @@ const EmployeeLogin: React.FC = () => {
       
       // Get and store profile data
       const profileData = await callApi<Profile>('get', '/core/profile/');
-      console.log('Profile Data:', profileData); // Debug log
 
       if (profileData?.systems) {
-        console.log('Selected System:', profileData.systems); // Debug log
         
         localStorage.setItem('selectedSystemId', profileData.systems.id.toString());
         localStorage.setItem('selectedSystemCategory', profileData.systems.category);
@@ -52,16 +50,23 @@ const EmployeeLogin: React.FC = () => {
 
       setSuccess(true);
       navigate('/');
-    } catch (err: any) {
+    } catch (err: unknown) {
       setSuccess(false);
       // Clear password field on error
       form.setFieldsValue({ password: '' });
       
       // Handle both 400 and 401 status codes
-      const errorMessage = err?.response?.data?.error || err?.message || 'Invalid email or password.';
+      const errorMessage = 
+        (err && typeof err === 'object' && 'response' in err && 
+         err.response && typeof err.response === 'object' && 
+         'data' in err.response && err.response.data && 
+         typeof err.response.data === 'object' && 
+         'error' in err.response.data && err.response.data.error) || 
+        (err && typeof err === 'object' && 'message' in err && err.message) || 
+        'Invalid email or password.';
       
       // Focus on password field if it's a password error
-      if (errorMessage.includes('password')) {
+      if (typeof errorMessage === 'string' && errorMessage.includes('password')) {
         form.getFieldInstance('password')?.focus();
       }
     } finally {

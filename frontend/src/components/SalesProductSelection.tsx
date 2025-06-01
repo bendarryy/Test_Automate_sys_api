@@ -26,8 +26,8 @@ export const SalesProductSelection = () => {
   const fetchProducts = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await api.callApi('get', `/supermarket/${systemId}/products/`);
-      const productsData = Array.isArray(response) ? response : response.data;
+      const response = await api.callApi<Product[]>('get', `/supermarket/${systemId}/products/`);
+      const productsData = response || [];
       setProducts(productsData || []);
     } catch (error: unknown) {
       message.error(`Failed to load products: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -43,7 +43,6 @@ export const SalesProductSelection = () => {
   }, [systemId]);
 
   const handleAddProduct = (product: Product) => {
-    console.log('Adding product:', product);
     const newItem = {
       id: Date.now(), // Temporary ID
       product: product.id,
@@ -53,7 +52,6 @@ export const SalesProductSelection = () => {
       discount_amount: '0.00',
       total_price: product.price
     };
-    console.log('Dispatching item:', newItem);
     dispatch(addItemToSale(newItem));
     message.success(`${product.name} added to sale`);
   };

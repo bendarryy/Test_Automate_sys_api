@@ -46,82 +46,69 @@ const OrderPage: React.FC = () => {
   const navigate = useNavigate();
   const [selectedRowKeys, setSelectedRowKeys] = React.useState<string[]>([]);
   const [searchText, setSearchText] = React.useState('');
-  const [filteredOrders, setFilteredOrders] = React.useState<Order[]>([]);
 
-  const handleBulkDelete = async () => {
+  // Memoize filtered and sorted orders
+  const filteredOrders = React.useMemo(() => {
+    const ordersList = Array.isArray(orders) ? orders : [];
+    // Sort orders by date in descending order (newest first)
+    const sortedOrders = [...ordersList].sort((a: Order, b: Order) =>
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
+    if (!searchText) return sortedOrders as Order[];
+    const searchLower = searchText.toLowerCase();
+    return sortedOrders.filter((order: Order) =>
+      String(order.id).includes(searchLower) ||
+      (order.customer_name && order.customer_name.toLowerCase().includes(searchLower)) ||
+      (order.table_number && order.table_number.toLowerCase().includes(searchLower)) ||
+      order.status.toLowerCase().includes(searchLower)
+    ) as Order[];
+  }, [orders, searchText]);
+
+  // Handlers
+  const handleBulkDelete = React.useCallback(async () => {
     try {
       await Promise.all(selectedRowKeys.map(id => deleteOrder(id)));
-      notification.success({ 
-        message: 'Success', 
-        description: `Deleted ${selectedRowKeys.length} orders successfully` 
+      notification.success({
+        message: 'Success',
+        description: `Deleted ${selectedRowKeys.length} orders successfully`
       });
       setSelectedRowKeys([]);
       getOrders();
-    } catch  {
+    } catch {
       notification.error({
         message: 'Error',
         description: 'Failed to delete selected orders'
       });
     }
-  };
+  }, [selectedRowKeys, deleteOrder, getOrders]);
 
-  const handleBulkStatusChange = async (newStatus: string) => {
+  const handleBulkStatusChange = React.useCallback(async (newStatus: string) => {
     try {
-      // Process orders sequentially instead of in parallel
-      for (const id of selectedRowKeys) {
-        await updateOrderStatus(id, newStatus);
-      }
-      notification.success({ 
-        message: 'Success', 
-        description: `Updated status for ${selectedRowKeys.length} orders successfully` 
+      await Promise.all(selectedRowKeys.map(id => updateOrderStatus(id, newStatus)));
+      notification.success({
+        message: 'Success',
+        description: `Updated status for ${selectedRowKeys.length} orders successfully`
       });
       setSelectedRowKeys([]);
       getOrders();
-    } catch  {
-      notification.error({ 
-        message: 'Error', 
-        description: 'Failed to update status for selected orders' 
+    } catch {
+      notification.error({
+        message: 'Error',
+        description: 'Failed to update status for selected orders'
       });
     }
-  };
+  }, [selectedRowKeys, updateOrderStatus, getOrders]);
 
   React.useEffect(() => {
     getOrders();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [systemId]);
-  
-  // Update filtered orders when orders or search text changes
-  React.useEffect(() => {
-    // Set initial filtered orders from orders data
-    const ordersList = Array.isArray(orders) ? orders : [];
-    
-    // Sort orders by date in descending order (newest first)
-    const sortedOrders = [...ordersList].sort((a: Order, b: Order) => 
-      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-    );
-    
-    if (!searchText) {
-      setFilteredOrders(sortedOrders as Order[]);
-      return;
-    }
-    
-    const filtered = sortedOrders.filter((order: Order) => {
-      const searchLower = searchText.toLowerCase();
-      return (
-        String(order.id).includes(searchLower) ||
-        (order.customer_name && order.customer_name.toLowerCase().includes(searchLower)) ||
-        (order.table_number && order.table_number.toLowerCase().includes(searchLower)) ||
-        order.status.toLowerCase().includes(searchLower)
-      );
-    });
-    
-    setFilteredOrders(filtered as Order[]);
-  }, [orders, searchText]);
-  
-  const handleSearch = (value: string) => {
-    setSearchText(value);
-  };
 
-  const handleStatusChange = async (id: string, status: string) => {
+  const handleSearch = React.useCallback((value: string) => {
+    setSearchText(value);
+  }, []);
+
+  const handleStatusChange = React.useCallback(async (id: string, status: string) => {
     try {
       await updateOrderStatus(id, status);
       notification.success({ message: 'Order status updated' });
@@ -130,7 +117,7 @@ const OrderPage: React.FC = () => {
       const error = err as Error;
       notification.error({ message: 'Failed to update order status', description: error.message });
     }
-  };
+  }, [updateOrderStatus, getOrders]);
 
   const columns: ColumnsType<Order> = [
     {

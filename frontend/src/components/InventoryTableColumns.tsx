@@ -4,10 +4,10 @@ import dayjs from 'dayjs';
 import { Product } from '../pages/supermarket/ProductsManagementPage';
 
 interface InventoryTableColumnsProps {
-  editingId: string | null;
+  editingId: number | null;
   handleEdit: (record: Product) => void;
-  handleDelete: (id: string) => void;
-  handleSave: (id: string) => void;
+  handleDelete: (id: number) => void;
+  handleSave: (id: number) => void;
   handleCancel: () => void;
 }
 

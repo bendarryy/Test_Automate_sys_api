@@ -1,38 +1,88 @@
 import React from 'react';
 import styled from 'styled-components';
 
+// Memoized SVG Button Icon
+const PlusIcon = React.memo(() => (
+  <svg height={16} width={16} viewBox="0 0 24 24">
+    <path strokeWidth={2} stroke="currentColor" d="M4 12H20M12 4V20" fill="currentColor" />
+  </svg>
+));
+
 type CardProps = {
   badgeText?: string;
   title?: string;
   description?: string;
   price?: string;
-  accentColor?: string;
-  textColor?: string;
-  imageGradient?: string;
+  $accentColor?: string;
+  $textColor?: string;
+  $imageGradient?: string;
   image?: string;
   onClick?: React.MouseEventHandler<HTMLDivElement>;
   style?: React.CSSProperties;
   width?: string | number;
 };
 
-const Card: React.FC<CardProps> = ({
+// Custom props comparison for React.memo
+function areEqual(prev: CardProps, next: CardProps) {
+  return (
+    prev.badgeText === next.badgeText &&
+    prev.title === next.title &&
+    prev.description === next.description &&
+    prev.price === next.price &&
+    prev.$accentColor === next.$accentColor &&
+    prev.$textColor === next.$textColor &&
+    prev.$imageGradient === next.$imageGradient &&
+    prev.image === next.image &&
+    prev.onClick === next.onClick &&
+    prev.style === next.style &&
+    prev.width === next.width
+  );
+}
+
+const Card: React.FC<CardProps> = React.memo(({
   badgeText = 'NEW',
   title = 'Premium Design',
   description = 'Hover to reveal stunning effects',
   price = '$49.99',
-  accentColor = '#7c3aed',
-  textColor = '#1e293b',
-  imageGradient = 'linear-gradient(45deg, #a78bfa, #8b5cf6)',
+  $accentColor = '#7c3aed',
+  $textColor = '#1e293b',
+  $imageGradient = 'linear-gradient(45deg, #a78bfa, #8b5cf6)',
   image,
   onClick,
   style,
   width,
 }) => {
+  // Memoize badge, image, and footer to avoid unnecessary rerenders
+  const badge = React.useMemo(() => (
+    <div className="card__badge">{badgeText}</div>
+  ), [badgeText]);
+
+  const cardImage = React.useMemo(() => (
+    <div
+      className="card__image"
+      style={{
+        backgroundImage: `url(${image})`,
+        backgroundPosition: 'center',
+        backgroundSize: 'cover',
+        backgroundRepeat: 'no-repeat',
+      }}
+    />
+  ), [image]);
+
+  const footer = React.useMemo(() => (
+    <div className="card__footer">
+      <div className="card__price">{price}</div>
+      <div className="card__button">
+        <PlusIcon />
+      </div>
+    </div>
+  ), [price]);
+
   return (
     <StyledWrapper
-      accentColor={accentColor}
-      textColor={textColor}
-      imageGradient={imageGradient}
+      $accentColor={$accentColor}
+      $textColor={$textColor}
+      $imageGradient={$imageGradient}
       style={style}
       onClick={onClick}
       width={width}
@@ -41,37 +91,30 @@ const Card: React.FC<CardProps> = ({
         <div className="card__shine" />
         <div className="card__glow" style={{ backgroundImage: `url(${image})` }} />
         <div className="card__content">
-          <div className="card__badge">{badgeText}</div>
-          <div className="card__image" style={{ backgroundImage: `url(${image})` , backgroundPosition: 'center', backgroundSize: 'cover', backgroundRepeat: 'no-repeat' }} />
+          {badge}
+          {cardImage}
           <div className="card__text">
             <p className="card__title">{title}</p>
             <p className="card__description">{description}</p>
           </div>
-          <div className="card__footer">
-            <div className="card__price">{price}</div>
-            <div className="card__button">
-              <svg height={16} width={16} viewBox="0 0 24 24">
-                <path strokeWidth={2} stroke="currentColor" d="M4 12H20M12 4V20" fill="currentColor" />
-              </svg>
-            </div>
-          </div>
+          {footer}
         </div>
       </div>
     </StyledWrapper>
   );
-};
+}, areEqual);
 
 type StyledProps = {
-  accentColor: string;
-  textColor: string;
-  imageGradient: string;
+  $accentColor: string;
+  $textColor: string;
+  $imageGradient: string;
   width?: string | number;
   image?: string;
 };
 
 const StyledWrapper = styled.div<StyledProps>`
   .card {
-    --card-accent: ${(props) => props.accentColor};
+    --card-accent: ${(props) => props.$accentColor};
     --card-shadow: 0 10px 15px -3px rgba(12, 84, 117, 0.12);
 
     width: ${(props) => props.width ? (typeof props.width === 'number' ? `${props.width}px` : props.width) : '190px'};
@@ -135,7 +178,7 @@ const StyledWrapper = styled.div<StyledProps>`
   .card__image {
     width: 100%;
     height: 100px;
-    background: ${(props) => props.imageGradient};
+    background: ${(props) => props.$imageGradient};
     border-radius: 12px;
     transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
     position: relative;

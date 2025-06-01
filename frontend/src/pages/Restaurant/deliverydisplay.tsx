@@ -14,7 +14,6 @@ const SYSTEM_ID = localStorage.getItem('selectedSystemId') ?? '';
 
 const DeliveryDisplay: React.FC = () => {
   const { message, modal } = AntdApp.useApp();
-  console.log('SYSTEM_ID:', SYSTEM_ID);
   const [statusUpdatingId, setStatusUpdatingId] = React.useState<number | null>(null);
   const { orders, patchOrderStatus, fetchOrders, orderLoading, orderError } = useDelivery(SYSTEM_ID);
 
@@ -23,14 +22,11 @@ const DeliveryDisplay: React.FC = () => {
     fetchOrders();
   }, [fetchOrders , statusUpdatingId]);
 
-  // Debugging logs
-  console.log('orders:', orders);
-  console.log('orderLoading:', orderLoading);
-  console.log('orderError:', orderError);
+
 
   // Classify orders - only ready and out_for_delivery for display
   const [readyOrders, outForDeliveryOrders] = useMemo(() => {
-    const ready = orders
+    const ready = orders 
       .filter((o: DeliveryOrder) => o.status === 'ready')
       .sort((a: DeliveryOrder, b: DeliveryOrder) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
     

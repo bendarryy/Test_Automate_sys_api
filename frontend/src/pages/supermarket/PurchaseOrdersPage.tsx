@@ -62,7 +62,7 @@ const PurchaseOrdersPage = () => {
   const fetchProducts = useCallback(async () => {
     try {
       const data = await callApi('get', `/supermarket/${system_id}/products/`);
-      setProducts(data);
+      setProducts(data as Product[]);
     } catch {
       message.error('Failed to fetch products');
     }
@@ -71,7 +71,7 @@ const PurchaseOrdersPage = () => {
   const fetchSuppliers = useCallback(async () => {
     try {
       const data = await callApi('get', `/supermarket/${system_id}/suppliers/`);
-      setSuppliers(data);
+      setSuppliers(data as Supplier[]);
     } catch {
       message.error('Failed to fetch suppliers');
     }
@@ -80,7 +80,7 @@ const PurchaseOrdersPage = () => {
   const fetchPurchaseOrders = useCallback(async () => {
     try {
       const data = await getPurchaseOrders();
-      setPurchaseOrders(data);
+      setPurchaseOrders(data as PurchaseOrder[]);
     } catch {
       message.error('Failed to fetch purchase orders');
     }
@@ -89,7 +89,7 @@ const PurchaseOrdersPage = () => {
   const fetchGoodsReceiving = useCallback(async () => {
     try {
       const data = await getGoodsReceiving();
-      setGoodsReceiving(data);
+      setGoodsReceiving(data as GoodsReceiving[]);
     } catch {
       message.error('Failed to fetch goods receiving records');
     }
@@ -116,10 +116,10 @@ const PurchaseOrdersPage = () => {
         fetchPurchaseOrders();
         break;
       case '2':
-        getPendingPurchaseOrders().then(setPurchaseOrders);
+        getPendingPurchaseOrders().then((data) => setPurchaseOrders(data as PurchaseOrder[]));
         break;
       case '3':
-        getPartiallyReceivedPurchaseOrders().then(setPurchaseOrders);
+        getPartiallyReceivedPurchaseOrders().then((data) => setPurchaseOrders(data as PurchaseOrder[]));
         break;
       case '4':
         fetchGoodsReceiving();

@@ -1,8 +1,3 @@
-import React from 'react';
-import { Table, Input, Tag } from 'antd';
-import type { ColumnsType } from 'antd/es/table';
-import { SearchOutlined } from '@ant-design/icons';
-
 
 
 interface ReusableTableProps<T extends Record<string, unknown>> {
@@ -16,7 +11,24 @@ interface ReusableTableProps<T extends Record<string, unknown>> {
   extraActions?: React.ReactNode;
 }
 
-export function ReusableTable<T extends Record<string, unknown>>({
+// Memoized reusable table component for performance
+import React from 'react';
+import { Table, Input, Tag } from 'antd';
+import type { ColumnsType } from 'antd/es/table';
+import { SearchOutlined } from '@ant-design/icons';
+
+interface ReusableTableProps<T extends Record<string, unknown>> {
+  data: T[];
+  loading?: boolean;
+  columns: ColumnsType<T>;
+  rowKey?: keyof T;
+  onRowSelectionChange?: (selectedRowKeys: React.Key[]) => void;
+  selectedRowKeys?: React.Key[];
+  showRowSelection?: boolean;
+  extraActions?: React.ReactNode;
+}
+
+const InternalReusableTable = <T extends Record<string, unknown>>({
   data,
   loading = false,
   columns,
@@ -25,37 +37,19 @@ export function ReusableTable<T extends Record<string, unknown>>({
   selectedRowKeys,
   showRowSelection = true,
   extraActions,
-}: ReusableTableProps<T>) {
-  // Example usage of permission-based action buttons:
-  // Place this in the parent component using ReusableTable, not inside the table itself.
-  //
-  // import useHasPermission from '../hooks/useHasPermission';
-  // const hasEdit = useHasPermission('update_menu');
-  // const hasDelete = useHasPermission('delete_menu');
-  //
-  // const columns = [
-  //   ...,
-  //   {
-  //     title: 'Actions',
-  //     key: 'actions',
-  //     render: (_: any, record: any) => (
-  //       <>
-  //         {hasEdit && <Button onClick={() => handleEdit(record)}>Edit</Button>}
-  //         {hasDelete && <Button danger onClick={() => handleDelete(record)}>Delete</Button>}
-  //       </>
-  //     ),
-  //   },
-  // ];
+}: ReusableTableProps<T>) => {
+  // Memoize rowSelection for performance
+  const rowSelection = React.useMemo(() => (
+    showRowSelection
+      ? {
+          selectedRowKeys,
+          onChange: onRowSelectionChange,
+        }
+      : undefined
+  ), [showRowSelection, selectedRowKeys, onRowSelectionChange]);
 
-
-
-
-  const rowSelection = showRowSelection
-    ? {
-        selectedRowKeys,
-        onChange: onRowSelectionChange,
-      }
-    : undefined;
+  // Memoize columns for performance (columns should be memoized in parent, but this is a safeguard)
+  const memoizedColumns = React.useMemo(() => columns, [columns]);
 
   return (
     <>
@@ -66,7 +60,7 @@ export function ReusableTable<T extends Record<string, unknown>>({
       )}
       <Table
         rowKey={rowKey}
-        columns={columns}
+        columns={memoizedColumns}
         dataSource={data}
         loading={loading}
         rowSelection={rowSelection}
@@ -75,7 +69,10 @@ export function ReusableTable<T extends Record<string, unknown>>({
       />
     </>
   );
-}
+};
+
+export const ReusableTable = React.memo(InternalReusableTable) as typeof InternalReusableTable;
+
 
 export function StatusTag({ status, statusColors }: { status: string; statusColors: Record<string, string> }) {
   return (

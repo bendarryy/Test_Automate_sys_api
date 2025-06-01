@@ -22,7 +22,6 @@ interface BillItem {
 
 export const SalesBillSection = () => {
   const currentSale = useSelector((state: RootState) => state.sales.currentSale);
-  console.log('Current sale in BillSection:', currentSale);
   
   const dispatch = useDispatch();
   const api = useApi();

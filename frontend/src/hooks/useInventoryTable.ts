@@ -4,7 +4,7 @@ import dayjs from 'dayjs';
 import { Product } from '../pages/supermarket/ProductsManagementPage';
 
 export const useInventoryTable = (form?: FormInstance) => {
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<number | null>(null);
 
   const handleEdit = (record: Product) => {
     if (form) {

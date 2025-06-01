@@ -1,14 +1,15 @@
 // useApi.ts
-import { useState, useCallback, useRef } from 'react';
-import apiClient from '../apiClient'
+import { useState, useCallback, useRef, useEffect } from 'react';
+import apiClient from '../apiClient';
 import { useNavigate } from 'react-router-dom';
 import { ApiError } from '../types';
 
-interface ApiState<T> {
-  data: T | null;
-  loading: boolean;
-  error: string | null;
-}
+// إعدادات headers الافتراضية
+const DEFAULT_HEADERS = {
+  'X-CSRFToken': 'gpPejT7onkPSewykjLJNNl4YLhPyTy7b',
+};
+
+
 
 interface CacheEntry<T> {
   data: T | null;
@@ -16,109 +17,113 @@ interface CacheEntry<T> {
 }
 
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-const cache = new Map<string, CacheEntry<unknown>>();
+// استخدم useRef للكاش داخل hook (أفضل للـ SSR/اختبار)
+const globalCache = new Map<string, CacheEntry<unknown>>();
 
 export const useApi = <T,>() => {
-  const [state, setState] = useState<ApiState<T>>({
-    data: null,
-    loading: false,
-    error: null,
-  });
-  const navigate = useNavigate();
+  const [data, setData] = useState<T | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const cacheRef = useRef(globalCache); // لكل instance نفس الكاش
   const abortControllerRef = useRef<AbortController | null>(null);
+  const navigate = useNavigate();
 
+  // إلغاء الطلب عند unmount
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
+
+  // دالة موحدة لتحديث الحالة
+  const updateState = useCallback((opts: Partial<{data: T | null; loading: boolean; error: string | null;}>) => {
+    if ('data' in opts) setData(opts.data!);
+    if ('loading' in opts) setLoading(opts.loading!);
+    if ('error' in opts) setError(opts.error!);
+  }, []);
+
+  // callApi: يدعم إبقاء البيانات القديمة أثناء التحميل
   const callApi = useCallback(async <R = T>(
-    method: 'get' | 'post' | 'put' | 'patch' | 'delete', 
-    url: string, 
-    payload?: unknown, 
+    method: 'get' | 'post' | 'put' | 'patch' | 'delete',
+    url: string,
+    payload?: unknown,
     isFormData?: boolean
   ): Promise<R | null> => {
-    // Cancel previous request if exists
+    // إلغاء الطلب السابق
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
-    abortControllerRef.current = new AbortController();
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
 
-    // Check cache for GET requests
+    // الكاش فقط للـ GET
     if (method === 'get') {
       const cacheKey = `${method}:${url}`;
-      const cachedData = cache.get(cacheKey);
-      if (cachedData && Date.now() - cachedData.timestamp < CACHE_DURATION) {
-        const cachedValue = cachedData.data as R | null;
-        setState({ data: cachedValue as unknown as T, loading: false, error: null });
-        return cachedValue;
+      const cached = cacheRef.current.get(cacheKey);
+      if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+        updateState({ data: cached.data as T, loading: false, error: null });
+        return cached.data as R;
       }
+      // إبقاء البيانات القديمة أثناء التحميل
+      updateState({ loading: true, error: null });
+    } else {
+      // لغير GET
+      updateState({ loading: true, error: null });
     }
 
-    setState({ data: null, loading: true, error: null });
     try {
       let response;
+      const config = {
+        headers: { ...DEFAULT_HEADERS },
+        signal: controller.signal,
+      };
       if (isFormData || (payload && typeof FormData !== 'undefined' && payload instanceof FormData)) {
-        response = await apiClient[method](url, payload as FormData, {
-          headers: {
-            'X-CSRFToken': "gpPejT7onkPSewykjLJNNl4YLhPyTy7b",
-          },
-          signal: abortControllerRef.current.signal,
-        });
+        response = await apiClient[method](url, payload as FormData, config);
       } else {
-        response = await apiClient[method](url, payload as FormData, {
-          headers: {
-            'X-CSRFToken': "gpPejT7onkPSewykjLJNNl4YLhPyTy7b",
-          },
-          signal: abortControllerRef.current.signal,
-        });
+        response = await apiClient[method](url, payload as unknown as FormData, config);
       }
-
-      // Cache GET responses
+      // كاش للـ GET
       if (method === 'get') {
         const cacheKey = `${method}:${url}`;
-        cache.set(cacheKey, { data: response.data, timestamp: Date.now() });
+        cacheRef.current.set(cacheKey, { data: response.data, timestamp: Date.now() });
       }
-
-      setState({ data: response.data as unknown as T, loading: false, error: null });
+      updateState({ data: response.data as T, loading: false, error: null });
       return response.data;
     } catch (err: unknown) {
-      // Don't set error state if request was aborted
+      // لا تعرض خطأ إذا كان الطلب ملغي
       if (err instanceof Error && err.name === 'AbortError') {
+        updateState({ loading: false });
         return null;
       }
-
       const apiError = err as ApiError;
       if (
         apiError.response &&
         apiError.response.status === 403 &&
-        apiError.response.data?.detail === "Authentication credentials were not provided."
+        apiError.response.data?.detail === 'Authentication credentials were not provided.'
       ) {
         navigate('/ownerLogin');
       }
-      
-      // Extract error message from response data if available
-      const errorMessage = apiError.response?.data?.error || 
-                          apiError.response?.data?.detail || 
-                          apiError.message || 
-                          'An unknown error occurred';
-                          
-      setState({ 
-        data: null, 
-        loading: false, 
-        error: errorMessage
-      });
+      const errorMessage = apiError.response?.data?.detail || apiError.message || 'An unknown error occurred';
+      // أبقِ البيانات القديمة عند الخطأ
+      updateState({ loading: false, error: errorMessage });
       throw err;
     } finally {
       abortControllerRef.current = null;
     }
-  }, [navigate]);
+  }, [navigate, updateState]);
 
   // Clear cache for specific URL
   const clearCache = useCallback((url: string) => {
     const cacheKey = `get:${url}`;
-    cache.delete(cacheKey);
+    cacheRef.current.delete(cacheKey);
   }, []);
 
   // Clear all cache
   const clearAllCache = useCallback(() => {
-    cache.clear();
+    cacheRef.current.clear();
   }, []);
 
-  return { ...state, callApi, clearCache, clearAllCache };
+  return { data, loading, error, callApi, clearCache, clearAllCache };
 };

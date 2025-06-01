@@ -9,6 +9,26 @@ import { SalesBillSection } from '../../components/SalesBillSection';
 import { useApi } from '../../hooks/useApi';
 import { setCurrentSale, clearCurrentSale } from '../../store/salesSlice';
 
+interface SaleItem {
+  id: number;
+  product_id: number;
+  quantity: number;
+  price: number;
+  name: string;
+}
+
+interface Sale {
+  id: number;
+  receipt_number: string;
+  cashier: string | null;
+  total_price: number | null;
+  discount_amount: string;
+  payment_type: string | null;
+  vat_amount: string;
+  vat_rate: string;
+  items: SaleItem[];
+}
+
 export const SalesPage = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isPrinting, setIsPrinting] = useState(false);
@@ -24,11 +44,11 @@ export const SalesPage = () => {
     }
 
     try {
-      let sale;
+      let sale: Sale;
       if (currentSale.id) {
-        sale = await api.callApi('put', `/supermarket/${systemId}/sales/${currentSale.id}/`, currentSale);
+        sale = await api.callApi('put', `/supermarket/${systemId}/sales/${currentSale.id}/`, currentSale) as Sale;
       } else {
-        sale = await api.callApi('post', `/supermarket/${systemId}/sales/`, currentSale);
+        sale = await api.callApi('post', `/supermarket/${systemId}/sales/`, currentSale) as Sale;
       }
       
       message.success('Sale completed successfully');

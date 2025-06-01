@@ -18,7 +18,7 @@ import {
 import dayjs from 'dayjs';
 
 export type Product = {
-  id: string;
+  id: number;
   name: string;
   price: number;
   stock_quantity: number;
@@ -74,10 +74,10 @@ const ProductsManagementPage = () => {
     fetchProducts();
   }, []);
 
-  const handleSave = useCallback((id: string) => {
+  const handleSave = useCallback((id: number) => {
     try {
       const values = form.getFieldsValue();
-      updateProduct(id, {
+      updateProduct(id.toString(), {
         ...values,
         expiry_date: dayjs(values.expiry_date).format('YYYY-MM-DD')
       }).then(() => {
@@ -92,9 +92,9 @@ const ProductsManagementPage = () => {
     }
   }, [form, updateProduct, handleCancelEdit, fetchProducts]);
 
-  const handleDelete = useCallback((id: string) => {
+  const handleDelete = useCallback((id: number) => {
     try {
-      deleteProduct(id).then(() => {
+      deleteProduct(id.toString()).then(() => {
         message.success('Product deleted successfully');
         fetchProducts();
       }).catch(() => {
@@ -108,7 +108,7 @@ const ProductsManagementPage = () => {
   const handleGetExpiringSoon = useCallback(async () => {
     try {
       const data = await getExpiringSoonProducts();
-      setExpiringProducts(data);
+      setExpiringProducts(Array.isArray(data) ? (data as Product[]) : []);
     } catch (err) {
       message.error(`Failed to load expiring products: ${err}`);
     }
@@ -117,7 +117,7 @@ const ProductsManagementPage = () => {
   const handleGetLowStock = useCallback(async () => {
     try {
       const data = await getLowStockProducts();
-      setLowStockProducts(data);
+      setLowStockProducts(Array.isArray(data) ? (data as Product[]) : []);
     } catch (err) {
       message.error(`Failed to load low stock products: ${err}`);
     }
@@ -127,7 +127,7 @@ const ProductsManagementPage = () => {
     try {
       const response = await getStockHistory();
       if (Array.isArray(response)) {
-        setStockHistory(response);
+        setStockHistory(response as unknown as StockHistoryItem[]);
       } else {
         message.error('Invalid stock history data format');
       }

@@ -4,7 +4,7 @@ import { Sidebar } from "./components/Sidebar";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { setPermissions } from "./store/permissionsSlice";
-import { setProfile } from "./store/profileSlice";
+import { setProfile, Profile } from "./store/profileSlice";
 import { RootState } from "./store";
 import { useApi } from "./hooks/useApi";
 
@@ -18,7 +18,7 @@ const Layout = () => {
     if (!profile) {
       (async () => {
         try {
-          const data = await callApi("get", "/core/profile/");
+          const data = await callApi("get", "/core/profile/") as Profile;
           dispatch(setProfile(data));
           dispatch(setPermissions(data?.actions || []));
 
@@ -31,13 +31,14 @@ const Layout = () => {
               // For non-owners, only store if localStorage is empty
               if (data.role !== "owner") {
                 if (!localStorage.getItem("selectedSystemId")) {
-                  localStorage.setItem("selectedSystemId", data.systems.id);
+                  const systemId = Array.isArray(data.systems) ? data.systems[0]?.id : data.systems;
+                  localStorage.setItem("selectedSystemId", String(systemId));
                 }
                 if (!localStorage.getItem("selectedSystemCategory")) {
-                  localStorage.setItem(
-                    "selectedSystemCategory",
-                    data.systems.category
-                  );
+                  const systemCategory = Array.isArray(data.systems) ? data.systems[0]?.category : undefined;
+                  if (systemCategory) {
+                    localStorage.setItem("selectedSystemCategory", systemCategory);
+                  }
                 }
               }
             }

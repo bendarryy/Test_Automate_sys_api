@@ -2,7 +2,9 @@
 import { useMemo, useCallback } from 'react';
 import { useApi } from './useApi';
 
-// Helper function to create emoji SVG
+/**
+ * Helper function to create an SVG data URL for an emoji icon.
+ */
 const createEmojiSvg = (emoji: string): string => {
   return `data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='50%' x='50%' dominant-baseline='middle' text-anchor='middle' font-size='50'>${emoji}</text></svg>`;
 };
@@ -36,23 +38,21 @@ const categoryIcons: Readonly<Record<string, string>> = {
   'default': '🍽️'
 } as const;
 
+/**
+ * Returns the emoji icon for a given category.
+ * @param category The category name
+ * @returns Emoji string
+ */
 export const getCategoryIcon = (category: string): string => {
-  // Convert category to lowercase and remove spaces for matching
   const normalizedCategory = (category || '').toLowerCase().trim();
-  
-  // Try to find an exact match
   if (categoryIcons[normalizedCategory]) {
     return categoryIcons[normalizedCategory];
   }
-
-  // Try to find a partial match
   for (const [key, icon] of Object.entries(categoryIcons)) {
     if (normalizedCategory.includes(key)) {
       return icon;
     }
   }
-
-  // Return default icon if no match found
   return categoryIcons.default;
 };
 
@@ -67,6 +67,12 @@ interface MenuItem {
   image?: string | null | File;
 }
 
+/**
+ * Custom React hook to manage menu items for a restaurant system.
+ * Provides CRUD operations and category utilities, with memoized handlers for performance.
+ * @param systemId The restaurant system ID
+ * @returns Menu API handlers and state
+ */
 export const useGetMenu = (systemId: number) => {
   const { callApi, data, loading, error, clearCache } = useApi<MenuItem[]>();
 
@@ -145,17 +151,17 @@ export const useGetMenu = (systemId: number) => {
     return result;
   }, [systemId, callApi, clearCache]);
 
-  return useMemo(() => ({ 
-    getMenu, 
-    createMenuItem, 
-    getMenuItemById, 
-    updateMenuItem, 
-    patchMenuItem, 
+  const apiObject = useMemo(() => ({
+    getMenu,
+    createMenuItem,
+    getMenuItemById,
+    updateMenuItem,
+    patchMenuItem,
     deleteMenuItem,
     getCategories,
-    data, 
-    loading, 
-    error 
+    data,
+    loading,
+    error
   }), [
     getMenu,
     createMenuItem,
@@ -168,4 +174,9 @@ export const useGetMenu = (systemId: number) => {
     loading,
     error
   ]);
+  // For debugging: set displayName on the returned object
+  // (React DevTools does not support hooks displayName, but this helps in custom logs)
+  // @ts-ignore
+  apiObject.displayName = 'useGetMenu';
+  return apiObject;
 };

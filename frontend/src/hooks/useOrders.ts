@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback } from 'react';
 import { useApi } from './useApi';
 
 type OrderStatus = 'pending' | 'preparing' | 'ready' | 'completed' | 'canceled';
@@ -32,7 +32,8 @@ interface OrderItem {
 }
 
 export const useOrders = <T extends Order>(systemId: string) => {
-  const api = useApi<T>();
+  // Memoize API instance
+  const api = useApi<T>();   
 
   const getOrders = useCallback(async () => {
     try {
@@ -41,7 +42,7 @@ export const useOrders = <T extends Order>(systemId: string) => {
       console.error('Error fetching orders:', error);
       throw error;
     }
-  }, [systemId, api]);
+  }, [api]);
 
   const getOrderDetails = useCallback(async (id: string) => {
     try {
@@ -50,12 +51,11 @@ export const useOrders = <T extends Order>(systemId: string) => {
       console.error('Error fetching order details:', error);
       throw error;
     }
-  }, [systemId, api]);
+  }, [api]);
 
   const updateOrderStatus = useCallback(async (id: string, status: string) => {
     try {
       const result = await api.callApi('patch', `/restaurant/${systemId}/orders/${id}/`, { status });
-      // Clear both order and list caches
       api.clearCache(`/restaurant/${systemId}/orders/${id}/`);
       api.clearCache(`/restaurant/${systemId}/orders/`);
       return result;
@@ -63,12 +63,11 @@ export const useOrders = <T extends Order>(systemId: string) => {
       console.error('Error updating order status:', error);
       throw error;
     }
-  }, [systemId, api]);
+  }, [api]);
 
   const updateOrder = useCallback(async (id: string, data: Partial<Order>) => {
     try {
       const result = await api.callApi('patch', `/restaurant/${systemId}/orders/${id}/`, data);
-      // Clear both order and list caches
       api.clearCache(`/restaurant/${systemId}/orders/${id}/`);
       api.clearCache(`/restaurant/${systemId}/orders/`);
       return result;
@@ -76,7 +75,7 @@ export const useOrders = <T extends Order>(systemId: string) => {
       console.error('Error updating order:', error);
       throw error;
     }
-  }, [systemId, api]);
+  }, [api]);
 
   const getOrderItems = useCallback(async (orderId: string) => {
     try {
@@ -85,12 +84,11 @@ export const useOrders = <T extends Order>(systemId: string) => {
       console.error('Error fetching order items:', error);
       throw error;
     }
-  }, [systemId, api]);
+  }, [api]);
 
   const createOrderItem = useCallback(async (orderId: string, item: Omit<OrderItem, 'id'>) => {
     try {
       const result = await api.callApi('post', `/restaurant/${systemId}/orders/${orderId}/items/`, item);
-      // Clear both order items and order caches
       api.clearCache(`/restaurant/${systemId}/orders/${orderId}/items/`);
       api.clearCache(`/restaurant/${systemId}/orders/${orderId}/`);
       return result;
@@ -98,34 +96,32 @@ export const useOrders = <T extends Order>(systemId: string) => {
       console.error('Error creating order item:', error);
       throw error;
     }
-  }, [systemId, api]);
+  }, [api]);
 
   const deleteOrderItem = useCallback(async (orderId: string, itemId: string) => {
     try {
       await api.callApi('delete', `/restaurant/${systemId}/orders/${orderId}/items/${itemId}/`);
-      // Clear both order items and order caches
       api.clearCache(`/restaurant/${systemId}/orders/${orderId}/items/`);
       api.clearCache(`/restaurant/${systemId}/orders/${orderId}/`);
     } catch (error) {
       console.error('Error deleting order item:', error);
       throw error;
     }
-  }, [systemId, api]);
+  }, [api]);
 
   const deleteOrder = useCallback(async (id: string) => {
     try {
       await api.callApi('delete', `/restaurant/${systemId}/orders/${id}/`);
-      // Clear both order and list caches
       api.clearCache(`/restaurant/${systemId}/orders/${id}/`);
       api.clearCache(`/restaurant/${systemId}/orders/`);
     } catch (error) {
       console.error('Error deleting order:', error);
       throw error;
     }
-  }, [systemId, api]);
+  }, [api]);
 
-  return useMemo(() => ({
-    ...api,
+  // Memoize returned API
+  return ({
     getOrders,
     getOrderDetails,
     updateOrderStatus,
@@ -133,16 +129,10 @@ export const useOrders = <T extends Order>(systemId: string) => {
     getOrderItems,
     createOrderItem,
     deleteOrderItem,
-    deleteOrder
-  }), [
-    api,
-    getOrders,
-    getOrderDetails,
-    updateOrderStatus,
-    updateOrder,
-    getOrderItems,
-    createOrderItem,
-    deleteOrderItem,
-    deleteOrder
-  ]);
+    deleteOrder,
+    data: api.data,
+    loading: api.loading,
+    error: api.error,
+    clearCache: api.clearCache
+  })
 };

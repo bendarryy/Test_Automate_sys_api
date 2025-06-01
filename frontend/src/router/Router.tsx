@@ -182,73 +182,87 @@ const router = createBrowserRouter([
       {
         path: "/kds/order/:orderId",
         element: (
+          <Suspense fallback={<LoadingSpinner />}>  
           <ProtectLogin>
             <ProtectedRoute permission="read_kds">
               <KdsPage />
             </ProtectedRoute>
           </ProtectLogin>
+          </Suspense>
         ),
       },
       {
         path: "/employees",
         element: (
+          <Suspense fallback={<LoadingSpinner />}>  
           <ProtectLogin>
             <ProtectedRoute permission="read_employee">
               <EmployeesPage />
             </ProtectedRoute>
           </ProtectLogin>
+          </Suspense>
         ),
       },
       {
         path: "/financesdashboards",
         element: (
+          <Suspense fallback={<LoadingSpinner />}>  
           <ProtectLogin>
             <ProtectedRoute permission="read_finance">
               <Financesdashboards />
             </ProtectedRoute>
           </ProtectLogin>
+          </Suspense>
         ),
       },
       {
         path: "/deliverydisplay",
         errorElement: <ErrorBoundary />,
         element: (
+          <Suspense fallback={<LoadingSpinner />}>  
           <ProtectLogin>
             <ProtectedRoute permission="read_deliverydisplay">
               <DeliveryDisplay />
             </ProtectedRoute>
           </ProtectLogin>
+          </Suspense>
         ),
       },
       {
         path: "/waiterdisplay",
         errorElement: <ErrorBoundary />,
         element: (
+          <Suspense fallback={<LoadingSpinner />}>  
           <ProtectLogin>
             <ProtectedRoute permission="read_waiterdisplay">
               <WaiterDisplay />
             </ProtectedRoute>
           </ProtectLogin>
+          </Suspense>
         ),
       },
       {
         path: "/profile",
         element: (
+          <Suspense fallback={<LoadingSpinner />}>  
           <ProtectLogin>
             <ProtectedRoute permission="read_profile">
               <Profile />
             </ProtectedRoute>
           </ProtectLogin>
+          </Suspense>
         ),
       },
       {
         path: "/settings",
         element: (
+          <Suspense fallback={<LoadingSpinner />}>  
           <ProtectLogin>
             <ProtectedRoute permission="read_settings">
               <Settings />
             </ProtectedRoute>
           </ProtectLogin>
+          </Suspense>
         ),
       },
     ],
@@ -314,33 +328,41 @@ const supermarketRouter = createBrowserRouter([
       {
         path: "/supermarket/suppliers",
         element: (
+          <Suspense fallback={<LoadingSpinner />}>  
           <ProtectLogin>
             <SupplierManagement />
           </ProtectLogin>
+          </Suspense>
         ),
       },
       {
         path: "/profile",
         element: (
+          <Suspense fallback={<LoadingSpinner />}>  
           <ProtectLogin>
             <Profile />
           </ProtectLogin>
+          </Suspense>
         ),
       },
       {
         path: "/settings",
         element: (
+          <Suspense fallback={<LoadingSpinner />}>  
           <ProtectLogin>
             <Settings />
           </ProtectLogin>
+          </Suspense>
         ),
       },
       {
         path: "/change-password",
         element: (
+          <Suspense fallback={<LoadingSpinner />}>  
           <ProtectLogin>
             <ChangePassword />
           </ProtectLogin>
+          </Suspense>
         ),
       },
     ],

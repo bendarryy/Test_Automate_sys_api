@@ -1,5 +1,5 @@
-import { useSelector } from 'react-redux';
-import { useMemo } from 'react';
+import { useSelector, shallowEqual } from 'react-redux';
+import { useMemo, useCallback } from 'react';
 import { RootState } from '../store';
 
 /**
@@ -7,12 +7,23 @@ import { RootState } from '../store';
  * @param permission - A single permission string or an array of permissions. Returns true if user has at least one of them.
  */
 export default function useHasPermission(permission: string | string[]): boolean {
-  const actions = useSelector((state: RootState) => state.permissions.actions);
-  
-  return useMemo(() => {
-    if (Array.isArray(permission)) {
-      return permission.some((perm) => actions.includes(perm));
-    }
-    return actions.includes(permission);
-  }, [permission, actions]);
+  // Use shallowEqual to avoid unnecessary rerenders if actions array reference changes but content doesn't
+  const actions = useSelector(
+    (state: RootState) => state.permissions.actions,
+    shallowEqual
+  );
+
+  // Memoize the permission check function for stability
+  const checkPermission = useCallback(
+    (perm: string | string[]) => {
+      if (Array.isArray(perm)) {
+        return perm.some((p) => actions.includes(p));
+      }
+      return actions.includes(perm);
+    },
+    [actions]
+  );
+
+  // Memoize the result for the current permission input
+  return useMemo(() => checkPermission(permission), [checkPermission, permission]);
 }

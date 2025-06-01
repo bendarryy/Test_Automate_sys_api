@@ -15,7 +15,6 @@ const SYSTEM_ID = localStorage.getItem('selectedSystemId') ?? '';
 
 const WaiterDisplay: React.FC = () => {
   const { message, modal } = AntdApp.useApp();
-  console.log('SYSTEM_ID:', SYSTEM_ID);
   const [statusUpdatingId, setStatusUpdatingId] = React.useState<number | null>(null);
   const { orders, patchOrderStatus, fetchOrders, orderLoading, orderError } = useWaiter(SYSTEM_ID);
 
@@ -24,10 +23,7 @@ const WaiterDisplay: React.FC = () => {
     fetchOrders();
   }, [fetchOrders]);
 
-  // Debugging logs
-  console.log('orders:', orders);
-  console.log('orderLoading:', orderLoading);
-  console.log('orderError:', orderError);
+
 
   // تصنيف الطلبات
   const [readyOrders, servedOrders] = useMemo(() => {

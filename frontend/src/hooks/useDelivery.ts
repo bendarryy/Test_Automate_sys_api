@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import axios from 'axios';
+import { useApi } from './useApi';
 
 export interface DeliveryOrder {
   id: number;
@@ -21,13 +21,14 @@ export const useDelivery = (systemId: string) => {
   const [orders, setOrders] = useState<DeliveryOrder[]>([]);
   const [orderLoading, setOrderLoading] = useState(false);
   const [orderError, setOrderError] = useState<string | null>(null);
+  const { callApi } = useApi<DeliveryOrder[]>();
 
   const fetchOrders = useCallback(async () => {
     setOrderLoading(true);
     setOrderError(null);
     try {
-      const response = await axios.get(`/api/restaurant/${systemId}/delivery/orders/`);
-      setOrders(response.data);
+      const response = await callApi('get', `/restaurant/${systemId}/delivery/orders/`);
+      setOrders(response ?? []);
     } catch (error) {
       setOrderError('Failed to fetch orders');
       console.error('Error fetching orders:', error);
@@ -38,7 +39,7 @@ export const useDelivery = (systemId: string) => {
 
   const patchOrderStatus = useCallback(async (orderId: number, newStatus: string) => {
     try {
-      await axios.patch(`/api/restaurant/${systemId}/delivery/orders/${orderId}/`, {
+      await callApi('patch', `/restaurant/${systemId}/delivery/orders/${orderId}/`, {
         status: newStatus
       });
       await fetchOrders(); // Refresh orders after status update

@@ -1,3 +1,4 @@
+import  { memo } from "react";
 import { useState } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "../store";
@@ -12,7 +13,7 @@ import { useThemeContext } from '../theme/ThemeContext';
 const { Header } = Layout;
 const { useToken } = theme;
 
-const Navbar = () => {
+const Navbar = memo(() => {
   const [numOfNotification] = useState(2);
   const { callApi } = useApi();
   const navigate = useNavigate();
@@ -27,14 +28,13 @@ const Navbar = () => {
 
   const handleLogout = async () => {
     try {
-      console.log(userRole);
       if (userRole !== 'owner') {
-        await callApi('post', '/core/employee/logout/');
-        navigate('/employeelogin');
+        await callApi('get', '/core/logout/');
+        window.location.href = '/employeelogin';
         localStorage.removeItem("loginViaOwner");
       } else {
         await callApi('get', '/core/logout/');
-        navigate('/ownerlogin');
+        window.location.href = '/ownerlogin';
         localStorage.removeItem("loginViaOwner");
       }
     } catch (error) {
@@ -224,6 +224,6 @@ const Navbar = () => {
       </Space>
     </Header>
   );
-};
+});
 
 export default Navbar;

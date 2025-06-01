@@ -71,7 +71,7 @@ const InventoryManagementPage: React.FC = () => {
       setEditingData(null);
       
     } catch (errInfo) {
-      console.log('Validate Failed:', errInfo);
+      console.error('Validate Failed:', errInfo);
     } finally {
       if (selectedSystemId) {
         fetchInventory(selectedSystemId);
@@ -85,7 +85,7 @@ const InventoryManagementPage: React.FC = () => {
       await deleteInventoryItem(selectedSystemId, id);
       fetchInventory(selectedSystemId);
     } catch (err) {
-      console.log('Delete Failed:', err);
+      console.error('Delete Failed:', err);
     }
   };
 

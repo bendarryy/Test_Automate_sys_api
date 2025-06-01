@@ -60,7 +60,7 @@ const ProductSelection = () => {
     const fetchCategories = async () => {
       const categoriesData = await getCategories();
       if (categoriesData) {
-        setCategories(categoriesData.map((category) => category.name));
+        setCategories(categoriesData.map((category) => category));
       }
     };
     fetchCategories();
@@ -391,9 +391,9 @@ const ProductSelection = () => {
                   description={product.description}
                   price={`$${product.price}`}
                   badgeText={product.is_available ? '' : 'Unavailable'}
-                  accentColor={product.is_available ? '#1677ff' : '#aaa'}
-                  textColor="#1e293b"
-                  imageGradient={product.is_available ? 'linear-gradient(45deg, #a78bfa, #8b5cf6)' : 'linear-gradient(45deg, #ccc, #eee)'}
+                  $accentColor={product.is_available ? '#1677ff' : '#aaa'}
+                  $textColor="#1e293b"
+                  $imageGradient={product.is_available ? 'linear-gradient(45deg, #a78bfa, #8b5cf6)' : 'linear-gradient(45deg, #ccc, #eee)'}
                   image={product.image}
                   width="100%"
                   onClick={() => {

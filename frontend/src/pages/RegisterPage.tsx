@@ -1,17 +1,26 @@
 import React from 'react';
 import { useRegister } from '../hooks/useRegister';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Form, Input, Button, Card, Alert, Typography, Row, Col } from 'antd';
 import '../styles/Login.css';
 
 const { Title } = Typography;
+
+interface RegisterFormValues {
+  username: string;
+  email: string;
+  password: string;
+  first_name: string;
+  last_name: string;
+  confirmPassword: string;
+}
 
 const RegisterPage: React.FC = () => {
   const { register, loading, error } = useRegister();
   const navigate = useNavigate();
   const [form] = Form.useForm();
 
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async (values: RegisterFormValues) => {
     try {
       await register({
         username: values.username,

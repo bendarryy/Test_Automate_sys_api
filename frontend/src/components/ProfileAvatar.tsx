@@ -20,7 +20,6 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({ name, size = 32, style })
   };
 
   const firstChar = getFirstChar(name);
-  console.log('ProfileAvatar - Input name:', name, 'First char:', firstChar);
 
   return (
     <Avatar

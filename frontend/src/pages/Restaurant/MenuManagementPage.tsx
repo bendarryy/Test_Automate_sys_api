@@ -66,9 +66,6 @@ const MenuManagementPage: React.FC<MenuManagementProps> = () => {
     fetchData();
   }, []);
 
-  useEffect(() => {
-    console.log('Items updated:', items);
-  }, [items]);
 
   const handleAddClick = React.useCallback(() => {
     setFormData({ ...initialItem, category: categories[0] || '' });
@@ -84,15 +81,12 @@ const MenuManagementPage: React.FC<MenuManagementProps> = () => {
 
   const handleDeleteClick = React.useCallback(async (item: MenuItem) => {
     await deleteMenuItem(item.id);
-    console.log('item.id:', item.id);
     setItems(prevItems => {
-      console.log('previous items:', prevItems);
       return prevItems.filter((i) => i.id !== item.id);
     });
   }, []);
 
   const handleSave = React.useCallback(async () => {
-    console.log('formData:', formData, 'categories:', categories);
     // Validation: name, category (non-empty and valid), price (>0), cost (>0 and < price)
     if (
       !formData.name ||

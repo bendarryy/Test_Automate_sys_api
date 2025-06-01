@@ -172,8 +172,10 @@ const EmployeesPage: React.FC = () => {
             setModalMode('edit');
             setModalLoading(true);
             employeeApi.getEmployee(record.id).then(details => {
-              setSelectedEmployee(details);
-              viewForm.setFieldsValue(details);
+              if (details) {
+                setSelectedEmployee(details);
+                viewForm.setFieldsValue(details);
+              }
             }).catch(() => {
               message.error('Error loading employee details');
             }).finally(() => {
