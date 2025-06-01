@@ -6,13 +6,14 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, OR
 from .models import MenuItem
 from .serializers import MenuItemSerializer, OrderSerializer, OrderItemSerializer
-from rest_framework.exceptions import PermissionDenied, MethodNotAllowed
+from rest_framework.exceptions import PermissionDenied, MethodNotAllowed, ValidationError
 from rest_framework import permissions
 from .serializers import InventoryItemSerializer
 from rest_framework.exceptions import NotFound
 from .models import System
 from core.models import Employee
 from core.permissions import IsSystemOwner, IsEmployeeRolePermission
+from rest_framework.exceptions import APIException
 
 from decimal import Decimal
 from rest_framework.decorators import action, api_view
@@ -20,6 +21,11 @@ from django.http import HttpResponseNotFound
 import logging
 from core.serializers import PublicSystemSerializer
 
+# Define a custom exception for table conflicts
+class TableConflict(APIException):
+    status_code = 409  # Use 409 Conflict
+    default_detail = 'Table is already occupied.'
+    default_code = 'table_occupied'
 
 logger = logging.getLogger(__name__)
 
@@ -64,6 +70,78 @@ class MenuItemViewSet(viewsets.ModelViewSet):
             ]
         return [IsAuthenticated(), OR(IsSystemOwner(), IsEmployeeRolePermission())]
 
+    def perform_create(self, serializer):
+        """Link order to correct system and check table availability."""
+        system_id = self.kwargs.get("system_id")
+        system = get_object_or_404(System, id=system_id)
+        
+        # Get the table number from the request data
+        table_number = serializer.validated_data.get('table_number')
+        order_type = serializer.validated_data.get('order_type', 'in_house')
+        
+        # Only check table availability for in-house orders
+        if order_type == 'in_house' and table_number:
+            # Check if there's an active order on this table
+            active_order = Order.objects.filter(
+                system=system,
+                table_number=table_number,
+                order_type='in_house',
+                status__in=['pending', 'preparing', 'ready', 'served']
+            ).first()
+            
+            if active_order:
+                # Raise the custom exception instead of returning a Response
+                raise TableConflict(detail=f"Table {table_number} is already occupied by order #{active_order.id}")
+        
+        # If table is not occupied or it's not an in-house order, save the order
+        serializer.save(system=system)
+
+    def perform_update(self, serializer):
+        """Restrict update fields for waiters."""
+        user = self.request.user
+        system = get_object_or_404(System, id=self.kwargs.get("system_id"))
+
+        if user != system.owner:
+            try:
+                employee = Employee.objects.get(system=system, user=user)
+                if employee.role == "waiter":
+                    allowed_fields = {"customer_name", "table_number", "waiter"}
+                    if any(
+                        field not in allowed_fields
+                        for field in self.request.data.keys()
+                    ):
+                        raise PermissionDenied(
+                            "Waiters can only update limited fields."
+                        )
+            except Employee.DoesNotExist:
+                raise PermissionDenied(
+                    "You do not have permission to update this order."
+                )
+
+        serializer.save()
+
+    def get_permissions(self):
+        """
+        Role-based access control for order actions:
+        - Owners, waiters, and cashiers: Full access (create, update, delete)
+        - Others (chef, delivery): Read-only
+        """
+        editable_roles = [
+            "waiter",
+            "cashier",
+            "manager",
+        ]  # You can expand this if needed
+        if self.action in ["create", "update", "partial_update", "destroy"]:
+            return [
+                IsAuthenticated(),
+                OR(IsSystemOwner(), IsEmployeeRolePermission(*editable_roles)),
+            ]
+        # editable_roles.append()
+        return [
+            IsAuthenticated(),
+            OR(IsSystemOwner(), IsEmployeeRolePermission(*editable_roles)),
+        ]
+
 
 class OrderViewSet(viewsets.ModelViewSet):
     serializer_class = OrderSerializer
@@ -75,9 +153,29 @@ class OrderViewSet(viewsets.ModelViewSet):
         return Order.objects.filter(system=system)
 
     def perform_create(self, serializer):
-        """Link order to correct system."""
+        """Link order to correct system and check table availability."""
         system_id = self.kwargs.get("system_id")
         system = get_object_or_404(System, id=system_id)
+        
+        # Get the table number from the request data
+        table_number = serializer.validated_data.get('table_number')
+        order_type = serializer.validated_data.get('order_type', 'in_house')
+        
+        # Only check table availability for in-house orders
+        if order_type == 'in_house' and table_number:
+            # Check if there's an active order on this table
+            active_order = Order.objects.filter(
+                system=system,
+                table_number=table_number,
+                order_type='in_house',
+                status__in=['pending', 'preparing', 'ready', 'served']
+            ).first()
+            
+            if active_order:
+                # Raise the custom exception instead of returning a Response
+                raise TableConflict(detail=f"Table {table_number} is already occupied by order #{active_order.id}")
+        
+        # If table is not occupied or it's not an in-house order, save the order
         serializer.save(system=system)
 
     def perform_update(self, serializer):
@@ -736,4 +834,58 @@ class DeliveryViewSet(viewsets.ModelViewSet):
         ).select_related("waiter").prefetch_related("order_items__menu_item")
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+
+
+class TableViewSet(viewsets.ViewSet):
+    permission_classes = [IsAuthenticated]
+
+    def get_permissions(self):
+        editable_roles = ["waiter", "cashier", "manager"]
+        return [
+            IsAuthenticated(),
+            OR(IsSystemOwner(), IsEmployeeRolePermission(*editable_roles)),
+        ]
+
+    def list(self, request, system_id=None):
+        """Get all tables and their active orders"""
+        system = get_object_or_404(System, id=system_id)
+        
+        # Get all orders that are in-house and not completed/canceled
+        active_orders = Order.objects.filter(
+            system=system,
+            order_type="in_house",
+            status__in=["pending", "preparing", "ready", "served"]
+        ).exclude(table_number__isnull=True).exclude(table_number="")
+
+        # Create a dictionary to store table status
+        tables_status = {}
+        
+        # Get all unique table numbers from active orders
+        for order in active_orders:
+            table_number = order.table_number
+            if table_number not in tables_status:
+                tables_status[table_number] = {
+                    "table_number": table_number,
+                    "is_occupied": True,
+                    "current_order": {
+                        "order_id": order.id,
+                        "status": order.status,
+                        "customer_name": order.customer_name,
+                        "waiter": order.waiter.user.username if order.waiter else None,
+                        "created_at": order.created_at
+                    }
+                }
+
+        # Add empty tables (tables with no active orders)
+        # You can modify this range based on your restaurant's table numbers
+        for table_num in range(1, 21):  # Assuming you have tables 1-20
+            table_str = str(table_num)
+            if table_str not in tables_status:
+                tables_status[table_str] = {
+                    "table_number": table_str,
+                    "is_occupied": False,
+                    "current_order": None
+                }
+
+        return Response(list(tables_status.values()))
 

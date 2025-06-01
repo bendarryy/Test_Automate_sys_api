@@ -106,7 +106,11 @@ class OrderSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
     
     def get_profit(self, obj):
-        return obj.calculate_profit()
+        """Calculate profit for the order instance."""
+        # Check if obj is an Order instance before calling calculate_profit
+        if isinstance(obj, Order):
+            return obj.calculate_profit()
+        return 0.0  # Return 0 or handle appropriately if obj is not an Order instance
 
     def validate(self, data):
         request = self.context["request"]

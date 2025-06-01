@@ -658,3 +658,68 @@ APIs for managing delivery orders from the restaurant to customers outside the r
     ```
 
 ---
+
+### Table and Order Management
+
+This section documents the endpoints related to managing tables and creating orders, including the new table status endpoint and the validation for occupied tables.
+
+#### GET /api/restaurant/{system_id}/tables/
+
+- **Description:** Retrieves the current status of all tables in a specific restaurant system, indicating whether each table is occupied by an active in-house order and providing details of the order if occupied.
+- **Authentication:** Required.
+- **Permissions:** Accessible by users with 'waiter', 'cashier', or 'manager' roles, as well as the system owner.
+- **URL Example:** `/api/restaurant/5/tables/` (for system with ID 5)
+- **Response Example:**
+```json
+[
+    {
+        "table_number": "1",
+        "is_occupied": true,
+        "current_order": {
+            "order_id": 123,
+            "status": "preparing",
+            "customer_name": "أحمد",
+            "waiter": "محمد",
+            "created_at": "2024-03-20T15:30:00Z"
+        }
+    },
+    {
+        "table_number": "2",
+        "is_occupied": false,
+        "current_order": null
+    }
+    // ... other tables
+]
+```
+
+#### POST /api/restaurant/{system_id}/orders/
+
+- **Description:** Creates a new order for a specific restaurant system. Includes validation to prevent creating a new in-house order on a table that is already occupied by an active order.
+- **Authentication:** Required.
+- **Permissions:** Accessible by users with 'waiter', 'cashier', or 'manager' roles, as well as the system owner.
+- **URL Example:** `/api/restaurant/5/orders/` (for system with ID 5)
+- **Request Body Example:** (See OrderSerializer fields for full details)
+```json
+{
+    "table_number": "5",
+    "customer_name": "Example Customer",
+    "waiter": 1, 
+    "order_type": "in_house", 
+    "status": "pending", 
+    "order_items": [
+        {
+            "menu_item": 1, 
+            "quantity": 2
+        }
+    ]
+}
+```
+- **Table Occupancy Check:** If an attempt is made to create an `in_house` order for a `table_number` that is currently associated with another active order (status 'pending', 'preparing', 'ready', or 'served') within the same system, the request will be rejected.
+- **Error Response (Table Conflict):** In case of a table conflict, the API will return a `409 Conflict` status code with a JSON response similar to this:
+```json
+{
+    "detail": "Table [Table Number] is already occupied by order #[Order ID]"
+}
+```
+
+---
