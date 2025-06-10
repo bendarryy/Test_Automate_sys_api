@@ -10,6 +10,7 @@ from .models import (
     Supplier,
     PurchaseOrder,
     GoodsReceiving,
+    ProductBatch,
 )
 from django.utils import timezone
 from decimal import Decimal
@@ -36,10 +37,95 @@ class StockUpdateSerializer(serializers.ModelSerializer):
         fields = ["stock_quantity"]
 
 
+class ProductBatchSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductBatch
+        fields = [
+            "id",
+            "product",
+            "purchase_order",
+            "quantity",
+            "expiry_date",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "created_at", "updated_at"]
+
+
 class ProductSerializer(serializers.ModelSerializer):
+    batches = ProductBatchSerializer(many=True, read_only=True)
+    expiring_batches = serializers.SerializerMethodField()
+    newest_batch = serializers.SerializerMethodField()
+    oldest_batch = serializers.SerializerMethodField()
+    batch_groups = serializers.SerializerMethodField()
+    stock_by_date = serializers.SerializerMethodField()
+    stock_by_expiry = serializers.SerializerMethodField()
+
     class Meta:
         model = Product
-        fields = "__all__"
+        fields = [
+            "id",
+            "name",
+            "price",
+            "cost",
+            "stock_quantity",
+            "minimum_stock",
+            "expiry_date",
+            "batches",
+            "batch_groups",
+            "expiring_batches",
+            "newest_batch",
+            "oldest_batch",
+            "stock_by_date",
+            "stock_by_expiry",
+        ]
+
+    def get_batch_groups(self, obj):
+        """Group batches by expiry date"""
+        from django.utils import timezone
+        from datetime import timedelta
+
+        today = timezone.now().date()
+        batches = obj.batches.filter(quantity__gt=0).order_by("expiry_date")
+
+        groups = {
+            "expired": [],
+            "expiring_soon": [],  # Within 7 days
+            "expiring_later": [],  # More than 7 days
+            "no_expiry": [],  # No expiry date set
+        }
+
+        for batch in batches:
+            if not batch.expiry_date:
+                groups["no_expiry"].append(ProductBatchSerializer(batch).data)
+            elif batch.expiry_date < today:
+                groups["expired"].append(ProductBatchSerializer(batch).data)
+            elif batch.expiry_date <= today + timedelta(days=7):
+                groups["expiring_soon"].append(ProductBatchSerializer(batch).data)
+            else:
+                groups["expiring_later"].append(ProductBatchSerializer(batch).data)
+
+        return groups
+
+    def get_expiring_batches(self, obj):
+        batches = obj.get_expiring_batches()
+        return ProductBatchSerializer(batches, many=True).data
+
+    def get_newest_batch(self, obj):
+        batch = obj.get_newest_batch()
+        return ProductBatchSerializer(batch).data if batch else None
+
+    def get_oldest_batch(self, obj):
+        batch = obj.get_oldest_batch()
+        return ProductBatchSerializer(batch).data if batch else None
+
+    def get_stock_by_date(self, obj):
+        """Get stock quantities grouped by received date"""
+        return obj.get_stock_by_date()
+
+    def get_stock_by_expiry(self, obj):
+        """Get stock quantities grouped by expiry date"""
+        return obj.get_stock_by_expiry()
 
 
 class SaleItemSerializer(serializers.ModelSerializer):
@@ -324,6 +410,9 @@ class GoodsReceivingSerializer(serializers.ModelSerializer):
     purchase_order_id = serializers.IntegerField(write_only=True, required=False)
     received_date = CustomDateField()
     expiry_date = CustomDateField(required=False, allow_null=True)
+    batch_details = ProductBatchSerializer(
+        source="purchase_order.batches", many=True, read_only=True
+    )
 
     class Meta:
         model = GoodsReceiving
@@ -338,6 +427,7 @@ class GoodsReceivingSerializer(serializers.ModelSerializer):
             "location",
             "created_at",
             "updated_at",
+            "batch_details",
         ]
         read_only_fields = ["id", "created_at", "updated_at", "purchase_order"]
 
