@@ -14,6 +14,7 @@ class Product(models.Model):
     )
     name = models.CharField(max_length=100)
     price = models.DecimalField(max_digits=10, decimal_places=2)
+    cost = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     stock_quantity = models.PositiveIntegerField()
     expiry_date = models.DateField(blank=True, null=True)
     minimum_stock = models.PositiveIntegerField(default=10)
@@ -175,7 +176,7 @@ class PurchaseOrder(models.Model):
         Product, on_delete=models.PROTECT, related_name="purchase_orders"
     )
     quantity = models.PositiveIntegerField()
-    price = models.DecimalField(max_digits=10, decimal_places=2)
+    cost = models.DecimalField(max_digits=10, decimal_places=2)
     order_date = models.DateTimeField(auto_now_add=True)
     expected_delivery_date = models.DateField()
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
@@ -215,15 +216,58 @@ class GoodsReceiving(models.Model):
         po = self.purchase_order
         total_received = sum(gr.received_quantity for gr in po.goods_receiving.all())
 
+        # If this is an update, subtract the old quantity
+        if self.pk:
+            old_record = GoodsReceiving.objects.get(pk=self.pk)
+            total_received -= old_record.received_quantity
+
+        # Add the new quantity
+        total_received += self.received_quantity
+
+        # Update PO status
         if total_received >= po.quantity:
             po.status = "completed"
         elif total_received > 0:
             po.status = "partially_received"
+        else:
+            po.status = "pending"
         po.save()
 
-        # Update product stock
+        # Update product stock and cost
         product = po.product
+        if self.pk:
+            # If updating, subtract the old quantity first
+            old_record = GoodsReceiving.objects.get(pk=self.pk)
+            product.stock_quantity -= old_record.received_quantity
+
+        # Add the new quantity
         product.stock_quantity += self.received_quantity
+        # Update product cost with the purchase order cost
+        product.cost = po.cost
         product.save()
 
         super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        # Update PO status and product stock before deleting
+        po = self.purchase_order
+        product = po.product
+
+        # Subtract the quantity from product stock
+        product.stock_quantity -= self.received_quantity
+        product.save()
+
+        # Recalculate PO status
+        total_received = (
+            sum(gr.received_quantity for gr in po.goods_receiving.all())
+            - self.received_quantity
+        )
+        if total_received >= po.quantity:
+            po.status = "completed"
+        elif total_received > 0:
+            po.status = "partially_received"
+        else:
+            po.status = "pending"
+        po.save()
+
+        super().delete(*args, **kwargs)

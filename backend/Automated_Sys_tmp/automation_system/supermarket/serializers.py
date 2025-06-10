@@ -21,7 +21,7 @@ from datetime import datetime
 class InventorysupItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
-        fields = ["id", "name", "price", "stock_quantity", "expiry_date"]
+        fields = ["id", "name", "price", "cost", "stock_quantity", "expiry_date"]
 
 
 class StockChangeSerializer(serializers.ModelSerializer):
@@ -223,7 +223,7 @@ class PurchaseOrderSerializer(serializers.ModelSerializer):
             "product_id",
             "product_name",
             "quantity",
-            "price",
+            "cost",
             "order_date",
             "expected_delivery_date",
             "status",
@@ -249,9 +249,9 @@ class PurchaseOrderSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Quantity must be greater than zero")
         return value
 
-    def validate_price(self, value):
+    def validate_cost(self, value):
         if value <= 0:
-            raise serializers.ValidationError("Price must be greater than zero")
+            raise serializers.ValidationError("Cost must be greater than zero")
         return value
 
     def validate_order_date(self, value):
@@ -431,4 +431,12 @@ class GoodsReceivingSerializer(serializers.ModelSerializer):
 class PublicProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
-        fields = ['id', 'name', 'price', 'stock_quantity', 'expiry_date', 'minimum_stock']
+        fields = [
+            "id",
+            "name",
+            "price",
+            "cost",
+            "stock_quantity",
+            "expiry_date",
+            "minimum_stock",
+        ]
