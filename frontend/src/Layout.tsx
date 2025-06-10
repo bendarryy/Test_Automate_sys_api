@@ -6,13 +6,21 @@ import { useDispatch, useSelector } from "react-redux";
 import { setPermissions } from "./store/permissionsSlice";
 import { setProfile, Profile } from "./store/profileSlice";
 import { RootState } from "./store";
-import { useApi } from "./hooks/useApi";
+import { useApi } from "./shared/hooks/useApi";
+import { useSelectedSystemId } from "./shared/hooks/useSelectedSystemId";
+
 
 const Layout = () => {
   const dispatch = useDispatch();
   const loaded = useSelector((state: RootState) => state.permissions.loaded);
   const profile = useSelector((state: RootState) => state.profile.profile);
   const { loading, callApi } = useApi();
+  const [
+    selectedSystemId,
+    setSelectedSystemId,
+    selectedCategory,
+    setSelectedCategory
+  ] = useSelectedSystemId();
 
   useEffect(() => {
     if (!profile) {
@@ -22,23 +30,21 @@ const Layout = () => {
           dispatch(setProfile(data));
           dispatch(setPermissions(data?.actions || []));
 
-          // Store system info in localStorage
+          // Store system info using Redux (was localStorage)
           if (data?.systems) {
             const isOwnerLogin =
               localStorage.getItem("loginViaOwner") === "true";
             localStorage.removeItem("loginViaOwner");
             if (!isOwnerLogin) {
-              // For non-owners, only store if localStorage is empty
+              // For non-owners, only store if not already set
               if (data.role !== "owner") {
-                if (!localStorage.getItem("selectedSystemId")) {
+                if (!selectedSystemId) {
                   const systemId = Array.isArray(data.systems) ? data.systems[0]?.id : data.systems;
-                  localStorage.setItem("selectedSystemId", String(systemId));
+                  if (systemId) setSelectedSystemId(String(systemId));
                 }
-                if (!localStorage.getItem("selectedSystemCategory")) {
+                if (!selectedCategory) {
                   const systemCategory = Array.isArray(data.systems) ? data.systems[0]?.category : undefined;
-                  if (systemCategory) {
-                    localStorage.setItem("selectedSystemCategory", systemCategory);
-                  }
+                  if (systemCategory) setSelectedCategory(systemCategory);
                 }
               }
             }
@@ -53,9 +59,10 @@ const Layout = () => {
       dispatch(setPermissions(profile.actions || []));
     }
     // eslint-disable-next-line
-  }, [dispatch, loaded, profile]);
+  }, [dispatch, loaded, profile, selectedSystemId, setSelectedSystemId, selectedCategory, setSelectedCategory]);
 
-  const systemId = localStorage.getItem("selectedSystemId");
+  // Use Redux value instead of localStorage
+  const systemId = selectedSystemId;
   if (profile?.role === "owner" && !systemId) {
     return <Navigate to="/systems" replace />;
   }

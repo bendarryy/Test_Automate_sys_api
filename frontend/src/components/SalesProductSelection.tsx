@@ -3,7 +3,8 @@ import { useDispatch } from 'react-redux';
 import { Card, Col, Row, Input, Select, Space, Typography, message, Spin } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import { addItemToSale } from '../store/salesSlice';
-import { useApi } from '../hooks/useApi';
+import { useApi } from '../shared/hooks/useApi';
+import { useSelectedSystemId } from '../shared/hooks/useSelectedSystemId';
 
 interface Product {
   id: number;
@@ -19,7 +20,7 @@ export const SalesProductSelection = () => {
   const [sortOrder, setSortOrder] = useState<'name-asc' | 'name-desc' | 'price-asc' | 'price-desc'>('name-asc');
   const dispatch = useDispatch();
   const api = useApi();
-  const systemId = localStorage.getItem('selectedSystemId');
+  const [systemId] = useSelectedSystemId();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
 

@@ -1,6 +1,6 @@
 import { ReactNode, useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useApi } from '../hooks/useApi';
+import { useApi } from '../shared/hooks/useApi';
 import { Spin } from 'antd';
 
 // This assumes that successful login sets some identifiable value in `data` (e.g., a token or user object)

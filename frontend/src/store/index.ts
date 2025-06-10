@@ -11,6 +11,7 @@ const store = configureStore({
     permissions: permissionsReducer,
     profile: profileReducer,
   },
+  // middleware, devTools, etc. can be configured here if needed
 });
 
 export type RootState = ReturnType<typeof store.getState>;

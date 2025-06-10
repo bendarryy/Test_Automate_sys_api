@@ -8,7 +8,8 @@ import {
   clearCurrentSale,
   updateItemQuantity
 } from '../store/salesSlice';
-import { useApi } from '../hooks/useApi';
+import { useApi } from '../shared/hooks/useApi';
+import { useSelectedSystemId } from '../shared/hooks/useSelectedSystemId';
 
 interface BillItem {
   id: number;
@@ -25,7 +26,9 @@ export const SalesBillSection = () => {
   
   const dispatch = useDispatch();
   const api = useApi();
-  const systemId = localStorage.getItem('selectedSystemId');
+  const [
+    systemId
+  ] = useSelectedSystemId();
 
   const columns = [
     {

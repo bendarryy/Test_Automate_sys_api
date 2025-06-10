@@ -5,7 +5,8 @@ import { Layout, Menu, Button, Typography, Dropdown } from 'antd';
 import { theme } from 'antd';
 import styles from '../styles/Sidebar.module.css';
 import { getCommonNavItems, NavItem } from '../config/navigation.config';
-import useNavigationItems from '../hooks/useNavigationItems';
+import useNavigationItems from '../shared/hooks/useNavigationItems';
+import { useSelectedSystemId } from '../shared/hooks/useSelectedSystemId';
 
 const { Sider } = Layout;
 const { Text } = Typography;
@@ -16,6 +17,7 @@ const { useToken } = theme;
 
 export function Sidebar({ defaultIconsOnly = false, className = "" }: { defaultIconsOnly?: boolean, className?: string }) {
   const [collapsed, setCollapsed] = useState(() => {
+    // Use localStorage directly for sidebarCollapsed (not related to systemId/category)
     const storedCollapsed = localStorage.getItem('sidebarCollapsed');
     return storedCollapsed ? JSON.parse(storedCollapsed) : defaultIconsOnly;
   });
@@ -26,22 +28,7 @@ export function Sidebar({ defaultIconsOnly = false, className = "" }: { defaultI
   const navigate = useNavigate();
   const { token } = useToken();
   
-  // Get system category from localStorage and make it reactive
-  const [systemCategory, setSystemCategory] = useState<string | null>(
-    localStorage.getItem('selectedSystemCategory')
-  );
-  
-  // Listen for system category changes
-  useEffect(() => {
-    const handleSystemCategoryChange = () => {
-      setSystemCategory(localStorage.getItem('selectedSystemCategory'));
-    };
-
-    window.addEventListener('systemCategoryChanged', handleSystemCategoryChange);
-    return () => {
-      window.removeEventListener('systemCategoryChanged', handleSystemCategoryChange);
-    };
-  }, []);
+  const [, , systemCategory] = useSelectedSystemId();
   
   // Get navigation items based on system category
   // Filter navigation items by permissions using the custom hook

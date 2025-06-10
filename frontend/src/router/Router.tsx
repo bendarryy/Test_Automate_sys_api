@@ -3,11 +3,12 @@ import React, { Suspense, lazy } from "react";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import '../styles/error.css';
 import { authRoutes } from '../config/navigation.config';
-import {SalesPage}  from "../pages/supermarket/SalesPage";
+import {SalesPage}  from "../page/supermarket/pages/sales/SalesPage";
 import ProtectedRoute from '../components/ProtectedRoute';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
 import LoadingSpinner from '../components/LoadingSpinner';
+import { useSelectedSystemId } from '../shared/hooks/useSelectedSystemId';
 
 
 function RootUrlPage() {
@@ -28,28 +29,28 @@ function RootUrlPage() {
 
 const Layout = lazy(() => import("../Layout"));
 const ProtectLogin = lazy(() => import("../security/protectLogin"));
-const DynamicHomePage = lazy(() => import("../pages/DynamicHomePage"));
-const RegisterPage = lazy(() => import("../pages/RegisterPage"));
-const OrdersPage = lazy(() => import("../pages/Restaurant/OrderPage"));
-const OrderDetailsPage = lazy(() => import("../pages/Restaurant/OrderDetailsPage"));
-const MenuManagement = lazy(() => import("../pages/Restaurant/MenuManagementPage"));
-const InventoryManagementPage = lazy(() => import("../pages/Restaurant/InventoryManagementPage"));
-const InventoryManagementSMPage = lazy(() => import("../pages/supermarket/ProductsManagementPage"));
-const InventoryItemViewPage = lazy(() => import("../pages/Restaurant/InventoryItemViewPage"));
-const EmployeeLogin = lazy(() => import("../pages/EmployeeLogin"));
-const OwnerLogin = lazy(() => import("../pages/OwnerLogin"));
-const Systems = lazy(() => import("../pages/Systems"));
-const KdsPage = lazy(() => import("../pages/Restaurant/KdsPage"));
-const EmployeesPage = lazy(() => import("../pages/Restaurant/EmployeesPage"));
-const Financesdashboards = lazy(() => import("../pages/Restaurant/financesdashboards"));
-const WaiterDisplay = lazy(() => import("../pages/Restaurant/waiterdisplay"));
-const DeliveryDisplay = lazy(() => import("../pages/Restaurant/deliverydisplay"));
+const DynamicHomePage = lazy(() => import("../shared/pages/DynamicHomePage"));
+const RegisterPage = lazy(() => import("../page/auth/pages/RegisterPage"));
+const OrdersPage = lazy(() => import("../page/restaurant/pages/orders/OrderPage"));
+const OrderDetailsPage = lazy(() => import("../page/restaurant/pages/orders/OrderDetailsPage"));
+const MenuManagement = lazy(() => import("../page/restaurant/pages/menu/MenuManagementPage"));
+const InventoryManagementPage = lazy(() => import("../page/restaurant/pages/inventory/InventoryManagementPage"));
+const InventoryManagementSMPage = lazy(() => import("../page/supermarket/pages/products/ProductsManagementPage"));
+const InventoryItemViewPage = lazy(() => import("../page/restaurant/pages/inventory/InventoryItemViewPage"));
+const EmployeeLogin = lazy(() => import("../page/auth/pages/EmployeeLogin"));
+const OwnerLogin = lazy(() => import("../page/auth/pages/OwnerLogin"));
+const Systems = lazy(() => import("../shared/pages/Systems"));
+const KdsPage = lazy(() => import("../page/restaurant/pages/kitchen/KdsPage"));
+const EmployeesPage = lazy(() => import("../page/restaurant/pages/employees/EmployeesPage"));
+const Financesdashboards = lazy(() => import("../page/restaurant/pages/analysis/FinancialDashboard"));
+const WaiterDisplay = lazy(() => import("../page/restaurant/pages/waiter/waiterdisplay"));
+const DeliveryDisplay = lazy(() => import("../page/restaurant/pages/delivery/deliverydisplay"));
 const About = () => <h1>About Page</h1>;
-const Profile = lazy(() => import("../pages/Profile"));
-const Settings = lazy(() => import("../pages/Settings"));
-const ChangePassword = lazy(() => import("../pages/ChangePassword"));
-const SupplierManagement = lazy(() => import("../pages/supermarket/SupplierManagement"));
-const PurchaseOrdersPage = lazy(() => import("../pages/supermarket/PurchaseOrdersPage"));
+const Profile = lazy(() => import("../page/settings/pages/Profile"));
+const Settings = lazy(() => import("../page/settings/Settings"));
+const ChangePassword = lazy(() => import("../page/settings/pages/ChangePassword"));
+const SupplierManagement = lazy(() => import("../page/supermarket/pages/suppliers/SupplierManagement"));
+const PurchaseOrdersPage = lazy(() => import("../page/supermarket/pages/purchase/PurchaseOrdersPage"));
 
 const ErrorBoundary = () => {
   return (
@@ -135,7 +136,7 @@ const router = createBrowserRouter([
         path: "/menu",
         element: (
           <ProtectLogin>
-            <MenuManagement EditPermition />
+            <MenuManagement  />
           </ProtectLogin>
         ),
       },
@@ -371,32 +372,16 @@ const supermarketRouter = createBrowserRouter([
 
 // Dynamic router that selects the appropriate router based on system category
 const DynamicRouter = () => {
-  // Get the selected system category from localStorage
-  const [systemCategory, setSystemCategory] = React.useState<string | null>(
-    localStorage.getItem('selectedSystemCategory')
-  );
-
-  // Listen for changes to localStorage
-  React.useEffect(() => {
-    const handleStorageChange = () => {
-      const newCategory = localStorage.getItem('selectedSystemCategory');
-      if (newCategory !== systemCategory) {
-        setSystemCategory(newCategory);
-        // Force a router recreation by updating the key
-        setRouterKey(prev => prev + 1);
-      }
-    };
-
-    // Listen for custom event when system category changes
-    window.addEventListener('systemCategoryChanged', handleStorageChange);
-    
-    return () => {
-      window.removeEventListener('systemCategoryChanged', handleStorageChange);
-    };
-  }, [systemCategory]);
+  // Get the selected system category from the hook
+  const [, , systemCategory] = useSelectedSystemId();
 
   // Add a key state to force router recreation
   const [routerKey, setRouterKey] = React.useState(0);
+
+  // Listen for changes to systemCategory and force router recreation
+  React.useEffect(() => {
+    setRouterKey(prev => prev + 1);
+  }, [systemCategory]);
 
   // Select the appropriate router based on system category
   return (
