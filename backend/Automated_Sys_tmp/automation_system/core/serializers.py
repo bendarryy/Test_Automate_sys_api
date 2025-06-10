@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
-from .models import System ,Employee
+from .models import System ,Employee ,  PublicSliderImage , OpeningHours
 from django.contrib.auth.models import  User ,Group, Permission 
 from django.contrib.auth.hashers import make_password, check_password
 from django.core.exceptions import ValidationError
@@ -145,6 +145,8 @@ class BaseSystemSerializer(serializers.ModelSerializer):
         help_text="Optional custom URL for the system location (e.g., a map link or website)"
     )
     location_link = serializers.SerializerMethodField(
+        
+        
         help_text="Returns the custom link if provided, otherwise a Google Maps link based on latitude and longitude"
     )
 
@@ -531,5 +533,57 @@ class PublicSystemSerializer(serializers.ModelSerializer):
         fields = ['name', 'description', 'category' , "phone_number" ,  "latitude", "longitude" , 'custom_domain']
         read_only_fields = ['name', 'description', 'category' , "phone_number" ,  "latitude", "longitude" , 'custom_domain']
 
+class OpeningHoursSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OpeningHours
+        fields = ['day', 'open_time', 'close_time', 'is_closed', 'is_24_hours']
 
-  
+
+
+class SystemSerializer(serializers.ModelSerializer):
+    opening_hours = OpeningHoursSerializer(many=True, read_only=True)
+    
+    class Meta:
+        model = System
+        fields = [
+            'id', 'name', 'category', 'description', 'is_public',
+            'logo', 'public_title', 'public_description',
+            'primary_color', 'secondary_color',
+            'email', 'whatsapp_number',
+            'social_links', 'opening_hours'
+        ]
+        extra_kwargs = {
+            'logo': {'required': False, 'allow_null': True},
+            'public_title': {'required': False, 'allow_blank': True},
+            'public_description': {'required': False, 'allow_blank': True},
+            'primary_color': {'required': False, 'allow_blank': True},
+            'secondary_color': {'required': False, 'allow_blank': True},
+            'email': {'required': False, 'allow_blank': True, 'allow_null': True},
+            'whatsapp_number': {'required': False, 'allow_blank': True, 'allow_null': True},
+            'social_links': {'required': False}
+        }
+
+class PublicSliderImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PublicSliderImage
+        fields = ['image', 'caption', 'is_active']
+        extra_kwargs = {
+            'caption': {'required': False},
+            'is_active': {'required': False}
+        }
+
+    def validate(self, data):
+        system = self.context.get('system')
+        if not self.instance and system:  # Only check for new images
+            if PublicSliderImage.objects.filter(system=system).count() >= PublicSliderImage.MAX_SLIDER_IMAGES:
+                raise serializers.ValidationError(
+                    f'Maximum number of slider images ({PublicSliderImage.MAX_SLIDER_IMAGES}) reached for this system.'
+                )
+        return data
+
+    def create(self, validated_data):
+        system = self.context.get('system')
+        if not system:
+            raise serializers.ValidationError("System context is required")
+        validated_data['system'] = system
+        return super().create(validated_data)

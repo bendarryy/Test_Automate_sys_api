@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from .models import Employee, System
+from .models import Employee, System, PublicSliderImage, OpeningHours
 from django.contrib.auth.decorators import login_required
 from core.forms import SystemForm
 from django.contrib.auth import authenticate, login, logout
@@ -26,7 +26,10 @@ from .serializers import (
     EmployeeInviteSerializer,
     SystemDeleteSerializer,
     ProfileUpdateSerializer,
-    BaseSystemSerializer
+    BaseSystemSerializer,
+    SystemSerializer,
+    PublicSliderImageSerializer,
+    OpeningHoursSerializer
 )
 from rest_framework.generics import RetrieveAPIView, ListAPIView
 from django.shortcuts import get_object_or_404
@@ -41,6 +44,7 @@ from drf_yasg.utils import swagger_auto_schema
 from django.conf import settings
 from drf_yasg import openapi
 from rest_framework import serializers
+from rest_framework import viewsets
 
 @csrf_exempt
 @api_view(["POST"])
@@ -679,3 +683,81 @@ class CheckAuthView(APIView):
             "is_authenticated": True,
             "user_id": request.user.id
         }, status=status.HTTP_200_OK)
+
+class PublicProfileViewSet(viewsets.ModelViewSet):
+    """Handle public profile operations"""
+    permission_classes = [IsAuthenticated, IsSystemOwner]
+    serializer_class = SystemSerializer
+    lookup_field = 'system_id'
+    lookup_url_kwarg = 'system_id'
+
+    def get_queryset(self):
+        return System.objects.filter(owner=self.request.user)
+
+    def get_object(self):
+        system_id = self.kwargs.get('system_id')
+        return get_object_or_404(
+            System,
+            id=system_id,
+            owner=self.request.user
+        )   
+
+class PublicSliderImageViewSet(viewsets.ModelViewSet):
+    """Handle slider image operations"""
+    permission_classes = [IsAuthenticated, IsSystemOwner]
+    serializer_class = PublicSliderImageSerializer
+
+    def get_queryset(self):
+        system_id = self.kwargs.get('system_id')
+        return PublicSliderImage.objects.filter(
+            system_id=system_id,
+            system__owner=self.request.user
+        )
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        system_id = self.kwargs.get('system_id')
+        if system_id:
+            context['system'] = get_object_or_404(System, id=system_id, owner=self.request.user)
+        return context
+
+    def perform_create(self, serializer):
+        system_id = self.kwargs.get('system_id')
+        system = get_object_or_404(System, id=system_id, owner=self.request.user)
+        serializer.save(system=system)
+
+class PublicSystemView(APIView):
+    """Public view for accessing system information"""
+    permission_classes = [AllowAny]
+
+    def get(self, request, subdomain):
+        try:
+            system = System.objects.get(subdomain=subdomain, is_public=True)
+        except System.DoesNotExist:
+            return Response(
+                {"error": "System not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        data = {
+            'name': system.name,
+            'category': system.category,
+            'description': system.description,
+            'logo': system.logo.url if system.logo else None,
+            'public_title': system.public_title,
+            'public_description': system.public_description,
+            'primary_color': system.primary_color,
+            'secondary_color': system.secondary_color,
+            'email': system.email,
+            'whatsapp_number': system.whatsapp_number,
+            'social_links': system.social_links,
+            'slider_images': PublicSliderImageSerializer(
+                system.slider_images.filter(is_active=True), 
+                many=True
+            ).data,
+            'opening_hours': OpeningHoursSerializer(
+                system.opening_hours.all(), 
+                many=True
+            ).data
+        }
+        return Response(data)

@@ -263,6 +263,7 @@ class SaleViewSet(viewsets.ModelViewSet):
         }
 
         # Return HTML response
+        # return 
         return render(request, "supermarket/receipt.html", context)
 
     @action(detail=True, methods=["patch"])
@@ -463,51 +464,26 @@ class GoodsReceivingViewSet(viewsets.ModelViewSet):
         except System.DoesNotExist:
             raise PermissionDenied("You do not have permission for this system.")
 
-
 @api_view(['GET'])
-def public_view(request):
+def supermarket_public_view(request, system):
     """
-    Public view for accessing supermarket systems via subdomain.
-    Returns products as JSON data.
+    Supermarket public view. Returns available products.
     """
-    subdomain = getattr(request, 'subdomain', None)
-    
-    if not subdomain:
-        return Response(
-            {"error": "Subdomain not found"},
-            status=status.HTTP_404_NOT_FOUND
-        )
+    products = Product.objects.filter(
+        system=system,
+        stock_quantity__gt=0
+    ).order_by('name')
 
-    try:
-        system = System.objects.get(subdomain=subdomain)
-        if not system.is_public or not system.is_active:
-            return Response(
-                {"error": "System is not public or active"},
-                status=status.HTTP_403_FORBIDDEN
-            )
+    products_data = [{
+        'id': product.id,
+        'name': product.name,
+        'price': str(product.price),
+        'stock_quantity': product.stock_quantity,
+        'expiry_date': product.expiry_date.strftime('%Y-%m-%d') if product.expiry_date else None,
+        'minimum_stock': product.minimum_stock
+    } for product in products]
 
-        products = Product.objects.filter(
-            system=system,
-            stock_quantity__gt=0  # Only show products with stock
-        ).order_by('name')
-        
-        # Explicitly select fields for products
-        products_data = [{
-            'id': product.id,
-            'name': product.name,
-            'price': str(product.price),  # Convert Decimal to string
-            'stock_quantity': product.stock_quantity,
-            'expiry_date': product.expiry_date.strftime('%Y-%m-%d') if product.expiry_date else None,
-            'minimum_stock': product.minimum_stock
-        } for product in products]
-
-        return Response({
-            'system': PublicSystemSerializer(system).data,
-            'products': products_data
-        })
-        
-    except System.DoesNotExist:
-        return Response(
-            {"error": "System not found"},
-            status=status.HTTP_404_NOT_FOUND
-        )
+    return Response({
+        'system': PublicSystemSerializer(system).data,
+        'products': products_data
+    })

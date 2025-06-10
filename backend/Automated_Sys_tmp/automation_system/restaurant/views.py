@@ -625,45 +625,27 @@ class WaiterStatsView(APIView):
 
 
 from .serializers import PublicMenuItemSerializer
-
 @api_view(['GET'])
-def public_view(request):
+def restaurant_public_view(request, system):
     """
-    Public view for accessing restaurant systems via subdomain.
-    Returns menu items as JSON data.
+    Restaurant public view. Returns menu grouped by category.
     """
-    subdomain = getattr(request, 'subdomain', None)
-    
-    if not subdomain:
-        return Response(
-            {"error": "Subdomain not found"},
-            status=status.HTTP_404_NOT_FOUND
-        )
+    menu_items = MenuItem.objects.filter(
+        system=system,
+        is_available=True
+    ).order_by('category', 'name')
 
-    try:
-        system = System.objects.get(subdomain=subdomain)
-        menu_items = MenuItem.objects.filter(
-            system=system,
-            is_available=True
-        ).order_by('category', 'name')
-        
-        # Group menu items by category
-        menu_by_category = {}
-        for item in menu_items:
-            if item.category not in menu_by_category:
-                menu_by_category[item.category] = []
-            menu_by_category[item.category].append(PublicMenuItemSerializer(item).data)
+    menu_by_category = {}
+    for item in menu_items:
+        category = item.category or "Uncategorized"
+        if category not in menu_by_category:
+            menu_by_category[category] = []
+        menu_by_category[category].append(PublicMenuItemSerializer(item).data)
 
-        return Response({
-            'system': PublicSystemSerializer(system).data,
-            'menu': menu_by_category
-        })
-        
-    except System.DoesNotExist:
-        return Response(
-            {"error": "System not found"},
-            status=status.HTTP_404_NOT_FOUND
-        )
+    return Response({
+        'system': PublicSystemSerializer(system).data,
+        'menu': menu_by_category
+    })
 
 
 # waiter display By Ali

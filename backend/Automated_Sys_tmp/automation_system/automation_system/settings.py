@@ -185,9 +185,22 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 
-MEDIA_URL = '/images/'
-MEDIA_ROOT = BASE_DIR / 'images'
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
+# Create a function to ensure media directories exist
+def create_media_dirs():
+    media_dirs = [
+        MEDIA_ROOT / 'public',
+        MEDIA_ROOT / 'public' / 'logos',
+        MEDIA_ROOT / 'public' / 'menus',
+        MEDIA_ROOT / 'public' / 'sliders',
+    ]
+    for directory in media_dirs:
+        directory.mkdir(parents=True, exist_ok=True)
+
+# Call the function when Django starts
+create_media_dirs()
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field

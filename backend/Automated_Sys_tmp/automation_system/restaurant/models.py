@@ -21,7 +21,7 @@ class MenuItem(BaseMultiTenantModel):
     cost = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     is_available = models.BooleanField(default=True)
     category = models.CharField(max_length=50, null=True)  # Remove choices to allow any category
-    image = models.ImageField(upload_to="menu_images/", blank=True, null=True)
+    image = models.ImageField(upload_to="images/menu_images/", blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, null=True)
     updated_at = models.DateTimeField(auto_now=True)
 
