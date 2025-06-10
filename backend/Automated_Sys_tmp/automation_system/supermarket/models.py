@@ -19,6 +19,7 @@ class Product(models.Model):
     expiry_date = models.DateField(blank=True, null=True)
     minimum_stock = models.PositiveIntegerField(default=10)
     received_date = models.DateField(auto_now_add=True)  # Track when stock was received
+    image = models.ImageField(upload_to="product_images/", null=True, blank=True)
 
     def __str__(self):
         return f"{self.name} - {self.system.name}"

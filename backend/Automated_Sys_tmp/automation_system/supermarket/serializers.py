@@ -22,7 +22,15 @@ from datetime import datetime
 class InventorysupItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
-        fields = ["id", "name", "price", "cost", "stock_quantity", "expiry_date"]
+        fields = [
+            "id",
+            "name",
+            "price",
+            "cost",
+            "stock_quantity",
+            "expiry_date",
+            "image",
+        ]
 
 
 class StockChangeSerializer(serializers.ModelSerializer):
@@ -60,6 +68,7 @@ class ProductSerializer(serializers.ModelSerializer):
     batch_groups = serializers.SerializerMethodField()
     stock_by_date = serializers.SerializerMethodField()
     stock_by_expiry = serializers.SerializerMethodField()
+    image = serializers.ImageField(required=False, allow_null=True)
 
     class Meta:
         model = Product
@@ -71,6 +80,7 @@ class ProductSerializer(serializers.ModelSerializer):
             "stock_quantity",
             "minimum_stock",
             "expiry_date",
+            "image",
             "batches",
             "batch_groups",
             "expiring_batches",
@@ -529,4 +539,5 @@ class PublicProductSerializer(serializers.ModelSerializer):
             "stock_quantity",
             "expiry_date",
             "minimum_stock",
+            "image",
         ]
