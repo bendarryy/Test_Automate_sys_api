@@ -82,9 +82,9 @@ const ChangePassword = lazy(
 const SupplierManagement = lazy(
   () => import("../page/supermarket/pages/suppliers/SupplierManagement")
 );
-// const PurchaseOrdersPage = lazy(
-//   () => import("../page/supermarket/pages/purchase/PurchaseOrdersPage")
-// );
+const PurchaseOrdersPage = lazy(
+  () => import("../page/supermarket/pages/purchase/PurchaseOrdersPage")
+);
 
 const ErrorBoundary = () => {
   return (
@@ -278,14 +278,14 @@ const supermarketRouter = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
-      // {
-      //   path: "/supermarket/purchase-orders",
-      //   element: (
-      //     <ProtectedRoute permission={["read_order", "create_order"]}>
-      //       <PurchaseOrdersPage />
-      //     </ProtectedRoute>
-      //   ),
-      // },
+      {
+        path: "/supermarket/purchase-orders",
+        element: (
+          <ProtectedRoute permission={["read_order", "create_order"]}>
+            <PurchaseOrdersPage />
+          </ProtectedRoute>
+        ),
+      },
       {
         path: "/supermarket/suppliers",
         element: <SupplierManagement />,
