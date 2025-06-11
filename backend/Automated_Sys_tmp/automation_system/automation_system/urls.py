@@ -28,7 +28,7 @@ schema_view = get_schema_view(
     openapi.Info(
         title="Smart System API",
         default_version="v1",
-        description="Multi-System API for core, restaurant, supermarket, and cafe",
+        description="Multi-System API for core, restaurant, supermarket",
         contact=openapi.Contact(email="support@example.com"),
     ),
     public=True,
