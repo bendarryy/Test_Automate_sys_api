@@ -75,9 +75,19 @@ class MenuItemViewSet(viewsets.ModelViewSet):
         system_id = self.kwargs.get("system_id")
         system = get_object_or_404(System, id=system_id)
         
-        # Get the table number from the request data
+        # Get the table number and order type from the request data
         table_number = serializer.validated_data.get('table_number')
         order_type = serializer.validated_data.get('order_type', 'in_house')
+        
+        # Validate delivery information for delivery orders
+        if order_type == 'delivery':
+            delivery_address = serializer.validated_data.get('delivery_address')
+            customer_phone = serializer.validated_data.get('customer_phone')
+            
+            if not delivery_address:
+                raise ValidationError("Delivery address is required for delivery orders")
+            if not customer_phone:
+                raise ValidationError("Customer phone number is required for delivery orders")
         
         # Only check table availability for in-house orders
         if order_type == 'in_house' and table_number:
@@ -157,9 +167,19 @@ class OrderViewSet(viewsets.ModelViewSet):
         system_id = self.kwargs.get("system_id")
         system = get_object_or_404(System, id=system_id)
         
-        # Get the table number from the request data
+        # Get the table number and order type from the request data
         table_number = serializer.validated_data.get('table_number')
         order_type = serializer.validated_data.get('order_type', 'in_house')
+        
+        # Validate delivery information for delivery orders
+        if order_type == 'delivery':
+            delivery_address = serializer.validated_data.get('delivery_address')
+            customer_phone = serializer.validated_data.get('customer_phone')
+            
+            if not delivery_address:
+                raise ValidationError("Delivery address is required for delivery orders")
+            if not customer_phone:
+                raise ValidationError("Customer phone number is required for delivery orders")
         
         # Only check table availability for in-house orders
         if order_type == 'in_house' and table_number:

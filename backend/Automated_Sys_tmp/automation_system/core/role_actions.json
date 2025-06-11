@@ -5,7 +5,6 @@
     "create_order", "read_order", "update_order", "delete_order",
     "create_inventory", "read_inventory", "update_inventory", "delete_inventory",
     "create_product", "read_product", "update_product", "delete_product",
-    "create_employee", "read_employee", "update_employee", "delete_employee",
     "read_finance", "read_sales", "read_waiterdisplay", "read_profile", "read_about"
   ],
   "supermarket_cashier": [
