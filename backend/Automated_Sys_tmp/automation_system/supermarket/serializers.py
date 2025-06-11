@@ -28,9 +28,31 @@ class InventorysupItemSerializer(serializers.ModelSerializer):
             "price",
             "cost",
             "stock_quantity",
+            "minimum_stock",
             "expiry_date",
             "image",
         ]
+        extra_kwargs = {
+            "minimum_stock": {"required": False, "default": 10},
+            "expiry_date": {"required": False, "allow_null": True},
+            "image": {"required": False, "allow_null": True},
+            "cost": {"required": False, "default": 0},
+        }
+
+    def validate_price(self, value):
+        if value <= 0:
+            raise serializers.ValidationError("Price must be greater than zero")
+        return value
+
+    def validate_stock_quantity(self, value):
+        if value < 0:
+            raise serializers.ValidationError("Stock quantity cannot be negative")
+        return value
+
+    def validate_minimum_stock(self, value):
+        if value < 0:
+            raise serializers.ValidationError("Minimum stock cannot be negative")
+        return value
 
 
 class StockChangeSerializer(serializers.ModelSerializer):

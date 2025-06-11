@@ -52,10 +52,12 @@ class Product(models.Model):
         return earliest_batch.expiry_date if earliest_batch else None
 
     def save(self, *args, **kwargs):
-        # Update total stock quantity from batches
-        self.stock_quantity = self.get_total_stock()
-        # Update expiry date to earliest batch expiry
-        self.expiry_date = self.get_earliest_expiry_date()
+        # Only update stock and expiry if the product already exists
+        if self.pk:
+            # Update total stock quantity from batches
+            self.stock_quantity = self.get_total_stock()
+            # Update expiry date to earliest batch expiry
+            self.expiry_date = self.get_earliest_expiry_date()
         super().save(*args, **kwargs)
 
     def get_stock_by_date(self):
@@ -290,7 +292,7 @@ class PurchaseOrder(models.Model):
         Supplier, on_delete=models.PROTECT, related_name="purchase_orders"
     )
     product = models.ForeignKey(
-        Product, on_delete=models.PROTECT, related_name="purchase_orders"
+        Product, on_delete=models.SET_NULL, related_name="purchase_orders", null=True
     )
     quantity = models.PositiveIntegerField()
     cost = models.DecimalField(max_digits=10, decimal_places=2)
