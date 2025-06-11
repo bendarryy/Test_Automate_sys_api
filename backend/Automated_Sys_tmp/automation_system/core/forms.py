@@ -6,7 +6,3 @@ class SystemForm(forms.ModelForm):
         model = System
         fields = ["name", "category"]
 # unUsed
-  
-  
-  
-    
