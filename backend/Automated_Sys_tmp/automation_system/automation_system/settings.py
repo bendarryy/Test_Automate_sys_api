@@ -49,7 +49,7 @@ INSTALLED_APPS = [
 
     # Category apps (each representing a different type of system)
     'restaurant',
-    'cafe',
+    # 'cafe',
     'supermarket',
     'workshop',
     'drf_yasg',
