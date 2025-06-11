@@ -906,6 +906,38 @@ class TableViewSet(viewsets.ViewSet):
 
         return Response(list(tables_status.values()))
 
+    @action(detail=False, methods=['get'])
+    def occupied_tables(self, request, system_id=None):
+        """Get only occupied tables and their active orders"""
+        system = get_object_or_404(System, id=system_id)
+        
+        # Get all orders that are in-house and not completed/canceled
+        active_orders = Order.objects.filter(
+            system=system,
+            order_type="in_house",
+            status__in=["pending", "preparing", "ready", "served"]
+        ).exclude(table_number__isnull=True).exclude(table_number="")
+
+        # Create a list to store occupied table status
+        occupied_tables_status = []
+        
+        # Get all unique table numbers from active orders
+        for order in active_orders:
+            table_number = order.table_number
+            occupied_tables_status.append({
+                "table_number": table_number,
+                "is_occupied": True,
+                "current_order": {
+                    "order_id": order.id,
+                    "status": order.status,
+                    "customer_name": order.customer_name,
+                    "waiter": order.waiter.user.username if order.waiter else None,
+                    "created_at": order.created_at
+                }
+            })
+
+        return Response(occupied_tables_status)
+
 
 class RestaurantDataAPIView(APIView):
     permission_classes = [IsAuthenticated]
