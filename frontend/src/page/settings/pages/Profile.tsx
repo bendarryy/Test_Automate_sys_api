@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { Card, Descriptions, Tag, Spin, Alert, Form, Input, Button, Modal, message, Row, Col, Typography } from 'antd';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../store';
-import Header from '../../../components/Header';
-import { useApi } from '../../../shared/hooks/useApi';
-import ProfileAvatar from '../../../components/ProfileAvatar';
+import Header from 'components/Header';
+import { useApi } from 'shared/hooks/useApi';
+import ProfileAvatar from 'components/ProfileAvatar';
 import { MdEmail, MdPerson, MdCalendarToday, MdBusiness, MdPhone } from 'react-icons/md';
 
 const { Title, Text } = Typography;

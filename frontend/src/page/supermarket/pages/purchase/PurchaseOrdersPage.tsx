@@ -3,7 +3,7 @@ import { Layout, Row, Col, Typography, Button, Modal, message, ConfigProvider, t
 import { usePurchaseOrders } from './hooks/usePurchaseOrders';
 import PurchaseOrderTable from './components/PurchaseOrderTable';
 import PurchaseOrderForm from './components/PurchaseOrderForm';
-import { useSelectedSystemId } from '../../../../shared/hooks/useSelectedSystemId';
+import { useSelectedSystemId } from 'shared/hooks/useSelectedSystemId';
 import { createPurchaseOrder, updatePurchaseOrder, deletePurchaseOrder } from './utils/api';
 import { PurchaseOrder } from './types/purchase';
 

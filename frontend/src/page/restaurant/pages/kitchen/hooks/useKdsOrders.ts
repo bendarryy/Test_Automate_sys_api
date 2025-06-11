@@ -1,5 +1,5 @@
 import { useCallback, useState, useEffect } from 'react';
-import { useApi } from '../../../../../shared/hooks/useApi';
+import { useApi } from 'shared/hooks/useApi';
 import { KitchenOrder } from '../types/kitchenOrder';
 import { sortOrders } from '../utils/kdsHelpers';
 

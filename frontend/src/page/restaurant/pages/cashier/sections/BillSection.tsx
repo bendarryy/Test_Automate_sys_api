@@ -4,7 +4,7 @@ import { RootState } from "../../../../../store";
 import { removeItem, clearBill, addItem } from "../../../../../store/billSlice";
 import { PrinterOutlined, SendOutlined, DeleteOutlined } from "@ant-design/icons";
 import { useSendOrders } from "../hooks/useSendOrders";
-import { useSelectedSystemId } from '../../../../../shared/hooks/useSelectedSystemId';
+import { useSelectedSystemId } from 'shared/hooks/useSelectedSystemId';
 import { Card, Input, Button, List, Typography, Space, Divider, Empty, Form, message } from "antd";
 
 const { Title, Text } = Typography;

@@ -1,8 +1,8 @@
 import React from 'react';
 import { Space, Statistic, Tooltip, Button, Spin, Alert } from 'antd';
 import { ReloadOutlined } from '@ant-design/icons';
-import Header from '../../../../components/Header';
-import { useDeliveryDisplay } from './useDeliveryDisplay';
+import Header from 'components/Header';
+import { useDeliveryDisplay } from './hooks/useDeliveryDisplay';
 import ReadyOrdersSection from './components/ReadyOrdersSection';
 import OutForDeliverySection from './components/OutForDeliverySection';
 import styles from './deliverydisplay.module.css';

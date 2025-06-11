@@ -1,29 +1,7 @@
 import React from 'react';
-import { Card, Button, Tag, Tooltip, Space, Empty } from 'antd';
-import { CarOutlined } from '@ant-design/icons';
-import { CheckOutlined, RollbackOutlined } from '@ant-design/icons';
-
-interface BaseOrderItem {
-  id: number;
-  menu_item_name: string;
-  quantity: number;
-  notes?: string;
-}
-
-interface BaseOrder {
-  id: number;
-  order_items: BaseOrderItem[];
-  total_price: number;
-  status: string;
-  created_at?: string;
-  // waiter
-  table_number?: number;
-  // delivery
-  customer_name?: string;
-}
-
-type DeliveryStatus = "ready" | "out_for_delivery" | "completed";
-type WaiterStatus = "ready" | "served" | "completed";
+import { Card, Button, Space } from 'antd';
+import { FaUser, FaRegCalendarAlt, FaChair } from 'react-icons/fa';
+import type { BaseOrder, DeliveryStatus, WaiterStatus } from '../types/order';
 
 interface OrderCardProps {
   order: BaseOrder;
@@ -37,20 +15,26 @@ interface OrderCardProps {
 
 const statusColors = {
   ready: 'blue',
-  served: 'orange',
+  out_for_delivery: 'orange',
   completed: 'green',
 };
 
 const statusText = {
   ready: 'Ready',
-  served: 'Served',
+  out_for_delivery: 'Out for Delivery',
   completed: 'Completed',
 };
 
 const statusAccent = {
   ready: 'linear-gradient(135deg, #1890ff 60%, #e6f7ff 100%)',
-  served: 'linear-gradient(135deg, #faad14 60%, #fffbe6 100%)',
+  out_for_delivery: 'linear-gradient(135deg, #faad14 60%, #fffbe6 100%)',
   completed: 'linear-gradient(135deg, #52c41a 60%, #f6ffed 100%)',
+};
+
+const statusbuttonColors = {
+  ready: '#1890ff',
+  out_for_delivery: '#faad14', 
+  completed: '#52c41a',
 };
 
 const OrderCard: React.FC<OrderCardProps> = ({
@@ -58,7 +42,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
   onStatusChange,
   isUpdating,
   showRevertButton,
-  orderType = 'waiter'
+  orderType = 'waiter',
 }) => {
   const [expanded, setExpanded] = React.useState(false);
 
@@ -116,40 +100,37 @@ const OrderCard: React.FC<OrderCardProps> = ({
           alignItems: 'center',
           padding: '16px 24px',
           borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
+          marginTop: 8,
         }}
       >
-        <Space size="middle">
-          <span
-            style={{
-              fontSize: 18,
-              fontWeight: 700,
-            }}
-          >
-            {orderType === 'waiter' ? `Table ${order.table_number}` : order.customer_name}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {order.order_type && (
+            <span style={{ color: '#888', fontSize: 13 }}>Type: {order.order_type}</span>
+          )}
+          {order.customer_name && (
+            <span style={{ fontWeight: 600, color: '#333' }}>{order.customer_name}</span>
+          )}
+          {order.delivery_address && (
+            <span style={{ color: '#888', fontSize: 13 }}>Address: {order.delivery_address}</span>
+          )}
+          {order.customer_phone && (
+            <span style={{ color: '#888', fontSize: 13 }}>Phone: {order.customer_phone}</span>
+          )}
+          {order.table_number && (
+            <span style={{ color: '#888', fontSize: 13 }}>Table: {order.table_number}</span>
+          )}
+          {order.created_at && (
+            <span style={{ color: '#aaa', fontSize: 12 }}>{new Date(order.created_at).toLocaleString()}</span>
+          )}
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <span style={{ fontSize: 14, color: '#888', fontWeight: 500 }}>
+            Order #{order.id}
           </span>
-          <Tag
-            color={statusColors[order.status as keyof typeof statusColors]}
-            style={{ fontSize: 14, padding: '2px 12px' }}
-          >
-            {statusText[order.status as keyof typeof statusText]}
-          </Tag>
-          <span
-            style={{
-              fontSize: 14,
-              color: '#888',
-            }}
-          >
-            {order.created_at ? new Date(order.created_at).toLocaleTimeString() : ''}
-          </span>
-        </Space>
-        <span
-          style={{
-            fontSize: 14,
-            color: '#888',
-          }}
-        >
-          Order #{order.id}
-        </span>
+          <div style={{ fontSize: 13, color: statusColors[order.status as keyof typeof statusColors], fontWeight: 600 }}>
+            {statusText[order.status as keyof typeof statusText] || order.status}
+          </div>
+        </div>
       </div>
       <div
         style={{
@@ -163,50 +144,22 @@ const OrderCard: React.FC<OrderCardProps> = ({
           style={{ padding: 0, marginBottom: 8, fontWeight: 600 }}
           aria-label={expanded ? 'Hide details' : 'Show details'}
         >
-          {expanded ? 'Hide details' : `Show details (${totalItems} items)`}
+          {expanded ? 'Hide details' : 'Show details'}
         </Button>
         {expanded && (
-          <div
-            style={{
-              maxHeight: 140,
-              overflowY: 'auto',
-              background: 'rgba(255, 255, 255, 0.2)',
-              borderRadius: 8,
-              padding: 8,
-            }}
-          >
-            <b>Items:</b>
-            <ul
-              style={{
-                paddingLeft: 20,
-                margin: 0,
-              }}
-            >
-              {orderItems.length > 0 ? orderItems.map(item => (
-                <li
-                  key={item.id}
-                  style={{
-                    marginBottom: 4,
-                    fontSize: 15,
-                  }}
-                >
-                  <span
-                    style={{
-                      fontWeight: 500,
-                    }}
-                  >
-                    {item.menu_item_name}
-                  </span>
-                  <span
-                    style={{
-                      marginLeft: 8,
-                      color: '#888',
-                    }}
-                  >
-                    ×{item.quantity}
-                  </span>
+          <div style={{ marginBottom: 8 }}>
+            <div style={{ fontWeight: 600, marginBottom: 4 }}>Order Items ({totalItems}):</div>
+            <ul style={{ margin: 0, paddingLeft: 18 }}>
+              {orderItems.map(item => (
+                <li key={item.id} style={{ marginBottom: 2 }}>
+                  <span style={{ fontWeight: 500 }}>{item.menu_item_name}</span> x{item.quantity}
+                  {item.notes && (
+                    <span style={{ color: '#888', fontSize: 12, marginLeft: 6 }}>
+                      ({item.notes})
+                    </span>
+                  )}
                 </li>
-              )) : <Empty description="No items" />}
+              ))}
             </ul>
           </div>
         )}
@@ -219,91 +172,64 @@ const OrderCard: React.FC<OrderCardProps> = ({
           padding: '16px 24px',
         }}
       >
+        {/* Waiter order actions */}
         {orderType === 'waiter' && order.status === 'ready' && (
-          <Tooltip title="Mark as served">
-            <Button
-              type="primary"
-              icon={<CheckOutlined />}
-              loading={isUpdating}
-              onClick={() => onStatusChange('served')}
-              style={{ borderRadius: 8, fontWeight: 600 }}
-              aria-label="Mark as served"
-            >
-              Mark as served
-            </Button>
-          </Tooltip>
+          <Button
+            type="primary"
+            loading={isUpdating}
+            onClick={() => onStatusChange('served')}
+            
+          >
+            Mark as Served
+          </Button>
         )}
         {orderType === 'waiter' && order.status === 'served' && (
-          <Tooltip title="Complete order">
-            <Button
-              type="primary"
-              danger
-              icon={<CheckOutlined />}
-              loading={isUpdating}
-              onClick={() => onStatusChange('completed')}
-              style={{ borderRadius: 8, fontWeight: 600 }}
-              aria-label="Complete order"
-            >
-              Complete
-            </Button>
-          </Tooltip>
+          <Button
+            type="primary"
+            loading={isUpdating}
+            onClick={() => onStatusChange('completed')}
+            style={{ backgroundColor:statusbuttonColors[order.status as keyof typeof statusbuttonColors] }}
+          >
+            Complete
+          </Button>
         )}
         {orderType === 'waiter' && showRevertButton && order.status === 'served' && (
-          <Tooltip title="Revert to Ready">
-            <Button
-              type="default"
-              danger
-              icon={<RollbackOutlined />}
-              onClick={() => onStatusChange('ready')}
-              loading={isUpdating}
-              style={{ marginLeft: 8 }}
-            >
-              Revert
-            </Button>
-          </Tooltip>
+          <Button
+            danger
+            loading={isUpdating}
+            onClick={() => onStatusChange('ready')}
+          >
+            Revert to Ready
+          </Button>
         )}
+        {/* Delivery order actions */}
         {orderType === 'delivery' && order.status === 'ready' && (
-          <Tooltip title="Mark as Out for Delivery">
-            <Button
-              type="primary"
-              icon={<CarOutlined />}
-              loading={isUpdating}
-              onClick={() => onStatusChange('out_for_delivery')}
-              style={{ borderRadius: 8, fontWeight: 600 }}
-              aria-label="Mark as Out for Delivery"
-            >
-              Mark as Out for Delivery
-            </Button>
-          </Tooltip>
+          <Button
+            type="primary"
+            loading={isUpdating}
+            onClick={() => onStatusChange('out_for_delivery')}
+          >
+            Out for Delivery
+          </Button>
         )}
         {orderType === 'delivery' && order.status === 'out_for_delivery' && (
-          <Tooltip title="Mark as Completed">
-            <Button
-              type="primary"
-              danger
-              icon={<CheckOutlined />}
-              loading={isUpdating}
-              onClick={() => onStatusChange('completed')}
-              style={{ borderRadius: 8, fontWeight: 600 }}
-              aria-label="Mark as Completed"
-            >
-              Mark as Completed
-            </Button>
-          </Tooltip>
+          <Button
+            type="primary"
+            loading={isUpdating}
+            onClick={() => onStatusChange('completed')}
+            style={{ backgroundColor:statusbuttonColors[order.status as keyof typeof statusbuttonColors] }}
+          >
+            Complete
+          </Button>
         )}
         {orderType === 'delivery' && showRevertButton && order.status === 'out_for_delivery' && (
-          <Tooltip title="Revert to Ready">
-            <Button
-              type="default"
-              danger
-              icon={<RollbackOutlined />}
-              onClick={() => onStatusChange('ready')}
-              loading={isUpdating}
-              style={{ marginLeft: 8 }}
-            >
-              Revert
-            </Button>
-          </Tooltip>
+          <Button
+            danger
+            loading={isUpdating}
+            onClick={() => onStatusChange('ready')}
+          >
+            Revert to Ready
+          </Button>
         )}
       </div>
     </Card>

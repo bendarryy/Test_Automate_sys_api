@@ -1,5 +1,5 @@
 // useLogin.ts
-import { useApi } from '../../../shared/hooks/useApi';
+import { useApi } from 'shared/hooks/useApi';
 import Cookies from 'js-cookie';
 
 interface LoginPayload {

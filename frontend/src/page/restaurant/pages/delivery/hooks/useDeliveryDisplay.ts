@@ -1,6 +1,7 @@
 import { useMemo, useState, useCallback, useTransition } from 'react';
-import { useDelivery, DeliveryOrder } from './useDelivery';
 import { App as AntdApp } from 'antd';
+import { useDelivery } from './useDelivery';
+import type { DeliveryOrder } from '../types/order';
 
 const SYSTEM_ID = localStorage.getItem('selectedSystemId') ?? '';
 

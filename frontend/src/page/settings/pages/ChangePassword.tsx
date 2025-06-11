@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Card, Form, Input, Button, message, Typography } from 'antd';
-import { useApi } from '../../../shared/hooks/useApi';
+import { useApi } from 'shared/hooks/useApi';
 import { LockOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 

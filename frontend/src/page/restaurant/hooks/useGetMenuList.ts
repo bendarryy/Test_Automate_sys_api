@@ -1,6 +1,6 @@
 // useGetMenu.ts
 import { useCallback, useMemo } from 'react';
-import { useApi } from '../../../shared/hooks/useApi';
+import { useApi } from 'shared/hooks/useApi';
 
 interface MenuItem {
   id: number;

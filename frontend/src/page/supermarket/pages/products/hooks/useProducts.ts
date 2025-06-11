@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Product } from '../types/product';
-import { useApi } from '../../../../../shared/hooks/useApi';
+import { useApi } from 'shared/hooks/useApi';
 
 export type ProductFilter = 'all' | 'low-stock' | 'expiring-soon' | 'expired';
 

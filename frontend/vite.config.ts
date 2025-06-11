@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite';
+import path from 'path';
 
 import react from '@vitejs/plugin-react'
 import viteCompression from 'vite-plugin-compression'
@@ -16,6 +17,14 @@ export default defineConfig({
     Inspect()
 
   ],
+  resolve: {
+    alias: {
+      'components': path.resolve(__dirname, 'src/components'),
+      'hooks': path.resolve(__dirname, 'src/hooks'),
+      'styles': path.resolve(__dirname, 'src/styles'),
+      'shared': path.resolve(__dirname, 'src/shared'),
+    },
+  },
   // تحسين الكاشينج للصور والملفات الثابتة
   build: {
     outDir: 'dist',

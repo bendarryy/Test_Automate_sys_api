@@ -1,7 +1,7 @@
 // src/pages/EmployeeLogin.tsx
 import React, { useState } from 'react';
 import { Form, Input, Button,  Alert, Typography } from 'antd';
-import { useApi } from '../../../shared/hooks/useApi';
+import { useApi } from 'shared/hooks/useApi';
 import { useNavigate } from 'react-router-dom';
 import AuthLayout from '../shared/AuthLayout';
 

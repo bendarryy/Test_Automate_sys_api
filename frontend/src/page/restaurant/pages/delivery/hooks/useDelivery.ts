@@ -1,20 +1,6 @@
-import { useApi } from '../../../../shared/hooks/useApi';
+import { useApi } from 'shared/hooks/useApi';
 import { useCallback, useEffect, useRef } from 'react';
-
-export interface DeliveryOrder {
-  id: number;
-  system: number;
-  customer_name: string;
-  table_number: number | null;
-  waiter: string | null;
-  total_price: string;
-  profit: number;
-  status: 'ready' | 'out_for_delivery' | 'completed';
-  order_type: 'delivery';
-  order_items: unknown[];
-  created_at: string;
-  updated_at: string;
-}
+import type { DeliveryOrder } from '../types/order';
 
 interface UseDeliveryOptions {
   autoRefresh?: boolean;
@@ -82,4 +68,3 @@ export function useDelivery(
     updateStatus,
   };
 }
-

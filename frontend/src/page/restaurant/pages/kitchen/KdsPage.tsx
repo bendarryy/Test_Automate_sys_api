@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
-import Header from '../../../../components/Header';
+import Header from 'components/Header';
 import { Row, Col, Spin, Alert, Button } from 'antd';
 import { DashboardOutlined } from '@ant-design/icons';
-import useHasPermission from '../../../../shared/hooks/useHasPermission';
-import { useSelectedSystemId } from '../../../../shared/hooks/useSelectedSystemId';
+import useHasPermission from 'shared/hooks/useHasPermission';
+import { useSelectedSystemId } from 'shared/hooks/useSelectedSystemId';
 
 import { useKdsOrders } from './hooks/useKdsOrders';
 import { filterOrders, getOrderStats, getUniqueTables } from './utils/kdsHelpers';

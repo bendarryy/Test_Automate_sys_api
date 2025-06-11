@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button, Skeleton, Divider } from 'antd';
-import Header from '../../../../components/Header';
+import Header from 'components/Header';
 import { useOrders } from '../../hooks/useOrders';
 import { useGetMenuList } from '../../hooks/useGetMenuList';
-import { useSelectedSystemId } from '../../../../shared/hooks/useSelectedSystemId';
+import { useSelectedSystemId } from 'shared/hooks/useSelectedSystemId';
 import OrderDetails from './components/OrderDetails';
 import { Order, OrderStatus } from './types/order'; // Added import for Order and OrderStatus
 

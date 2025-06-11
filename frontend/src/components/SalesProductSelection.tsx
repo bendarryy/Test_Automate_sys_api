@@ -3,8 +3,8 @@ import { useDispatch } from 'react-redux';
 import { Card, Col, Row, Input, Select, Space, Typography, message, Spin } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import { addItemToSale } from '../store/salesSlice';
-import { useApi } from '../shared/hooks/useApi';
-import { useSelectedSystemId } from '../shared/hooks/useSelectedSystemId';
+import { useApi } from 'shared/hooks/useApi';
+import { useSelectedSystemId } from 'shared/hooks/useSelectedSystemId';
 
 interface Product {
   id: number;

@@ -3,7 +3,7 @@ import { useSelectedSystemId } from '../hooks/useSelectedSystemId';
 
 // Lazy load the home pages
 const RestaurantHomePage = lazy(() => import('../../page/restaurant/pages/cashier/HomePage'));
-const SupermarketHomePage = lazy(() => import('../../page/supermarket/pages/cashier/HomePage'));
+const SupermarketHomePage = lazy(() => import('../../page/supermarket/pages/home/HomePage'));
 
 const DynamicHomePage: React.FC = () => {
   // State to track the current system category

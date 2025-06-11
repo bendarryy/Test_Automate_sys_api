@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from 'react';
-import { useApi } from '../../../../../shared/hooks/useApi';
+import { useApi } from 'shared/hooks/useApi';
 
 export interface InventoryItem {
   id: number;

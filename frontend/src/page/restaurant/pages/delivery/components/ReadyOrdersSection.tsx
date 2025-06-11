@@ -1,10 +1,11 @@
 import React, { useCallback } from 'react';
 import { Empty, Skeleton } from 'antd';
 import { ClockCircleTwoTone } from '@ant-design/icons';
-import { Swiper, SwiperSlide } from 'swiper/react';
-import OrderCard from '../components/OrderCard';
+import OrderCard from './OrderCard';
 import styles from '../deliverydisplay.module.css';
-import { DeliveryOrder } from '../useDelivery';
+import type { DeliveryOrder } from '../types/order';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import 'swiper/swiper-bundle.css';
 
 interface ReadyOrdersSectionProps {
   orders: DeliveryOrder[];
@@ -51,7 +52,8 @@ const ReadyOrdersSection: React.FC<ReadyOrdersSectionProps> = React.memo(({
             slidesPerView={'auto'}
             freeMode
             direction="horizontal"
-            style={{ height: '100%', padding: '8px 0' }}>
+            style={{ height: '100%', padding: '8px 0' }}
+          >
             {orders.map(order => (
               <SwiperSlide key={order.id} style={{ width: 370, height: '100%' }}>
                 <div style={{ height: '100%', paddingRight: 16 }}>
@@ -79,7 +81,7 @@ const ReadyOrdersSection: React.FC<ReadyOrdersSectionProps> = React.memo(({
                                 'menu_item_name' in item &&
                                 'quantity' in item
                               ) {
-                                const obj = item as Record<string, unknown>;
+                                const obj = item;
                                 return (
                                   typeof obj.id === 'number' &&
                                   typeof obj.menu_item_name === 'string' &&
@@ -93,9 +95,8 @@ const ReadyOrdersSection: React.FC<ReadyOrdersSectionProps> = React.memo(({
                     }}
                     isUpdating={updatingOrderId === order.id}
                     onStatusChange={newStatus => {
-                      // handle only delivery statuses
                       if (newStatus === 'out_for_delivery') {
-                        handleCardStatusChange(order, newStatus as "out_for_delivery");
+                        handleCardStatusChange(order, newStatus as 'out_for_delivery');
                       }
                     }}
                     orderType="delivery"

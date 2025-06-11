@@ -9,9 +9,9 @@ import { useProducts } from './hooks/useProducts';
 import { useProductFilters } from './hooks/useProductFilters';
 import { useProductStock } from './hooks/useProductStock';
 import { useDeleteProduct } from './hooks/useDeleteProduct';
-import { useApi } from '../../../../shared/hooks/useApi';
+import { useApi } from 'shared/hooks/useApi';
 import { AddProductPayload, Product } from './types/product';
-import { useSelectedSystemId } from '../../../../shared/hooks/useSelectedSystemId';
+import { useSelectedSystemId } from 'shared/hooks/useSelectedSystemId';
 
 const { Title } = Typography;
 

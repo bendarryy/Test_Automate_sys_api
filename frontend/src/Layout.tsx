@@ -6,8 +6,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { setPermissions } from "./store/permissionsSlice";
 import { setProfile, Profile } from "./store/profileSlice";
 import { RootState } from "./store";
-import { useApi } from "./shared/hooks/useApi";
-import { useSelectedSystemId } from "./shared/hooks/useSelectedSystemId";
+import { useApi } from "shared/hooks/useApi";
+import { useSelectedSystemId } from "shared/hooks/useSelectedSystemId";
 
 
 const Layout = () => {

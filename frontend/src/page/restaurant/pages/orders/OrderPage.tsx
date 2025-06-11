@@ -2,11 +2,11 @@ import React from 'react';
 import { Button, Select, notification, Space, Input, Tag } from 'antd';
 import { DeleteOutlined, SearchOutlined, ReloadOutlined, ShopOutlined, CarOutlined } from '@ant-design/icons';
 import { useOrders } from '../../hooks/useOrders';
-import Header from '../../../../components/Header';
+import Header from 'components/Header';
 import { useNavigate } from 'react-router-dom';
-import { ReusableTable } from '../../../../components/ReusableTable';
+import { ReusableTable } from 'components/ReusableTable';
 import type { ColumnsType } from 'antd/es/table';
-import { useSelectedSystemId } from '../../../../shared/hooks/useSelectedSystemId';
+import { useSelectedSystemId } from 'shared/hooks/useSelectedSystemId';
 import { Order, OrderStatus } from './types/order';
 import { statusColors } from './utils/orderUtils';
 

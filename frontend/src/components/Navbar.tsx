@@ -6,7 +6,7 @@ import { MdNotifications, MdNotificationsActive } from "react-icons/md"; // reac
 import { useNavigate } from "react-router-dom";
 import { Layout, Badge, Dropdown, Space, Button, Switch, theme } from 'antd';
 import type { MenuProps } from 'antd';
-import { useApi } from "../shared/hooks/useApi";
+import { useApi } from "shared/hooks/useApi";
 import ProfileAvatar from "./ProfileAvatar";
 import { useThemeContext } from '../theme/ThemeContext';
 

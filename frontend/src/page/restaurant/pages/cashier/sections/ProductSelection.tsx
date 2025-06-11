@@ -3,8 +3,8 @@ import { useEffect, useState, useMemo } from "react";
 // import styles from "../styles/ProductsSection.module.css"; // Removed unused import
 import { useDispatch, useSelector } from "react-redux";
 import { addItem, setSelectedTable, setOrderType } from "../../../../../store/billSlice";
-import { useGetMenu, getCategoryIcon } from "../../../../../shared/hooks/useGetMenu";
-import { useSelectedSystemId } from "../../../../../shared/hooks/useSelectedSystemId";
+import { useGetMenu, getCategoryIcon } from "shared/hooks/useGetMenu";
+import { useSelectedSystemId } from "shared/hooks/useSelectedSystemId";
 // Import necessary Ant Design components
 import {
   Spin,
@@ -16,7 +16,7 @@ import {
   message,
   Badge,
 } from "antd";
-import Card from "../../../../../components/Card";
+import Card from "components/Card";
 import { MdTableRestaurant, MdDeliveryDining, MdStore } from "react-icons/md";
 import { RootState } from "../../../../../store";
 import TablesSection from "./TablesSection";

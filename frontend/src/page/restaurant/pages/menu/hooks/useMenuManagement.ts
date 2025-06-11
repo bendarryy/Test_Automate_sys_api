@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { message } from 'antd';
-import { useGetMenu } from '../../../../../shared/hooks/useGetMenu';
-import { useSelectedSystemId } from '../../../../../shared/hooks/useSelectedSystemId';
+import { useGetMenu } from 'shared/hooks/useGetMenu';
+import { useSelectedSystemId } from 'shared/hooks/useSelectedSystemId';
 import { MenuItem } from '../types/menu';
 import { filterMenuItems, validateMenuItem } from '../utils/menuUtils';
 

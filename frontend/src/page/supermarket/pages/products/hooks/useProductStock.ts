@@ -1,4 +1,4 @@
-import { useApi } from '../../../../../shared/hooks/useApi';
+import { useApi } from 'shared/hooks/useApi';
 
 export function useProductStock(systemId: string) {
   const { loading, error, callApi } = useApi();

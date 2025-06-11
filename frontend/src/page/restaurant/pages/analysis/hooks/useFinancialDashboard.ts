@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useApi } from '../../../../../shared/hooks/useApi';
+import { useApi } from 'shared/hooks/useApi';
 import { ProfitSummary, OrderSummary, ProfitTrendPoint } from '../types/dashboard';
 
 export function useFinancialDashboard(trendView: 'daily' | 'monthly', pathname?: string) {

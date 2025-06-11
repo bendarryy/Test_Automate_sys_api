@@ -1,9 +1,9 @@
 import React, { useCallback } from 'react';
 import { Empty, Skeleton } from 'antd';
 import { CarTwoTone } from '@ant-design/icons';
-import OrderCard from '../components/OrderCard';
+import OrderCard from './OrderCard';
 import styles from '../deliverydisplay.module.css';
-import type { DeliveryOrder } from '../useDelivery';
+import type { DeliveryOrder } from '../types/order';
 
 
 
@@ -78,7 +78,7 @@ const OutForDeliverySection: React.FC<OutForDeliverySectionProps> = React.memo((
                             'menu_item_name' in item &&
                             'quantity' in item
                           ) {
-                            const obj = item as Record<string, unknown>;
+                            const obj = item;
                             return (
                               typeof obj.id === 'number' &&
                               typeof obj.menu_item_name === 'string' &&

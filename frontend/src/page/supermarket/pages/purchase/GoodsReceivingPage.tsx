@@ -3,7 +3,7 @@ import { Layout, Row, Col, Typography, Button, Modal, message, ConfigProvider } 
 import { useGoodsReceiving } from './hooks/useGoodsReceiving';
 import GoodsReceivingTable from './components/GoodsReceivingTable';
 import GoodsReceivingForm from './components/GoodsReceivingForm';
-import { useSelectedSystemId } from '../../../../shared/hooks/useSelectedSystemId';
+import { useSelectedSystemId } from 'shared/hooks/useSelectedSystemId';
 import { createGoodsReceiving, updateGoodsReceiving, deleteGoodsReceiving } from './utils/api';
 import { GoodsReceiving } from './types/purchase';
 

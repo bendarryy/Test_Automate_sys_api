@@ -8,8 +8,8 @@ import {
   clearCurrentSale,
   updateItemQuantity
 } from '../store/salesSlice';
-import { useApi } from '../shared/hooks/useApi';
-import { useSelectedSystemId } from '../shared/hooks/useSelectedSystemId';
+import { useApi } from 'shared/hooks/useApi';
+import { useSelectedSystemId } from 'shared/hooks/useSelectedSystemId';
 
 interface BillItem {
   id: number;

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
-import useHasPermission from '../shared/hooks/useHasPermission';
+import useHasPermission from 'shared/hooks/useHasPermission';
 
 interface ProtectedRouteProps {
   permission: string | string[];

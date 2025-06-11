@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useInventory } from './useInventory';
-import { useSelectedSystemId } from '../../../../../shared/hooks/useSelectedSystemId';
+import { useSelectedSystemId } from 'shared/hooks/useSelectedSystemId';
 import { InventoryItem, NewInventoryItem } from '../types/inventory';
 
 export function useInventoryManagement() {

@@ -1,6 +1,6 @@
 import { useMemo, useState, useCallback } from 'react';
 import { useWaiter } from './useWaiter';
-import { useSelectedSystemId } from '../../../../../shared/hooks/useSelectedSystemId';
+import { useSelectedSystemId } from 'shared/hooks/useSelectedSystemId';
 import { getReadyOrders, getServedOrders } from '../utils/orderUtils';
 import { App as AntdApp } from 'antd';
 import { Order } from '../types/waiterOrder';

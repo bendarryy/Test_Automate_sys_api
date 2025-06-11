@@ -5,8 +5,8 @@ import { Layout, Menu, Button, Typography, Dropdown } from 'antd';
 import { theme } from 'antd';
 import styles from '../styles/Sidebar.module.css';
 import { getCommonNavItems, NavItem } from '../config/navigation.config';
-import useNavigationItems from '../shared/hooks/useNavigationItems';
-import { useSelectedSystemId } from '../shared/hooks/useSelectedSystemId';
+import useNavigationItems from 'shared/hooks/useNavigationItems';
+import { useSelectedSystemId } from 'shared/hooks/useSelectedSystemId';
 
 const { Sider } = Layout;
 const { Text } = Typography;

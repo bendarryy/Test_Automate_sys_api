@@ -7,9 +7,10 @@
   "compilerOptions": {
     "baseUrl": "src",
     "paths": {
-      "@styles/*": ["styles/*"],
-      "@components/*": ["components/*"],
-      "@hooks/*": ["hooks/*"]
+      "styles/*": ["styles/*"],
+      "components/*": ["components/*"],
+      "hooks/*": ["hooks/*"],
+      "shared/*": ["shared/*"]
     }
   }
 

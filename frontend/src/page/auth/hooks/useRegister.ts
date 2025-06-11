@@ -1,6 +1,6 @@
 // useRegister.ts
 import { useCallback, useMemo } from 'react';
-import { useApi } from '../../../shared/hooks/useApi';
+import { useApi } from 'shared/hooks/useApi';
 
 interface RegisterPayload {
   username: string;
