@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import styles from '../../../../styles/financesdashboards.module.css';
 import Header from '../../../../components/Header';
-import LoadingSpinner from '../../../../components/LoadingSpinner';
+import LoadingSpinner from '../../../../components/Loading';
 import { Button } from 'antd';
 import { useFinancialDashboard } from './hooks/useFinancialDashboard';
 import { prepareCSVContent, formatNumber } from './utils/dashboardUtils';

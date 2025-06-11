@@ -2,15 +2,18 @@ import React from 'react';
 import { Table, Button, Tag } from 'antd';
 import { EditOutlined } from '@ant-design/icons';
 import { Employee } from '../types/employee';
-import { roleColors } from '../utils/roleOptions';
+import { SystemCategory, getRoleConfig } from '../utils/roleOptions'; // Import SystemCategory and getRoleConfig
 
 interface EmployeeTableProps {
   data: Employee[] | undefined;
   loading: boolean;
+  category: SystemCategory; // Add category prop
   onEdit: (employee: Employee) => void;
 }
 
-const EmployeeTable: React.FC<EmployeeTableProps> = ({ data, loading, onEdit }) => {
+const EmployeeTable: React.FC<EmployeeTableProps> = ({ data, loading, category, onEdit }) => {
+  const { colors: roleColorsToDisplay } = getRoleConfig(category); // Get role colors based on category
+
   const columns = [
     {
       title: '#',
@@ -28,7 +31,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({ data, loading, onEdit }) 
       dataIndex: 'role',
       key: 'role',
       render: (role: string) => (
-        <Tag color={roleColors[role] || 'default'}>
+        <Tag color={roleColorsToDisplay[role] || 'default'}> {/* Use category-specific colors */}
           {role.charAt(0).toUpperCase() + role.slice(1).replace('_', ' ')}
         </Tag>
       ),

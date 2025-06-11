@@ -1,6 +1,6 @@
 // useApi.ts
 import { useState, useCallback, useRef, useEffect } from 'react';
-import apiClient from '../../apiClient';
+import apiClient from '../../config/apiClient.config';
 import { useNavigate } from 'react-router-dom';
 import { ApiError } from '../../types';
 
@@ -26,6 +26,8 @@ export const useApi = <T,>() => {
   const [error, setError] = useState<string | null>(null);
   const cacheRef = useRef(globalCache); // لكل instance نفس الكاش
   const abortControllerRef = useRef<AbortController | null>(null);
+  // Track the method of the ongoing request
+  const ongoingRequestMethodRef = useRef<string | null>(null);
   const navigate = useNavigate();
 
   // إلغاء الطلب عند unmount
@@ -51,12 +53,23 @@ export const useApi = <T,>() => {
     payload?: unknown,
     isFormData?: boolean
   ): Promise<R | null> => {
-    // إلغاء الطلب السابق
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
+    // Only abort previous request if it's not a mutation (POST/PUT/PATCH/DELETE) being followed by a GET
+    const prevController = abortControllerRef.current;
+    const prevMethod = ongoingRequestMethodRef.current;
+    // If previous is mutation and current is GET, do NOT abort
+    if (
+      prevController &&
+      prevMethod &&
+      ['post', 'put', 'patch', 'delete'].includes(prevMethod) &&
+      method === 'get'
+    ) {
+      // Do not abort
+    } else if (prevController) {
+      prevController.abort();
     }
     const controller = new AbortController();
     abortControllerRef.current = controller;
+    ongoingRequestMethodRef.current = method;
 
     // الكاش فقط للـ GET
     if (method === 'get') {
@@ -110,7 +123,11 @@ export const useApi = <T,>() => {
       updateState({ loading: false, error: errorMessage });
       throw err;
     } finally {
-      abortControllerRef.current = null;
+      // Only clear if this call still owns the controller
+      if (abortControllerRef.current === controller) {
+        abortControllerRef.current = null;
+        ongoingRequestMethodRef.current = null;
+      }
     }
   }, [navigate, updateState]);
 

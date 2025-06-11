@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Card, Typography, Space, Spin, Result , App as AntdApp } from 'antd';
+import { Card, Typography, Spin, Result , App as AntdApp } from 'antd';
 import ProductTable from './components/ProductTable';
 import ProductForm from './components/ProductForm';
 import ProductStockEditor from './components/ProductStockEditor';
@@ -8,6 +8,7 @@ import ProductDetailsModal from './components/ProductDetailsModal';
 import { useProducts } from './hooks/useProducts';
 import { useProductFilters } from './hooks/useProductFilters';
 import { useProductStock } from './hooks/useProductStock';
+import { useDeleteProduct } from './hooks/useDeleteProduct';
 import { useApi } from '../../../../shared/hooks/useApi';
 import { AddProductPayload, Product } from './types/product';
 import { useSelectedSystemId } from '../../../../shared/hooks/useSelectedSystemId';
@@ -19,6 +20,7 @@ const ProductsManagementPage: React.FC = () => {
   const { filter, setFilter } = useProductFilters();
   const { products, loading, error } = useProducts(systemId || '', filter);
   const { updateStock, loading: stockLoading } = useProductStock(systemId || '');
+  const { deleteProduct, loading: deleteLoading } = useDeleteProduct(systemId || '');
   const { callApi: addProductApi } = useApi<Product>();
   const [showStockEditor, setShowStockEditor] = useState<Product | null>(null);
   const [showDetails, setShowDetails] = useState<Product | null>(null);
@@ -36,16 +38,36 @@ const ProductsManagementPage: React.FC = () => {
     };
     setOptimisticProducts((prev) => (prev ? [optimisticProduct, ...prev] : [optimisticProduct, ...(products || [])]));
     try {
-      const created = await addProductApi('post', `/api/supermarket/${systemId}/products/`, payload);
+      const newProduct = await addProductApi('post', `/supermarket/${systemId}/products/`, payload);
+      // Replace temp product with actual product from API response
+      setOptimisticProducts((prev) => {
+        const base = prev || [];
+        return base.map(p => p.id === tempId ? newProduct : p).filter(p => p !== null) as Product[];
+      });
       notification.success({ message: 'Product added successfully!' });
-      // Replace temp product with real one
-      setOptimisticProducts((prev) => prev ? [created as Product, ...prev.filter(p => p.id !== tempId)] : null);
-    } catch {
-      notification.error({ message: 'Failed to add product' });
+    } catch (e: unknown) {
+      notification.error({ message: 'Failed to add product', description: (e as Error)?.message || 'Unknown error' });
       // Rollback optimistic update
-      setOptimisticProducts((prev) => prev ? prev.filter(p => p.id !== tempId) : null);
+      setOptimisticProducts((prev) => (prev || []).filter((p: Product) => p.id !== tempId)); // Corrected filter syntax
     } finally {
       setAdding(false);
+    }
+  };
+
+  const handleDeleteProduct = async (productId: number) => {
+    const originalProducts = optimisticProducts || products;
+    // Optimistic update: remove product locally
+    setOptimisticProducts((prev) => {
+      const base = prev || products;
+      return base.filter(p => p.id !== productId);
+    });
+    try {
+      await deleteProduct(productId);
+      notification.success({ message: 'Product deleted successfully!' });
+    } catch (e: unknown) { // Changed e: any to e: unknown
+      notification.error({ message: 'Failed to delete product', description: (e as Error)?.message || 'Unknown error' });
+      // Rollback optimistic update
+      setOptimisticProducts(originalProducts);
     }
   };
 
@@ -76,35 +98,30 @@ const ProductsManagementPage: React.FC = () => {
 
   return (
     <Card className="products-management-page" style={{ maxWidth: 1100, margin: '32px auto', boxShadow: '0 2px 16px #f0f1f2' }}>
-      <Title level={2} style={{ textAlign: 'center', marginBottom: 24 }}>Supermarket Products</Title>
-      <Space direction="vertical" size="large" style={{ width: '100%' }}>
-        <Space style={{ width: '100%', justifyContent: 'space-between', flexWrap: 'wrap' }}>
-          <ProductFilters filter={filter} setFilter={setFilter} />
-          <ProductForm onSubmit={handleAddProduct} loading={adding} />
-        </Space>
-        {loading ? (
-          <div style={{ textAlign: 'center', padding: 48 }}><Spin size="large" /></div>
-        ) : error ? (
-          <Result status="error" title="Error" subTitle={error} />
-        ) : (
-          <ProductTable
-            products={displayedProducts}
-            onEditStock={setShowStockEditor}
-            onViewDetails={setShowDetails}
-          />
-        )}
-        {showStockEditor && (
-          <ProductStockEditor
-            product={showStockEditor}
-            onUpdate={async (stock) => {
-              await handleUpdateStock(showStockEditor.id, stock);
-              setShowStockEditor(null);
-            }}
-            loading={stockLoading}
-          />
-        )}
-        <ProductDetailsModal product={showDetails} onClose={() => setShowDetails(null)} />
-      </Space>
+      <Title level={2} style={{ textAlign: 'center', marginBottom: 24 }}>Products Management</Title>
+      <ProductForm onSubmit={handleAddProduct} loading={adding} />
+      <ProductFilters filter={filter} setFilter={setFilter} />
+      {(loading || deleteLoading || stockLoading) && <Spin size="large" style={{ display: 'block', margin: 'auto' }} />}
+      {error && <Result status="error" title="Failed to load products" subTitle={typeof error === 'string' ? error : (error as Error)?.message} />} {/* Handled error message type */}
+      {!loading && !error && (
+        <ProductTable
+          products={displayedProducts}
+          onEditStock={product => setShowStockEditor(product)}
+          onViewDetails={product => setShowDetails(product)}
+          onDeleteProduct={handleDeleteProduct}
+        />
+      )}
+      {showStockEditor && (
+        <ProductStockEditor
+          product={showStockEditor}
+          onUpdate={async (stock) => {
+            await handleUpdateStock(showStockEditor.id, stock);
+            setShowStockEditor(null);
+          }}
+          loading={stockLoading}
+        />
+      )}
+      <ProductDetailsModal product={showDetails} onClose={() => setShowDetails(null)} />
     </Card>
   );
 };

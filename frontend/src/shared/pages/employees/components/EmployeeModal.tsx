@@ -2,14 +2,15 @@ import React from 'react';
 import { Modal, Form, Input, Select, Space, Button, Popconfirm } from 'antd';
 import { EditOutlined, DeleteOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons';
 import { Employee } from '../types/employee';
-import { roleOptions } from '../utils/roleOptions';
-import LoadingSpinner from '../../../../../components/LoadingSpinner';
+import { SystemCategory, getRoleConfig } from '../utils/roleOptions'; // Import SystemCategory and getRoleConfig
+import LoadingSpinner from '../../../../components/Loading';
 
 interface EmployeeModalProps {
   open: boolean;
   loading: boolean;
   mode: 'view' | 'edit';
   form: import('antd').FormInstance<Employee>;
+  category: SystemCategory; // Add category prop
   onCancel: () => void;
   onEdit: () => void;
   onSave: () => void;
@@ -18,8 +19,11 @@ interface EmployeeModalProps {
 }
 
 const EmployeeModal: React.FC<EmployeeModalProps> = ({
-  open, loading, mode, form, onCancel, onEdit, onSave, onDelete, setMode
-}) => (
+  open, loading, mode, form, category, onCancel, onEdit, onSave, onDelete, setMode
+}) => {
+  const { options: roleOptionsToDisplay } = getRoleConfig(category); // Get role options based on category, renamed to avoid conflict
+
+  return (
   <Modal
     title={mode === 'view' ? 'Employee Details' : 'Edit Employee'}
     open={open}
@@ -47,8 +51,8 @@ const EmployeeModal: React.FC<EmployeeModalProps> = ({
           label="Role"
           rules={[{ required: true, message: 'Please select a role' }]}
         >
-          <Select>
-            {roleOptions.map(role => (
+          <Select placeholder="Select Role">
+            {roleOptionsToDisplay.map(role => (
               <Select.Option key={role.value} value={role.value}>
                 {role.label}
               </Select.Option>
@@ -120,6 +124,6 @@ const EmployeeModal: React.FC<EmployeeModalProps> = ({
       </Form>
     )}
   </Modal>
-);
+)};
 
 export default EmployeeModal;

@@ -1,16 +1,23 @@
 import React, { useEffect, useState } from 'react';
-import Header from '../../../../components/Header';
-import { Card, Space, Typography, message, Form } from 'antd';
+import Header from '../../../components/Header';
+import { Card, Space, Typography, message, Form } from 'antd'; // Ensure Typography is imported
 import EmployeeTable from './components/EmployeeTable';
 import EmployeeModal from './components/EmployeeModal';
 import InviteEmployeeModal from './components/InviteEmployeeModal';
 import { useEmployees } from './hooks/useEmployees';
 import { Employee, EmployeeFormData } from './types/employee';
+import { SystemCategory } from './utils/roleOptions'; // Import SystemCategory
 
-const { Title } = Typography;
+const { Title } = Typography; // Ensure Title is extracted
 
-const EmployeesPage: React.FC = () => {
-  const { data, loading, fetchEmployees, inviteEmployee, employeeApi } = useEmployees();
+interface EmployeesPageProps {
+  category: SystemCategory; // Add category prop
+}
+
+const EmployeesPage: React.FC<EmployeesPageProps> = ({ category }) => {
+  const { data, loading, fetchEmployees, inviteEmployee, employeeApi } = useEmployees(
+    // category
+  ); // Pass category to useEmployees if needed
   const [showViewModal, setShowViewModal] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [modalMode, setModalMode] = useState<'view' | 'edit'>('view');
@@ -18,8 +25,9 @@ const EmployeesPage: React.FC = () => {
   const [viewForm] = Form.useForm<Employee>();
   const [inviteForm] = Form.useForm<EmployeeFormData>();
   const [modalLoading, setModalLoading] = useState(false);
+  const [optimisticEmployees, setOptimisticEmployees] = useState<Employee[]>([]);
 
-  useEffect(() => { fetchEmployees(); /* eslint-disable-next-line */ }, []);
+  useEffect(() => { fetchEmployees(); /* eslint-disable-next-line */ }, [fetchEmployees]); // Added fetchEmployees to dependency array
 
   const handleEdit = () => setModalMode('edit');
 
@@ -29,7 +37,6 @@ const EmployeesPage: React.FC = () => {
       if (!selectedEmployee) return;
 
       setModalLoading(true);
-      // Ensure all required fields are present and not undefined
       const safeValues = {
         ...values,
         position: values.position ?? '',
@@ -51,7 +58,7 @@ const EmployeesPage: React.FC = () => {
         email: updated.email ?? selectedEmployee.email,
       });
       setModalMode('view');
-      setShowViewModal(false); // Close the popup on success
+      setShowViewModal(false); 
       fetchEmployees();
       message.success('Employee updated successfully');
     } catch {
@@ -75,15 +82,27 @@ const EmployeesPage: React.FC = () => {
   };
 
   const handleInvite = async (values: EmployeeFormData) => {
+    // Create a temporary optimistic employee (id: 'temp', etc.)
+    const optimisticEmployee: Employee = {
+      id: Date.now(), // temp id
+      name: values.name,
+      role: values.role,
+      phone: values.phone,
+      email: values.email,
+      // add other fields as needed
+    };
+    setOptimisticEmployees([optimisticEmployee]);
     try {
       setModalLoading(true);
       await inviteEmployee(values);
       message.success('Employee invited successfully!');
       inviteForm.resetFields();
       setShowInviteModal(false);
-      fetchEmployees();
-    } catch {
+      fetchEmployees(); // will reset optimistic list
+    } catch (err) {
+      setOptimisticEmployees([]); // Remove the optimistic employee
       message.error('Failed to invite employee. Please try again.');
+      console.error('Invite error:', err);
     } finally {
       setModalLoading(false);
     }
@@ -124,7 +143,7 @@ const EmployeesPage: React.FC = () => {
       <Header
         title="Employee Management"
         breadcrumbs={[
-          { title: 'Restaurant', path: '/restaurant' },
+          { title: category === 'restaurant' ? 'Restaurant' : 'Supermarket', path: `/${category}` },
           { title: 'Employees' }
         ]}
         actions={
@@ -146,8 +165,9 @@ const EmployeesPage: React.FC = () => {
             <Title level={4} style={{ margin: 0 }}>Staff Directory</Title>
           </div>
           <EmployeeTable
-            data={data ?? undefined}
+            data={optimisticEmployees.length > 0 ? [...optimisticEmployees, ...(data ?? [])] : data ?? undefined}
             loading={loading}
+            category={category}
             onEdit={handleTableEdit}
           />
         </Space>
@@ -157,6 +177,7 @@ const EmployeesPage: React.FC = () => {
         loading={modalLoading}
         mode={modalMode}
         form={viewForm}
+        category={category} // Pass category to EmployeeModal
         onCancel={() => {
           setShowViewModal(false);
           setSelectedEmployee(null);
@@ -171,6 +192,7 @@ const EmployeesPage: React.FC = () => {
         open={showInviteModal}
         loading={modalLoading}
         form={inviteForm}
+        category={category} // Pass category to InviteEmployeeModal
         onCancel={() => {
           setShowInviteModal(false);
           inviteForm.resetFields();

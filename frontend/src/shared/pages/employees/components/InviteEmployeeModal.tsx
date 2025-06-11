@@ -1,20 +1,24 @@
 import React from 'react';
 import { Modal, Form, Input, Select, Space, Button } from 'antd';
 import { UserAddOutlined } from '@ant-design/icons';
-import { roleOptions } from '../utils/roleOptions';
+import { SystemCategory, getRoleConfig } from '../utils/roleOptions'; // Import SystemCategory and getRoleConfig
 import { EmployeeFormData } from '../types/employee';
 
 interface InviteEmployeeModalProps {
   open: boolean;
   loading: boolean;
-form: import('antd').FormInstance<EmployeeFormData>;
+  form: import('antd').FormInstance<EmployeeFormData>;
+  category: SystemCategory; // Add category prop
   onCancel: () => void;
   onFinish: (values: EmployeeFormData) => void;
 }
 
 const InviteEmployeeModal: React.FC<InviteEmployeeModalProps> = ({
-  open, loading, form, onCancel, onFinish
-}) => (
+  open, loading, form, category, onCancel, onFinish
+}) => {
+  const { options: roleOptionsToDisplay } = getRoleConfig(category); // Get role options based on category, renamed to avoid conflict
+
+  return (
   <Modal
     title="Invite New Employee"
     open={open}
@@ -42,7 +46,7 @@ const InviteEmployeeModal: React.FC<InviteEmployeeModalProps> = ({
         rules={[{ required: true, message: 'Please select a role' }]}
       >
         <Select placeholder="Select Role">
-          {roleOptions.map(option => (
+          {roleOptionsToDisplay.map(option => (
             <Select.Option key={option.value} value={option.value}>
               {option.label}
             </Select.Option>
@@ -94,6 +98,6 @@ const InviteEmployeeModal: React.FC<InviteEmployeeModalProps> = ({
       </Form.Item>
     </Form>
   </Modal>
-);
+)};
 
 export default InviteEmployeeModal;

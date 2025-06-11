@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { Table, Button, Tag, Input, Space, Tooltip } from 'antd';
-import { EditOutlined, EyeOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
+// antd components
+import { Table, Button, Tag, Input, Space, Tooltip } from 'antd'; // Added Tooltip
+// antd icons
+import { ExclamationCircleOutlined, EditOutlined, EyeOutlined, DeleteOutlined } from '@ant-design/icons'; // Added EditOutlined, EyeOutlined, DeleteOutlined
 import type { ColumnsType } from 'antd/es/table';
 import type { Product } from '../types/product';
 
@@ -8,6 +10,7 @@ interface ProductTableProps {
   products: Product[];
   onEditStock: (product: Product) => void;
   onViewDetails: (product: Product) => void;
+  onDeleteProduct: (productId: number) => void; // Add this line
 }
 
 const LOW_STOCK_THRESHOLD = 10;
@@ -24,7 +27,7 @@ function isExpiringSoon(product: Product) {
   return diff < EXPIRY_SOON_DAYS;
 }
 
-const ProductTable: React.FC<ProductTableProps> = ({ products, onEditStock, onViewDetails }) => {
+const ProductTable: React.FC<ProductTableProps> = ({ products, onEditStock, onViewDetails, onDeleteProduct }) => {
   const [search, setSearch] = useState('');
 
   const filtered = products.filter(p => p.name.toLowerCase().includes(search.toLowerCase()));
@@ -74,10 +77,13 @@ const ProductTable: React.FC<ProductTableProps> = ({ products, onEditStock, onVi
       render: (_, record) => (
         <Space>
           <Tooltip title="Edit Stock">
-            <Button icon={<EditOutlined />} onClick={() => onEditStock(record)} size="small" />
+            <Button type="link" icon={<EditOutlined />} onClick={() => onEditStock(record)} />
           </Tooltip>
           <Tooltip title="View Details">
-            <Button icon={<EyeOutlined />} onClick={() => onViewDetails(record)} size="small" />
+            <Button type="link" icon={<EyeOutlined />} onClick={() => onViewDetails(record)} />
+          </Tooltip>
+          <Tooltip title="Delete Product">
+            <Button type="link" danger icon={<DeleteOutlined />} onClick={() => onDeleteProduct(record.id)} />
           </Tooltip>
         </Space>
       ),

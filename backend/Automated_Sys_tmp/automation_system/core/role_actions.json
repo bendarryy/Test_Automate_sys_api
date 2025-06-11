@@ -1,4 +1,21 @@
 {
+  "supermarket_manager": [
+    "root_url_is_home_supermarket",
+    "create_menu", "read_menu", "update_menu", "delete_menu",
+    "create_order", "read_order", "update_order", "delete_order",
+    "create_inventory", "read_inventory", "update_inventory", "delete_inventory",
+    "create_product", "read_product", "update_product", "delete_product",
+    "create_employee", "read_employee", "update_employee", "delete_employee",
+    "read_finance", "read_sales", "read_waiterdisplay", "read_profile", "read_about"
+  ],
+  "supermarket_cashier": [
+    "root_url_is_cashier_supermarket",
+    "read_menu", "read_order", "update_order", "read_finance", "read_sales", "read_waiterdisplay", "read_profile", "read_about"
+  ],
+  "supermarket_inventory_manager": [
+    "root_url_is_inventory_manager_supermarket",
+    "read_inventory", "update_inventory", "read_profile", "read_about"
+  ],
   "owner": [
     "root_url_is_home",
     "create_menu", "read_menu", "update_menu", "delete_menu",
