@@ -19,8 +19,8 @@ from decimal import Decimal
 from rest_framework.decorators import action, api_view
 from django.http import HttpResponseNotFound
 import logging
-from core.serializers import PublicSystemSerializer
-
+from core.serializers import PublicSystemSerializer 
+from .serializers import RestaurantDataSerializer
 # Define a custom exception for table conflicts
 class TableConflict(APIException):
     status_code = 409  # Use 409 Conflict
@@ -864,6 +864,10 @@ class TableViewSet(viewsets.ViewSet):
         """Get all tables and their active orders"""
         system = get_object_or_404(System, id=system_id)
         
+        # Get restaurant data to determine number of tables
+        restaurant_data = get_object_or_404(RestaurantData, system=system)
+        total_tables = restaurant_data.number_of_tables
+        
         # Get all orders that are in-house and not completed/canceled
         active_orders = Order.objects.filter(
             system=system,
@@ -891,8 +895,7 @@ class TableViewSet(viewsets.ViewSet):
                 }
 
         # Add empty tables (tables with no active orders)
-        # You can modify this range based on your restaurant's table numbers
-        for table_num in range(1, 21):  # Assuming you have tables 1-20
+        for table_num in range(1, total_tables + 1):  # Use the number from RestaurantData
             table_str = str(table_num)
             if table_str not in tables_status:
                 tables_status[table_str] = {
@@ -902,4 +905,37 @@ class TableViewSet(viewsets.ViewSet):
                 }
 
         return Response(list(tables_status.values()))
+
+
+class RestaurantDataAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get_permissions(self):
+        editable_roles = ["manager"]
+        return [
+            IsAuthenticated(),
+            OR(IsSystemOwner(), IsEmployeeRolePermission(*editable_roles)),
+        ]
+
+    def get(self, request, system_id):
+        """Get restaurant data including number of tables"""
+        restaurant_data = get_object_or_404(RestaurantData, system_id=system_id)
+        serializer = RestaurantDataSerializer(restaurant_data)
+        return Response(serializer.data)
+
+    def post(self, request, system_id):
+        """Set the number of tables for the restaurant"""
+        restaurant_data = get_object_or_404(RestaurantData, system_id=system_id)
+        number_of_tables = request.data.get('number_of_tables')
+
+        if not number_of_tables or not isinstance(number_of_tables, int) or number_of_tables < 1:
+            return Response(
+                {'error': 'Please provide a valid positive number of tables'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        restaurant_data.number_of_tables = number_of_tables
+        restaurant_data.save()
+        serializer = RestaurantDataSerializer(restaurant_data)
+        return Response(serializer.data)
 

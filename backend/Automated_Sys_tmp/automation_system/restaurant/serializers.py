@@ -5,6 +5,7 @@ from .models import MenuItem
 from .models import Order, OrderItem
 from .models import InventoryItem
 from django.shortcuts import get_object_or_404
+from .models import RestaurantData
 
 from rest_framework.exceptions import NotFound, PermissionDenied
 
@@ -167,3 +168,9 @@ class PublicMenuItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = MenuItem
         fields = ['id', 'name', 'description', 'price', 'is_available', 'category', 'image', 'created_at', 'updated_at']
+
+class RestaurantDataSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RestaurantData
+        fields = ['id', 'system', 'number_of_tables']
+        read_only_fields = ['id', 'system']

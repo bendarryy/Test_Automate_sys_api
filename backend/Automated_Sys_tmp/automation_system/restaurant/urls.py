@@ -25,6 +25,7 @@ router.register(
 # API URLs
 api_urlpatterns = [
     path('', include(router.urls)),
+    path('systems/<int:system_id>/restaurant-data/', RestaurantDataAPIView.as_view(), name='restaurant-data'),
     path('<int:system_id>/inventory/', InventoryItemViewSet.as_view({
         'get': 'list',
         'post': 'create',
