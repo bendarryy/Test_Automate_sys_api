@@ -7,6 +7,7 @@ from rest_framework.response import Response
 from django.db.models import F
 from datetime import date, timedelta
 from django.http import Http404
+from django.db import transaction
 
 from .models import (
     System,
@@ -56,6 +57,7 @@ class InventoryItemViewSet(viewsets.ModelViewSet):
 
         return Product.objects.filter(system=system)
 
+    @transaction.atomic
     def perform_create(self, serializer):
         system_id = self.kwargs.get("system_id")
         user = self.request.user
@@ -67,7 +69,15 @@ class InventoryItemViewSet(viewsets.ModelViewSet):
                 "You do not have permission to add inventory to this system."
             )
 
-        serializer.save(system=system)
+        # Create the product
+        product = Product.objects.create(system=system, **serializer.validated_data)
+
+        # Create initial stock change record
+        StockChange.objects.create(
+            product=product, quantity_changed=product.stock_quantity, change_type="add"
+        )
+
+        return product
 
     def perform_update(self, serializer):
         system = serializer.instance.system
@@ -187,6 +197,18 @@ class InventoryItemViewSet(viewsets.ModelViewSet):
 
         return [IsAuthenticated(), OR(IsSystemOwner(), IsEmployeeRolePermission())]
 
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        system_id = self.kwargs.get("system_id")
+        if system_id:
+            try:
+                context["system"] = System.objects.get(
+                    id=system_id, owner=self.request.user
+                )
+            except System.DoesNotExist:
+                pass
+        return context
+
 
 class SaleViewSet(viewsets.ModelViewSet):
     serializer_class = SaleSerializer
@@ -263,7 +285,7 @@ class SaleViewSet(viewsets.ModelViewSet):
         }
 
         # Return HTML response
-        # return 
+        # return
         return render(request, "supermarket/receipt.html", context)
 
     @action(detail=True, methods=["patch"])
@@ -464,26 +486,32 @@ class GoodsReceivingViewSet(viewsets.ModelViewSet):
         except System.DoesNotExist:
             raise PermissionDenied("You do not have permission for this system.")
 
-@api_view(['GET'])
+
+@api_view(["GET"])
 def supermarket_public_view(request, system):
     """
     Supermarket public view. Returns available products.
     """
-    products = Product.objects.filter(
-        system=system,
-        stock_quantity__gt=0
-    ).order_by('name')
+    products = Product.objects.filter(system=system, stock_quantity__gt=0).order_by(
+        "name"
+    )
 
-    products_data = [{
-        'id': product.id,
-        'name': product.name,
-        'price': str(product.price),
-        'stock_quantity': product.stock_quantity,
-        'expiry_date': product.expiry_date.strftime('%Y-%m-%d') if product.expiry_date else None,
-        'minimum_stock': product.minimum_stock
-    } for product in products]
+    products_data = [
+        {
+            "id": product.id,
+            "name": product.name,
+            "price": str(product.price),
+            "stock_quantity": product.stock_quantity,
+            "expiry_date": (
+                product.expiry_date.strftime("%Y-%m-%d")
+                if product.expiry_date
+                else None
+            ),
+            "minimum_stock": product.minimum_stock,
+        }
+        for product in products
+    ]
 
-    return Response({
-        'system': PublicSystemSerializer(system).data,
-        'products': products_data
-    })
+    return Response(
+        {"system": PublicSystemSerializer(system).data, "products": products_data}
+    )
