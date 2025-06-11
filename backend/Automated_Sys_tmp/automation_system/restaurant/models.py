@@ -46,6 +46,8 @@ class Order(models.Model):
     table_number = models.CharField(max_length=10, blank=True, null=True)
     waiter = models.ForeignKey(Employee, on_delete=models.SET_NULL, null=True)
     total_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    delivery_address = models.TextField(blank=True, null=True, help_text="Required for delivery orders")
+    customer_phone = models.CharField(max_length=20, blank=True, null=True, help_text="Required for delivery orders")
 
     ORDER_TYPE_CHOICES = [
         ("in_house", "In-House"),  # Default option
