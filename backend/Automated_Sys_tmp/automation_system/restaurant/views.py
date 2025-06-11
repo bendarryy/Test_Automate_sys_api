@@ -403,28 +403,59 @@ class ProfitSummaryView(APIView):
     def get(self, request, system_id):
         system = get_object_or_404(System, id=system_id)
         today = date.today()
+        system_created_date = system.created_at.date()
 
-        # اليوم الحالي وأمس
+        # If system was created today, only return today's data
+        if system_created_date == today:
+            today_profit = self.calc_profit(system, today, today)
+            return Response({
+                "day_profit": round(today_profit, 2),
+                "day_change": 0.0,  # No change since it's the first day
+                "week_profit": round(today_profit, 2),
+                "week_change": 0.0,  # No change since it's the first week
+                "month_profit": round(today_profit, 2),
+                "month_change": 0.0,  # No change since it's the first month
+            })
+
+        # Calculate yesterday's data only if system existed yesterday
         yesterday = today - timedelta(days=1)
         today_profit = self.calc_profit(system, today, today)
-        yesterday_profit = self.calc_profit(system, yesterday, yesterday)
-        day_change = self.percentage_change(today_profit, yesterday_profit)
+        if yesterday >= system_created_date:
+            yesterday_profit = self.calc_profit(system, yesterday, yesterday)
+            day_change = self.percentage_change(today_profit, yesterday_profit)
+        else:
+            yesterday_profit = 0
+            day_change = 100.0 if today_profit > 0 else 0.0
 
-        # هذا الأسبوع والأسبوع السابق
+        # Calculate week's data
         week_start = today - timedelta(days=today.weekday())
+        if week_start < system_created_date:
+            week_start = system_created_date
         last_week_start = week_start - timedelta(days=7)
         last_week_end = week_start - timedelta(days=1)
+        
         week_profit = self.calc_profit(system, week_start, today)
-        last_week_profit = self.calc_profit(system, last_week_start, last_week_end)
-        week_change = self.percentage_change(week_profit, last_week_profit)
+        if last_week_start >= system_created_date:
+            last_week_profit = self.calc_profit(system, last_week_start, last_week_end)
+            week_change = self.percentage_change(week_profit, last_week_profit)
+        else:
+            last_week_profit = 0
+            week_change = 100.0 if week_profit > 0 else 0.0
 
-        # هذا الشهر والشهر السابق
+        # Calculate month's data
         month_start = today.replace(day=1)
+        if month_start < system_created_date:
+            month_start = system_created_date
         last_month_end = month_start - timedelta(days=1)
         last_month_start = last_month_end.replace(day=1)
+        
         month_profit = self.calc_profit(system, month_start, today)
-        last_month_profit = self.calc_profit(system, last_month_start, last_month_end)
-        month_change = self.percentage_change(month_profit, last_month_profit)
+        if last_month_start >= system_created_date:
+            last_month_profit = self.calc_profit(system, last_month_start, last_month_end)
+            month_change = self.percentage_change(month_profit, last_month_profit)
+        else:
+            last_month_profit = 0
+            month_change = 100.0 if month_profit > 0 else 0.0
 
         return Response(
             {
@@ -464,11 +495,12 @@ class ProfitTrendView(APIView):
     def get(self, request, system_id):
         system = get_object_or_404(System, id=system_id)
         view = request.query_params.get("view", "daily")
+        system_created_date = system.created_at.date()
 
         if view == "daily":
-            # Get last 30 days of profit data
+            # Get last 30 days of profit data, but not before system creation
             end_date = date.today()
-            start_date = end_date - timedelta(days=29)
+            start_date = max(end_date - timedelta(days=29), system_created_date)
 
             # Get all completed orders in the date range
             orders = Order.objects.filter(
@@ -491,9 +523,9 @@ class ProfitTrendView(APIView):
             ]
 
         else:  # monthly view
-            # Get last 12 months of profit data
+            # Get last 12 months of profit data, but not before system creation
             end_date = date.today()
-            start_date = end_date.replace(day=1) - timedelta(days=365)
+            start_date = max(end_date.replace(day=1) - timedelta(days=365), system_created_date)
 
             # Get all completed orders in the date range
             orders = Order.objects.filter(
