@@ -149,14 +149,6 @@ class PublicSliderImage(models.Model):
     def __str__(self):
         return f"Slider Image - {self.system.name}"
 
-class RestaurantData(models.Model):
-    system = models.OneToOneField(System, on_delete=models.CASCADE, related_name="restaurant_data")
-    number_of_tables = models.PositiveIntegerField(default=15)
-    # you can add more later: e.g., table layout, kitchen size, etc.
-
-    def __str__(self):
-        return f"RestaurantData for {self.system.name}"
-
 
 from django.contrib.auth.hashers import make_password, check_password
 

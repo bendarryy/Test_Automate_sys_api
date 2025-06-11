@@ -2,6 +2,7 @@ from django.db import models
 from core.models import System , BaseMultiTenantModel 
 from django.contrib.auth.models import User 
 from core.models import Employee
+from django.core.exceptions import ValidationError
 
 
 
@@ -138,3 +139,16 @@ class InventoryItem(models.Model):
 #     system = models.ForeignKey(System, on_delete=models.CASCADE)
 #     user = models.ForeignKey(User, on_delete=models.CASCADE)
 #     role = models.CharField(max_length=50, choices=[('manager', 'Manager'), ('chef', 'Chef'), ('waiter', 'Waiter')])
+
+class RestaurantData(models.Model):
+    system = models.OneToOneField(System, on_delete=models.CASCADE, related_name="restaurant_data")
+    number_of_tables = models.PositiveIntegerField(default=15, help_text="Number of tables in the restaurant")
+    # you can add more later: e.g., table layout, kitchen size, etc.
+
+    def __str__(self):
+        return f"RestaurantData for {self.system.name}"
+
+    def save(self, *args, **kwargs):
+        if self.system.category != 'restaurant':
+            raise ValidationError("RestaurantData can only be associated with restaurant systems")
+        super().save(*args, **kwargs)

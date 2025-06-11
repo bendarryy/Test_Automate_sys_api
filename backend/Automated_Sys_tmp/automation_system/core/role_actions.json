@@ -32,7 +32,6 @@
     "create_order", "read_order", "update_order", "delete_order",
     "create_inventory", "read_inventory", "update_inventory", "delete_inventory",
     "create_product", "read_product", "update_product", "delete_product",
-    "create_employee", "read_employee", "update_employee", "delete_employee",
     "read_finance",
     "read_kds", "read_waiterdisplay", "read_deliverydisplay",
     "read_profile", "read_settings", "read_about", "read_home", "read_sales"
