@@ -17,6 +17,8 @@ from decimal import Decimal
 import time
 from django.shortcuts import get_object_or_404
 from datetime import datetime
+from django.db import transaction
+from django.db.models import F
 
 
 class InventorysupItemSerializer(serializers.ModelSerializer):
@@ -214,45 +216,48 @@ class SaleCreateSerializer(serializers.ModelSerializer):
         # Generate receipt number
         receipt_number = f"RCP-{system_id}-{int(time.time())}"
 
-        sale = Sale.objects.create(
-            system_id=system_id,
-            cashier=cashier,
-            receipt_number=receipt_number,
-            **validated_data,
-        )
+        with transaction.atomic():
+            # Create the sale
+            sale = Sale.objects.create(
+                system_id=system_id,
+                cashier=cashier,
+                receipt_number=receipt_number,
+                **validated_data,
+            )
 
-        # Create sale items and update stock
-        for item_data in items_data:
-            product = item_data["product"]
-            quantity = Decimal(str(item_data["quantity"]))
+            # Create sale items and update stock
+            for item_data in items_data:
+                product = item_data["product"]
+                quantity = Decimal(str(item_data["quantity"]))
 
-            # Check stock availability
-            if product.stock_quantity < quantity:
-                raise serializers.ValidationError(
-                    f"Insufficient stock for {product.name}"
+                # Check stock availability
+                if product.stock_quantity < quantity:
+                    raise serializers.ValidationError(
+                        f"Insufficient stock for {product.name}"
+                    )
+
+                # Set unit price from product's price and calculate total
+                item_data["unit_price"] = product.price
+                item_data["total_price"] = (product.price * quantity) - item_data.get(
+                    "discount_amount", Decimal("0")
                 )
 
-            # Set unit price from product's price and calculate total
-            item_data["unit_price"] = product.price
-            item_data["total_price"] = (product.price * quantity) - item_data.get(
-                "discount_amount", Decimal("0")
-            )
+                # Create sale item
+                SaleItem.objects.create(sale=sale, **item_data)
 
-            # Create sale item
-            SaleItem.objects.create(sale=sale, **item_data)
+                # Update stock using F() expression to prevent race conditions
+                Product.objects.filter(id=product.id).update(
+                    stock_quantity=F("stock_quantity") - quantity
+                )
 
-            # Update stock
-            product.stock_quantity -= quantity
-            product.save()
+                # Create stock change record
+                StockChange.objects.create(
+                    product=product, quantity_changed=-quantity, change_type="remove"
+                )
 
-            # Create stock change record
-            StockChange.objects.create(
-                product=product, quantity_changed=-quantity, change_type="remove"
-            )
-
-        # Calculate total
-        sale.calculate_total()
-        return sale
+            # Calculate total
+            sale.calculate_total()
+            return sale
 
 
 class DiscountSerializer(serializers.ModelSerializer):

@@ -125,7 +125,7 @@ class ProductBatch(models.Model):
         Product, on_delete=models.CASCADE, related_name="batches"
     )
     purchase_order = models.ForeignKey(
-        "PurchaseOrder", on_delete=models.PROTECT, related_name="batches"
+        "PurchaseOrder", on_delete=models.CASCADE, related_name="batches"
     )
     quantity = models.PositiveIntegerField()
     expiry_date = models.DateField()
@@ -318,7 +318,7 @@ class GoodsReceiving(models.Model):
     """Goods Receiving records for Purchase Orders"""
 
     purchase_order = models.ForeignKey(
-        PurchaseOrder, on_delete=models.PROTECT, related_name="goods_receiving"
+        PurchaseOrder, on_delete=models.CASCADE, related_name="goods_receiving"
     )
     received_quantity = models.PositiveIntegerField()
     received_date = models.DateField()
