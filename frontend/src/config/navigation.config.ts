@@ -85,6 +85,7 @@ const navItemsData: BaseNavItem[] = [
   { name: "Employees", icon: "Team", href: "/employees", systemCategory: "supermarket", showInSidebar: true, requiredPermission: "update_employee" }, // Changed systemCategory and added requiredPermission
   { name: "About", icon: "Information", href: "/about", systemCategory: "supermarket", showInSidebar: true, requiredPermission: "access_about" },
   { name: "Supplier Management", icon: "Store2", href: "/supermarket/suppliers", systemCategory: "supermarket", showInSidebar: true },
+  { name: "Goods Receiving", icon: "Archive", href: "/supermarket/goods-receiving", systemCategory: "supermarket", showInSidebar: true, requiredPermission: "read_order" },
 
   // Common
   { name: "Profile", icon: "AccountCircle", href: "/profile", systemCategory: "all", showInSidebar: true, requiredPermission: "read_profile" },

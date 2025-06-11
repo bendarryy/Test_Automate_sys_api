@@ -1,133 +1,106 @@
-import React, { useEffect, useState } from 'react';
-import { Card, Button, Modal, message, Row, Col, Typography, Space } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
-import { PurchaseOrdersTable } from './components/PurchaseOrdersTable';
-import { PurchaseOrderForm } from './components/PurchaseOrderForm';
+import React, { useState } from 'react';
+import { Layout, Row, Col, Typography, Button, Modal, message, ConfigProvider, theme } from 'antd';
 import { usePurchaseOrders } from './hooks/usePurchaseOrders';
-import { PurchaseOrder } from './types/PurchaseOrder';
+import PurchaseOrderTable from './components/PurchaseOrderTable';
+import PurchaseOrderForm from './components/PurchaseOrderForm';
 import { useSelectedSystemId } from '../../../../shared/hooks/useSelectedSystemId';
-import { useSuppliers } from './hooks/useSuppliers';
-import { useProducts } from './hooks/useProducts';
+import { createPurchaseOrder, updatePurchaseOrder, deletePurchaseOrder } from './utils/api';
+import { PurchaseOrder } from './types/purchase';
 
-export const PurchaseOrdersPage: React.FC = () => {
-  const [systemId] = useSelectedSystemId(); 
-  const {
-    data: orders = [],
-    loading,
-    error,
-    fetchOrders,
-    createOrder,
-    updateOrder,
-    deleteOrder,
-    clearCache,
-  } = usePurchaseOrders(systemId);
+const { Title } = Typography;
+const { Header, Content, Footer } = Layout;
 
-  // Fetch suppliers and products from API
-  const { data: suppliers = [], fetchSuppliers } = useSuppliers(systemId);
-  const { data: products = [], fetchProducts } = useProducts(systemId);
+const PurchaseOrdersPage: React.FC = () => {
+  const [systemId] = useSelectedSystemId();
+  const { orders, loading, error } = usePurchaseOrders(systemId || '');
+  const [modalOpen, setModalOpen] = useState(false);
+  const [formLoading, setFormLoading] = useState(false);
+  const [editOrder, setEditOrder] = useState<PurchaseOrder | null>(null);
 
-  const [modalVisible, setModalVisible] = useState(false);
-  const [editingOrder, setEditingOrder] = useState<PurchaseOrder | null>(null);
-  const [submitting, setSubmitting] = useState(false);
-
-  useEffect(() => {
-    fetchOrders();
-    fetchSuppliers();
-    fetchProducts();
-    // eslint-disable-next-line
-  }, [systemId]);
-
-  const handleCreate = () => {
-    setEditingOrder(null);
-    setModalVisible(true);
+  const handleCreate = async (data: Partial<PurchaseOrder>) => {
+    setFormLoading(true);
+    try {
+      await createPurchaseOrder(systemId || '', {
+        ...data,
+        order_date: data.order_date,
+        expected_delivery_date: data.expected_delivery_date,
+      });
+      message.success('Purchase order saved');
+      setModalOpen(false);
+      setEditOrder(null);
+      window.location.reload();
+    } catch (e: any) {
+      message.error(e.message || 'Error saving order');
+    } finally {
+      setFormLoading(false);
+    }
   };
 
   const handleEdit = (order: PurchaseOrder) => {
-    setEditingOrder(order);
-    setModalVisible(true);
+    setEditOrder(order);
+    setModalOpen(true);
   };
 
   const handleDelete = async (order: PurchaseOrder) => {
-    Modal.confirm({
-      title: 'Delete Purchase Order',
-      content: 'Are you sure you want to delete this order?',
-      okText: 'Delete',
-      okType: 'danger',
-      cancelText: 'Cancel',
-      onOk: async () => {
-        try {
-          setSubmitting(true);
-          await deleteOrder(order.id);
-          message.success('Order deleted');
-          fetchOrders();
-        } catch {
-          message.error('Failed to delete order');
-        } finally {
-          setSubmitting(false);
-        }
-      },
-    });
-  };
-
-  const handleFormSubmit = async (values: any) => {
-    setSubmitting(true);
+    setFormLoading(true);
     try {
-      if (editingOrder) {
-        await updateOrder(editingOrder.id, values);
-        message.success('Order updated');
-      } else {
-        await createOrder(values);
-        message.success('Order created');
-      }
-      setModalVisible(false);
-      fetchOrders();
-    } catch {
-      message.error('Failed to save order');
+      await deletePurchaseOrder(systemId || '', order.id);
+      message.success('Order deleted');
+      window.location.reload();
+    } catch (e: any) {
+      message.error(e.message || 'Error deleting order');
     } finally {
-      setSubmitting(false);
+      setFormLoading(false);
     }
   };
 
   return (
-    <Card style={{ margin: 24, borderRadius: 12, boxShadow: '0 2px 8px #f0f1f2' }}>
-      <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
-        <Col>
-          <Typography.Title level={3} style={{ margin: 0 }}>
-            Purchase Orders
-          </Typography.Title>
-        </Col>
-        <Col>
-          <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate} aria-label="Add Purchase Order">
-            New Order
-          </Button>
-        </Col>
-      </Row>
-      <Space direction="vertical" style={{ width: '100%' }}>
-        <PurchaseOrdersTable
-          orders={orders || []}
-          loading={loading || submitting}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-        />
-        {error && <Typography.Text type="danger">{error}</Typography.Text>}
-      </Space>
-      <Modal
-        open={modalVisible}
-        title={editingOrder ? 'Edit Purchase Order' : 'Create Purchase Order'}
-        onCancel={() => setModalVisible(false)}
-        footer={null}
-        destroyOnClose
-        aria-modal="true"
-      >
-        <PurchaseOrderForm
-          initialValues={editingOrder || undefined}
-          onSubmit={handleFormSubmit}
-          submitting={submitting}
-          suppliers={suppliers}
-          products={products}
-        />
-      </Modal>
-    </Card>
+    <ConfigProvider
+      theme={{
+        token: {
+          colorPrimary: '#1677ff',
+          borderRadius: 8,
+          fontSize: 16,
+        },
+      }}
+    >
+      <Layout style={{ minHeight: '100vh' }}>
+        <Header style={{ background: '#fff', borderBottom: '1px solid #eee' }}>
+          <Title level={2} style={{ margin: 0 }}>Purchase Orders</Title>
+        </Header>
+        <Content style={{ padding: 24 }}>
+          <Row justify="end" style={{ marginBottom: 16 }}>
+            <Col>
+              <Button type="primary" onClick={() => { setModalOpen(true); setEditOrder(null); }}>+ New Purchase Order</Button>
+            </Col>
+          </Row>
+          <PurchaseOrderTable
+            orders={orders}
+            loading={loading}
+            error={error}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+          />
+          <Modal
+            open={modalOpen}
+            title={editOrder ? 'Edit Purchase Order' : 'New Purchase Order'}
+            onCancel={() => { setModalOpen(false); setEditOrder(null); }}
+            footer={null}
+            destroyOnClose
+          >
+            <PurchaseOrderForm
+              initial={editOrder || {}}
+              onSubmit={handleCreate}
+              onCancel={() => { setModalOpen(false); setEditOrder(null); }}
+              loading={formLoading}
+            />
+          </Modal>
+        </Content>
+        <Footer style={{ textAlign: 'center', background: '#fafafa' }}>
+          <Typography.Text type="secondary">Supermarket System © {new Date().getFullYear()}</Typography.Text>
+        </Footer>
+      </Layout>
+    </ConfigProvider>
   );
 };
 

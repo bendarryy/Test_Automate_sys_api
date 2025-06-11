@@ -85,6 +85,9 @@ const SupplierManagement = lazy(
 const PurchaseOrdersPage = lazy(
   () => import("../page/supermarket/pages/purchase/PurchaseOrdersPage")
 );
+const GoodsReceivingPage = lazy(
+  () => import("../page/supermarket/pages/purchase/GoodsReceivingPage")
+);
 
 const ErrorBoundary = () => {
   return (
@@ -283,6 +286,14 @@ const supermarketRouter = createBrowserRouter([
         element: (
           <ProtectedRoute permission={["read_order", "create_order"]}>
             <PurchaseOrdersPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/supermarket/goods-receiving",
+        element: (
+          <ProtectedRoute permission={["read_order", "create_order"]}>
+            <GoodsReceivingPage />
           </ProtectedRoute>
         ),
       },

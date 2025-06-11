@@ -1,20 +1,20 @@
 import { useEffect, useState } from 'react';
-import { PurchaseOrder } from '../types/purchase';
-import { getPurchaseOrders } from '../utils/api';
+import { GoodsReceiving } from '../types/purchase';
+import { getGoodsReceiving } from '../utils/api';
 
-export function usePurchaseOrders(systemId: string) {
-  const [orders, setOrders] = useState<PurchaseOrder[]>([]);
+export function useGoodsReceiving(systemId: string) {
+  const [records, setRecords] = useState<GoodsReceiving[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!systemId) return;
     setLoading(true);
-    getPurchaseOrders(systemId)
-      .then(setOrders)
+    getGoodsReceiving(systemId)
+      .then(setRecords)
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   }, [systemId]);
 
-  return { orders, loading, error };
+  return { records, loading, error };
 }
