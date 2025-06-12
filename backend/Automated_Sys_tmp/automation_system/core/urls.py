@@ -18,7 +18,8 @@ urlpatterns = [
     path('systems/<int:system_id>/', views.SystemUpdateView.as_view(), name='system-update'),
     path('systems/<int:system_id>/delete/', views.SystemDeleteView.as_view(), name='system-delete'),
     path('systems/<int:system_id>/subdomain/', views.update_system_subdomain, name='system-subdomain'),
-    path('systems/<int:system_id>/logo/', views.SystemLogoUpdateView.as_view(), name='system-logo-update'),
+    path('systems/<int:system_id>/logo/', views.SystemLogoView.as_view(), name='system-logo'),
+    path('systems/<int:system_id>/detail/', views.SystemDetailView.as_view(), name='system-detail'),
 
     # System nested endpoints
     path('systems/<int:system_id>/public-profile/', views.PublicProfileViewSet.as_view({

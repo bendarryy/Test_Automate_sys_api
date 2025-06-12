@@ -589,6 +589,12 @@ class SystemUpdateView(BaseSystemView):
                 )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    def get(self, request, system_id, *args, **kwargs):
+        """Retrieve a specific system by its ID."""
+        system = get_object_or_404(System, id=system_id)
+        serializer = SystemSerializer(system)
+        return Response(serializer.data)
+
 class SystemDeleteView(APIView):
     """Delete a system with password confirmation"""
     permission_classes = [IsAuthenticated, IsSystemOwner]
@@ -765,7 +771,7 @@ class PublicSystemView(APIView):
 
 
 
-class SystemLogoUpdateView(generics.UpdateAPIView):
+class SystemLogoView(generics.UpdateAPIView):
     """
     Update the logo of a system.
     Endpoint: PATCH /api/core/systems/{system_id}/logo/
@@ -784,3 +790,19 @@ class SystemLogoUpdateView(generics.UpdateAPIView):
 
     def patch(self, request, *args, **kwargs):
         return self.partial_update(request, *args, **kwargs)
+
+    def get(self, request, *args, **kwargs):
+        """Retrieve the logo URL of a system."""
+        system = self.get_object()
+        if system.logo:
+            return Response({"logo_url": system.logo.url}, status=status.HTTP_200_OK)
+        return Response({"error": "No logo found for this system."}, status=status.HTTP_404_NOT_FOUND)
+
+class SystemDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, system_id):
+        """Retrieve a specific system by its ID."""
+        system = get_object_or_404(System, id=system_id)
+        serializer = SystemSerializer(system)
+        return Response(serializer.data)

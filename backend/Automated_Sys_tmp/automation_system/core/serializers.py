@@ -603,7 +603,6 @@ class SystemPublicProfileSerializer(serializers.ModelSerializer):
             'subdomain',
             'custom_link',
             # Editable fields
-            'description',
             'is_public',
             'public_title',
             'public_description',
@@ -611,10 +610,10 @@ class SystemPublicProfileSerializer(serializers.ModelSerializer):
             'secondary_color',
             'email',
             'whatsapp_number',
-            'social_links'
+            'social_links',
+            'logo'
         ]
         extra_kwargs = {
-            'description': {'required': False},
             'is_public': {'required': False},
             'public_title': {'required': False},
             'public_description': {'required': False},
@@ -622,7 +621,9 @@ class SystemPublicProfileSerializer(serializers.ModelSerializer):
             'secondary_color': {'required': False},
             'email': {'required': False},
             'whatsapp_number': {'required': False},
-            'social_links': {'required': False}
+            'social_links': {'required': False},
+            "subdomain": {'required': False, 'allow_null': True},
+            "custom_link": {'required': False, 'allow_null': True}
         }
 
 
