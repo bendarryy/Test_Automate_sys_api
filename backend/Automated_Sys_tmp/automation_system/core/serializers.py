@@ -109,13 +109,12 @@ class BaseSystemSerializer(serializers.ModelSerializer):
     )
     subdomain = serializers.CharField(
         required=False,
-        allow_blank=True,
+    
         allow_null=True,
         help_text="Subdomain for your system"
     )
     custom_domain = serializers.CharField(
         required=False,
-        allow_blank=True,
         allow_null=True,
         help_text="Custom domain for the system"
     )

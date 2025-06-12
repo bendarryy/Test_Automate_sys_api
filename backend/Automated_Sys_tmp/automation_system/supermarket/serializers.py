@@ -39,6 +39,9 @@ class InventorysupItemSerializer(serializers.ModelSerializer):
             "expiry_date": {"required": False, "allow_null": True},
             "image": {"required": False, "allow_null": True},
             "cost": {"required": False, "default": 0},
+            "name": {"required": False},
+            "price": {"required": False},
+            "stock_quantity": {"required": False},
         }
 
     def validate_price(self, value):
@@ -55,6 +58,13 @@ class InventorysupItemSerializer(serializers.ModelSerializer):
         if value < 0:
             raise serializers.ValidationError("Minimum stock cannot be negative")
         return value
+
+    def update(self, instance, validated_data):
+        # Only update the fields that were provided in the request
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        return instance
 
 
 class StockChangeSerializer(serializers.ModelSerializer):

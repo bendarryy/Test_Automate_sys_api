@@ -311,6 +311,13 @@ class PurchaseOrder(models.Model):
             from datetime import timedelta
 
             self.expected_delivery_date = self.order_date + timedelta(days=7)
+
+        # Update product cost if this is a new purchase order or cost has changed
+        if self.product:
+            if not self.pk or self.cost != self.product.cost:
+                self.product.cost = self.cost
+                self.product.save()
+
         super().save(*args, **kwargs)
 
 

@@ -5,84 +5,11 @@ import { setSelectedTable } from "../../../../../store/billSlice";
 import { Card, Row, Col, Badge, Space, Typography, Tag, Drawer, Tabs, Input, Button, Select, Popover, message } from 'antd';
 import { MdPeopleOutline, MdTableRestaurant, MdEventSeat, MdEventAvailable, MdSearch, MdClose } from "react-icons/md";
 import { Table } from '../../../../../types';
+import apiClient from '../../../../../config/apiClient.config';
+import { useSelectedSystemId } from '../../../../../shared/hooks/useSelectedSystemId';
 
 const { Text } = Typography;
 const { Search } = Input;
-
-const tables: Table[] = [
-  {
-    id: 1,
-    name: 'Table 1',
-    status: "available",
-    capacity: 4
-  },
-  {
-    id: 2,
-    name: 'Table 2',
-    status: "available",
-    capacity: 6
-  },
-  {
-    id: 3,
-    name: 'Table 3',
-    status: "reserved",
-    capacity: 2
-  },
-  {
-    id: 4,
-    name: 'Table 4',
-    status: "occupied",
-    capacity: 8
-  },
-  {
-    id: 5,
-    name: 'Table 5',
-    status: "available",
-    capacity: 4
-  },
-  {
-    id: 6,
-    name: 'Table 6',
-    status: "reserved",
-    capacity: 6
-  },
-  {
-    id: 7,
-    name: 'Table 7',
-    status: "available",
-    capacity: 2
-  },
-  {
-    id: 8,
-    name: 'Table 8',
-    status: "occupied",
-    capacity: 8
-  },
-  {
-    id: 9,
-    name: 'Table 9',
-    status: "available",
-    capacity: 4
-  },
-  {
-    id: 10,
-    name: 'Table 10',
-    status: "reserved",
-    capacity: 6
-  },
-  {
-    id: 11,
-    name: 'Table 11',
-    status: "available",
-    capacity: 2
-  },
-  {
-    id: 12,
-    name: 'Table 12',
-    status: "occupied",
-    capacity: 8
-  }
-];
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -123,10 +50,35 @@ const TablesSection: React.FC<TablesSectionProps> = ({ onClose, orderType = 'in_
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
   const [capacityFilter, setCapacityFilter] = useState<number[]>([]);
   const [isOpen, setIsOpen] = useState(true);
+  const [tables, setTables] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [systemId] = useSelectedSystemId();
+
+  const fetchTables = async () => {
+    if (!systemId) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await apiClient.get(`/restaurant/systems/${systemId}/tables/`);
+      const apiTables = (res.data || []).map((t: any, idx: number) => ({
+        id: Number(t.table_number),
+        name: `Table ${t.table_number}`,
+        status: t.is_occupied ? 'occupied' : 'available',
+        capacity: 4,
+        ...t,
+      }));
+      setTables(apiTables);
+    } catch (err: any) {
+      setError('حدث خطأ أثناء تحميل الطاولات');
+    }
+    setLoading(false);
+  };
 
   useEffect(() => {
+    fetchTables();
     setIsOpen(true);
-  }, []);
+  }, [systemId]);
 
   const handleTableClick = (id: number) => {
     if (orderType === 'delivery') {
@@ -150,7 +102,7 @@ const TablesSection: React.FC<TablesSectionProps> = ({ onClose, orderType = 'in_
     return matchesSearch && matchesStatus && matchesCapacity;
   });
 
-  const renderTableCard = (table: Table) => (
+  const renderTableCard = (table: any) => (
     <Col key={table.id} xs={24} sm={12} md={8} lg={6} style={{ marginBottom: '16px' }}>
       <Popover
         content={
@@ -163,13 +115,13 @@ const TablesSection: React.FC<TablesSectionProps> = ({ onClose, orderType = 'in_
               {table.status === 'reserved' && (
                 <Space>
                   <MdEventSeat size={16} />
-                  <Text type="secondary">Reserved for 2 hours</Text>
+                  <Text type="secondary">Reserved</Text>
                 </Space>
               )}
               {table.status === 'occupied' && (
                 <Space>
                   <MdEventAvailable size={16} />
-                  <Text type="secondary">Occupied for 45 min</Text>
+                  <Text type="secondary">Occupied</Text>
                 </Space>
               )}
             </Space>
@@ -184,10 +136,11 @@ const TablesSection: React.FC<TablesSectionProps> = ({ onClose, orderType = 'in_
           style={{
             cursor: orderType === 'delivery' ? 'not-allowed' : 'pointer',
             border: selectedTable === table.id ? '2px solid #1890ff' : '1px solid #f0f0f0',
-            transition: 'all 0.3s ease',
-            transform: hoveredTable === table.id ? 'translateY(-4px)' : 'none',
-            boxShadow: hoveredTable === table.id ? '0 4px 12px rgba(0,0,0,0.1)' : 'none',
-            height: '100%',
+            background: selectedTable === table.id ? '#e6f7ff' : '#fff',
+            boxShadow: selectedTable === table.id ? '0 4px 16px rgba(24,144,255,0.10)' : hoveredTable === table.id ? '0 8px 24px rgba(0,0,0,0.05)' : '0 2px 8px rgba(0,0,0,0.03)',
+            transition: 'all 0.3s cubic-bezier(.25,.8,.25,1)',
+            minHeight: 170,
+            transform: hoveredTable === table.id ? 'scale(1.02)' : undefined,
             opacity: orderType === 'delivery' ? 0.5 : 1,
           }}
           onMouseEnter={() => setHoveredTable(table.id)}
@@ -198,12 +151,11 @@ const TablesSection: React.FC<TablesSectionProps> = ({ onClose, orderType = 'in_
             <Badge
               status={getStatusColor(table.status) as 'success' | 'error' | 'warning' | 'processing' | 'default'}
               text={
-                <Tag color={getStatusColor(table.status)} style={{ margin: 0 }}>
+                <Tag color={getStatusColor(table.status)} style={{ margin: 0, fontWeight: 600, fontSize: 13, borderRadius: 8, padding: '2px 12px' }}>
                   {getStatusText(table.status)}
                 </Tag>
               }
             />
-            
             <div style={{ 
               display: 'flex', 
               alignItems: 'center', 
@@ -213,10 +165,9 @@ const TablesSection: React.FC<TablesSectionProps> = ({ onClose, orderType = 'in_
               borderRadius: '8px',
               width: '100%'
             }}>
-              <MdTableRestaurant size={24} color={selectedTable === table.id ? '#1890ff' : '#8c8c8c'} />
+              <MdTableRestaurant size={28} color={selectedTable === table.id ? '#1890ff' : '#8c8c8c'} />
             </div>
-
-            <Text strong style={{ margin: 0 }}>
+            <Text strong style={{ margin: 0, fontSize: 16, letterSpacing: 1, textAlign: 'center' }}>
               {table.name}
             </Text>
           </Space>
@@ -278,9 +229,15 @@ const TablesSection: React.FC<TablesSectionProps> = ({ onClose, orderType = 'in_
               </Col>
             </Row>
           </div>
-          <Row gutter={[16, 16]}>
-            {filteredTables.map(renderTableCard)}
-          </Row>
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: '2rem' }}>جارٍ تحميل الطاولات...</div>
+          ) : error ? (
+            <div style={{ textAlign: 'center', color: 'red', padding: '2rem' }}>{error}</div>
+          ) : (
+            <Row gutter={[16, 16]}>
+              {filteredTables.map(renderTableCard)}
+            </Row>
+          )}
         </>
       ),
     },
