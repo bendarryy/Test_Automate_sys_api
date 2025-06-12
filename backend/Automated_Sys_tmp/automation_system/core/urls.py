@@ -18,7 +18,8 @@ urlpatterns = [
     path('systems/<int:system_id>/', views.SystemUpdateView.as_view(), name='system-update'),
     path('systems/<int:system_id>/delete/', views.SystemDeleteView.as_view(), name='system-delete'),
     path('systems/<int:system_id>/subdomain/', views.update_system_subdomain, name='system-subdomain'),
-    
+    path('systems/<int:system_id>/logo/', views.SystemLogoUpdateView.as_view(), name='system-logo-update'),
+
     # System nested endpoints
     path('systems/<int:system_id>/public-profile/', views.PublicProfileViewSet.as_view({
         'get': 'retrieve',

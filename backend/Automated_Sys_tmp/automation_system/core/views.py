@@ -29,7 +29,9 @@ from .serializers import (
     BaseSystemSerializer,
     SystemSerializer,
     PublicSliderImageSerializer,
-    OpeningHoursSerializer
+    OpeningHoursSerializer,
+    SystemPublicProfileSerializer,
+    SystemLogoUpdateSerializer
 )
 from rest_framework.generics import RetrieveAPIView, ListAPIView
 from django.shortcuts import get_object_or_404
@@ -685,22 +687,13 @@ class CheckAuthView(APIView):
         }, status=status.HTTP_200_OK)
 
 class PublicProfileViewSet(viewsets.ModelViewSet):
-    """Handle public profile operations"""
+    serializer_class = SystemPublicProfileSerializer
     permission_classes = [IsAuthenticated, IsSystemOwner]
-    serializer_class = SystemSerializer
-    lookup_field = 'system_id'
-    lookup_url_kwarg = 'system_id'
-
-    def get_queryset(self):
-        return System.objects.filter(owner=self.request.user)
+    http_method_names = ['get', 'patch']  # Only allow GET and PATCH
 
     def get_object(self):
         system_id = self.kwargs.get('system_id')
-        return get_object_or_404(
-            System,
-            id=system_id,
-            owner=self.request.user
-        )   
+        return get_object_or_404(System, id=system_id)
 
 class PublicSliderImageViewSet(viewsets.ModelViewSet):
     """Handle slider image operations"""
@@ -761,3 +754,25 @@ class PublicSystemView(APIView):
             ).data
         }
         return Response(data)
+
+
+
+class SystemLogoUpdateView(generics.UpdateAPIView):
+    """
+    Update the logo of a system.
+    Endpoint: PATCH /api/core/systems/{system_id}/logo/
+    Requires authentication and the user must be the system owner.
+    """
+    queryset = System.objects.all()
+    serializer_class = SystemLogoUpdateSerializer
+    permission_classes = [IsAuthenticated, IsSystemOwner]
+    lookup_field = 'system_id' # This makes the view automatically look up the system by the system_id in the URL
+
+    def get_object(self):
+        # Ensure the user owns the system
+        system = get_object_or_404(self.get_queryset(), id=self.kwargs[self.lookup_field])
+        self.check_object_permissions(self.request, system)
+        return system
+
+    def patch(self, request, *args, **kwargs):
+        return self.partial_update(request, *args, **kwargs)

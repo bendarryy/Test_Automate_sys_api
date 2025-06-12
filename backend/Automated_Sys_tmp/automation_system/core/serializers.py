@@ -587,3 +587,51 @@ class PublicSliderImageSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("System context is required")
         validated_data['system'] = system
         return super().create(validated_data)
+
+class SystemPublicProfileSerializer(serializers.ModelSerializer):
+    # Add read-only fields
+    name = serializers.CharField(read_only=True)
+    category = serializers.CharField(read_only=True)
+    subdomain = serializers.CharField(read_only=True)
+    custom_link = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = System
+        fields = [
+            # Read-only fields
+            'name',
+            'category',
+            'subdomain',
+            'custom_link',
+            # Editable fields
+            'description',
+            'is_public',
+            'public_title',
+            'public_description',
+            'primary_color',
+            'secondary_color',
+            'email',
+            'whatsapp_number',
+            'social_links'
+        ]
+        extra_kwargs = {
+            'description': {'required': False},
+            'is_public': {'required': False},
+            'public_title': {'required': False},
+            'public_description': {'required': False},
+            'primary_color': {'required': False},
+            'secondary_color': {'required': False},
+            'email': {'required': False},
+            'whatsapp_number': {'required': False},
+            'social_links': {'required': False}
+        }
+
+
+class SystemLogoUpdateSerializer(serializers.ModelSerializer):
+    """Serializer for updating only the system logo"""
+    class Meta:
+        model = System
+        fields = ['logo']
+        extra_kwargs = {
+            'logo': {'required': False, 'allow_null': True}
+        }
