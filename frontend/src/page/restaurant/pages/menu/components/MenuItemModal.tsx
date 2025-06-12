@@ -113,7 +113,7 @@ const MenuItemModal: React.FC<MenuItemModalProps> = ({
                         if (val && !categories.includes(val)) {
                           setFormData({ ...formData, category: val, newCategory: '' });
                           categories.push(val);
-                          message.success('تمت إضافة التصنيف');
+                            message.success('Category added');
                         }
                       }}
                     />
@@ -124,11 +124,12 @@ const MenuItemModal: React.FC<MenuItemModalProps> = ({
                         if (val && !categories.includes(val)) {
                           setFormData({ ...formData, category: val, newCategory: '' });
                           categories.push(val);
-                          message.success('تمت إضافة التصنيف');
+                          message.success('Category added');
                         }
                       }}
+                      style={{ marginLeft: 0, padding: "0 4px", height: 'auto', lineHeight: 'normal' }}
                     >
-                      إضافة
+                     +
                     </Button>
                   </div>
                 </>
