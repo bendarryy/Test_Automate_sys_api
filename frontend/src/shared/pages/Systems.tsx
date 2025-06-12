@@ -76,14 +76,7 @@ const Systems: React.FC = () => {
                   </div>
                 </div>
               ))}
-              <Button
-                type="dashed"
-                style={{ width: '100%', height: 44, fontWeight: 'bold', borderRadius: 8, marginTop: 16 }}
-                onClick={() => navigate('/systems/create')}
-                icon={<AppstoreOutlined />}
-              >
-                + Create New System
-              </Button>
+
             </div>
           ) : (
             !loading && !error && (
@@ -100,13 +93,21 @@ const Systems: React.FC = () => {
               </>
             )
           )}
+          <Button
+            type="dashed"
+            style={{ width: '100%', height: 44, fontWeight: 'bold', borderRadius: 8, marginTop: 16 }}
+            onClick={() => navigate('/systems/create')}
+            icon={<AppstoreOutlined />}
+          >
+              + Create New System
+          </Button>
           <Button 
             type="default" 
             style={{ marginTop: 24, width: '100%', height: 44, fontWeight: 'bold', borderRadius: 8 }}
             onClick={() => navigate('/')}
           >
-            Cancel
-          </Button>
+            back to home          
+            </Button>
         </div>
       </Content>
     </Layout>
