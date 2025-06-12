@@ -6,13 +6,17 @@ import '@ant-design/v5-patch-for-react-19';
 import { StrictMode, lazy } from "react";
 const App = lazy(() => import("./App"));
 import { App as AntdApp } from 'antd';
+import { QueryClientProvider } from '@tanstack/react-query';
+import queryClient from './queryClient';
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
       <Provider store={store}>  
-        <AntdApp>
-          <App />
-        </AntdApp>
+        <QueryClientProvider client={queryClient}>
+          <AntdApp>
+            <App />
+          </AntdApp>
+        </QueryClientProvider>
       </Provider>
   </StrictMode>
 );

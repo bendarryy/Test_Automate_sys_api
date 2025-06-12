@@ -88,7 +88,8 @@ const PurchaseOrdersPage = lazy(
 const GoodsReceivingPage = lazy(
   () => import("../page/supermarket/pages/purchase/GoodsReceivingPage")
 );
-const CreateSystemPage = lazy(() => import("../shared/pages/systems/CreateSystemPage"));
+const CreateSystemPage = lazy(() => import("../page/system/CreateSystem/CreateSystem"));
+const UpdateSystemPage = lazy(() => import("../page/system/UpdateSystem/UpdateSystem"));
 
 const ErrorBoundary = () => {
   return (
@@ -121,6 +122,13 @@ const authRoutesConfig = authRoutes.map((route) => {
     case "/systems/create":
       element = <CreateSystemPage />;
       break;
+    case "/systems/edit/:id":
+      element = <UpdateSystemPage />;
+      return {
+        path: route.path,
+        element,
+        errorElement: <ErrorBoundary />,
+      };
     default:
       element = null;
   }

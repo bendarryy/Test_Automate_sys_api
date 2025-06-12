@@ -50,26 +50,35 @@ const Systems: React.FC = () => {
                       <Paragraph style={{ color: '#666', margin: 0, fontSize: 13 }}>{system.description || 'No description available for this system.'}</Paragraph>
                     </div>
                   </div>
-                  <Button
-                    type="primary"
-                    style={{ borderRadius: 6, fontWeight: 'bold', height: 40 }}
-                    onClick={() => {
-                      setSelectedSystemId(system.id.toString());
-                      setSelectedCategory(system.category);
-                      
-                      // Dispatch a custom event to notify the router that the system category has changed
-                      window.dispatchEvent(new CustomEvent('systemCategoryChanged'));
-                      
-                      navigate('/');
-                    }}
-                  >
-                    Select
-                  </Button>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <Button
+                      type="primary"
+                      style={{ borderRadius: 6, fontWeight: 'bold', height: 40, marginBottom: 4 }}
+                      onClick={() => {
+                        setSelectedSystemId(system.id.toString());
+                        setSelectedCategory(system.category);
+                        
+                        // Dispatch a custom event to notify the router that the system category has changed
+                        window.dispatchEvent(new CustomEvent('systemCategoryChanged'));
+                        
+                        navigate('/');
+                      }}
+                    >
+                      Select
+                    </Button>
+                    <Button
+                      type="default"
+                      style={{ borderRadius: 6, fontWeight: 'bold', height: 36 }}
+                      onClick={() => navigate(`/systems/edit/${system.id}`)}
+                    >
+                      Edit
+                    </Button>
+                  </div>
                 </div>
               ))}
               <Button
                 type="dashed"
-                style={{ width: '100%', height: 44, fontWeight: 'bold', borderRadius: 8, marginTop: 8 }}
+                style={{ width: '100%', height: 44, fontWeight: 'bold', borderRadius: 8, marginTop: 16 }}
                 onClick={() => navigate('/systems/create')}
                 icon={<AppstoreOutlined />}
               >

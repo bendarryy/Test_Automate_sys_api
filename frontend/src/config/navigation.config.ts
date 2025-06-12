@@ -137,4 +137,5 @@ export const authRoutes = [
   { path: "/employeelogin", name: "Employee Login" },
   { path: "/systems", name: "Systems" },
   { path: "/systems/create", name: "Create System" },
+  { path: "/systems/edit/:id", name: "Edit System" },
 ];
