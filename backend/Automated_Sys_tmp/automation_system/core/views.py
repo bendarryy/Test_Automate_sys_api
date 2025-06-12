@@ -316,13 +316,11 @@ Example :Update only passowrd/email ...  -> `{"password":"password" }` """
         employee = self.get_employee(system, employee_id)
 
         # Ensure the employee belongs to a system owned by the user
-        if system.owner != request.user:
+        if not self._is_system_owner(request.user, system):
             return Response({"error": "You do not own this system."}, status=status.HTTP_403_FORBIDDEN)
 
         # Delete both Employee and User
-        user = employee.user
-        employee.delete()
-        user.delete()
+        self._delete_employee_and_user(employee)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def get_system(self, system_id):
@@ -340,6 +338,16 @@ Example :Update only passowrd/email ...  -> `{"password":"password" }` """
         except Employee.DoesNotExist:
             raise NotFound("Employee not found")
         return employee
+
+    def _is_system_owner(self, user, system):
+        """Check if the user is the owner of the system"""
+        return system.owner == user
+
+    def _delete_employee_and_user(self, employee):
+        """Helper method to delete an employee and their associated user"""
+        user = employee.user
+        employee.delete()
+        user.delete()
 
 
 class EmployeeListView(generics.ListAPIView):
