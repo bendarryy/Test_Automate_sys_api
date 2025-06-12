@@ -7,4 +7,5 @@ export interface MenuItem {
   is_available: boolean;
   description: string;
   image: string | File | null;
+  newCategory?: string; // Optional for new categories
 }

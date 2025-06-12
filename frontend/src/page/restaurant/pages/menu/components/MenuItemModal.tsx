@@ -1,5 +1,5 @@
 import React from 'react';
-import { Modal, Input, Upload, Button, message } from 'antd';
+import { Modal, Input, Upload, Button, message, Select } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { MenuItem } from '../types/menu';
 
@@ -84,16 +84,61 @@ const MenuItemModal: React.FC<MenuItemModalProps> = ({
       <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
         <div style={{ flex: 1 }}>
           <label style={{ fontWeight: 500 }}>Category</label>
-          <select
-            name="category"
-            value={formData.category}
-            onChange={onChange}
-            style={{ width: '100%', marginTop: 4, height: 32, borderRadius: 4, border: '1px solid #d9d9d9' }}
-          >
-            {categories.map((cat) => (
-              <option key={cat} value={cat}>{cat}</option>
-            ))}
-          </select>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <Input
+              style={{ display: 'none' }} /> {/* dummy for spacing, can be removed if not needed */}
+            <Select
+              showSearch
+              allowClear={false}
+              value={formData.category || undefined}
+              placeholder="Select or add category"
+              style={{ width: '100%', marginTop: 4 }}
+              onChange={val => setFormData({ ...formData, category: val })}
+              onSearch={() => {}}
+              filterOption={(input, option) => {
+                const label = typeof option?.children === 'string' ? option.children : '';
+                return label.toLowerCase().includes(input.toLowerCase());
+              }}
+              dropdownRender={menu => (
+                <>
+                  {menu}
+                  <div style={{ display: 'flex', alignItems: 'center', padding: 8 }}>
+                    <Input
+                      style={{ flex: 1 }}
+                      placeholder="Add new category"
+                      value={formData.newCategory || ''}
+                      onChange={e => setFormData({ ...formData, newCategory: e.target.value })}
+                      onPressEnter={e => {
+                        const val = (e.target as HTMLInputElement).value.trim();
+                        if (val && !categories.includes(val)) {
+                          setFormData({ ...formData, category: val, newCategory: '' });
+                          categories.push(val);
+                          message.success('تمت إضافة التصنيف');
+                        }
+                      }}
+                    />
+                    <Button
+                      type="link"
+                      onClick={() => {
+                        const val = (formData.newCategory || '').trim();
+                        if (val && !categories.includes(val)) {
+                          setFormData({ ...formData, category: val, newCategory: '' });
+                          categories.push(val);
+                          message.success('تمت إضافة التصنيف');
+                        }
+                      }}
+                    >
+                      إضافة
+                    </Button>
+                  </div>
+                </>
+              )}
+            >
+              {categories.map(cat => (
+                <Select.Option key={cat} value={cat}>{cat}</Select.Option>
+              ))}
+            </Select>
+          </div>
         </div>
         <div style={{ flex: 1 }}>
           <label style={{ fontWeight: 500 }}>Price (EGP)</label>
