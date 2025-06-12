@@ -89,13 +89,15 @@ class OrderSerializer(serializers.ModelSerializer):
     )
     table_number = serializers.CharField(required=False, allow_null=True)
     customer_name = serializers.CharField(required=False, allow_null=True)
+    delivery_address = serializers.CharField(required=False, allow_null=True)
+    customer_phone = serializers.CharField(required=False, allow_null=True)
 
     class Meta:
         model = Order
         fields = [
             "id", "system", "customer_name", "table_number", "waiter", 
             "total_price", "profit", "status", "order_type", "order_items", 
-            "created_at", "updated_at"
+            "created_at", "updated_at", "delivery_address", "customer_phone"
         ]
         read_only_fields = ["id", "total_price", "created_at", "updated_at", "system"]
 

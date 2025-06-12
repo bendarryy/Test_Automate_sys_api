@@ -79,7 +79,7 @@ class MenuItemViewSet(viewsets.ModelViewSet):
         table_number = serializer.validated_data.get('table_number')
         order_type = serializer.validated_data.get('order_type', 'in_house')
         
-        # Validate delivery information for delivery orders
+        # Check delivery requirements for delivery orders
         if order_type == 'delivery':
             delivery_address = serializer.validated_data.get('delivery_address')
             customer_phone = serializer.validated_data.get('customer_phone')
@@ -89,7 +89,7 @@ class MenuItemViewSet(viewsets.ModelViewSet):
             if not customer_phone:
                 raise ValidationError("Customer phone number is required for delivery orders")
         
-        # Only check table availability for in-house orders
+        # Check table availability for in-house orders
         if order_type == 'in_house' and table_number:
             # Check if there's an active order on this table
             active_order = Order.objects.filter(
@@ -100,10 +100,9 @@ class MenuItemViewSet(viewsets.ModelViewSet):
             ).first()
             
             if active_order:
-                # Raise the custom exception instead of returning a Response
                 raise TableConflict(detail=f"Table {table_number} is already occupied by order #{active_order.id}")
         
-        # If table is not occupied or it's not an in-house order, save the order
+        # If all validations pass, save the order
         serializer.save(system=system)
 
     def perform_update(self, serializer):
@@ -171,7 +170,7 @@ class OrderViewSet(viewsets.ModelViewSet):
         table_number = serializer.validated_data.get('table_number')
         order_type = serializer.validated_data.get('order_type', 'in_house')
         
-        # Validate delivery information for delivery orders
+        # Check delivery requirements for delivery orders
         if order_type == 'delivery':
             delivery_address = serializer.validated_data.get('delivery_address')
             customer_phone = serializer.validated_data.get('customer_phone')
@@ -181,7 +180,7 @@ class OrderViewSet(viewsets.ModelViewSet):
             if not customer_phone:
                 raise ValidationError("Customer phone number is required for delivery orders")
         
-        # Only check table availability for in-house orders
+        # Check table availability for in-house orders
         if order_type == 'in_house' and table_number:
             # Check if there's an active order on this table
             active_order = Order.objects.filter(
@@ -192,10 +191,9 @@ class OrderViewSet(viewsets.ModelViewSet):
             ).first()
             
             if active_order:
-                # Raise the custom exception instead of returning a Response
                 raise TableConflict(detail=f"Table {table_number} is already occupied by order #{active_order.id}")
         
-        # If table is not occupied or it's not an in-house order, save the order
+        # If all validations pass, save the order
         serializer.save(system=system)
 
     def perform_update(self, serializer):
