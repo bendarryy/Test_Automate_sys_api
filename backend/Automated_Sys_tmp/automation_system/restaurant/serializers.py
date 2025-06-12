@@ -81,7 +81,6 @@ class OrderItemSerializer(serializers.ModelSerializer):
 class OrderSerializer(serializers.ModelSerializer):
     order_items = OrderItemSerializer(many=True, read_only=True)
     waiter = serializers.PrimaryKeyRelatedField(queryset=Employee.objects.filter(role="waiter"), allow_null=True, required=False)
-    profit = serializers.SerializerMethodField()
     order_type = serializers.ChoiceField(
         choices=Order.ORDER_TYPE_CHOICES,
         default="in_house",
@@ -89,13 +88,15 @@ class OrderSerializer(serializers.ModelSerializer):
     )
     table_number = serializers.CharField(required=False, allow_null=True)
     customer_name = serializers.CharField(required=False, allow_null=True)
+    delivery_address = serializers.CharField(required=False, allow_null=True)
+    customer_phone = serializers.CharField(required=False, allow_null=True)
 
     class Meta:
         model = Order
         fields = [
             "id", "system", "customer_name", "table_number", "waiter", 
-            "total_price", "profit", "status", "order_type", "order_items", 
-            "created_at", "updated_at"
+            "total_price", "status", "order_type", "order_items", 
+            "created_at", "updated_at", "delivery_address", "customer_phone"
         ]
         read_only_fields = ["id", "total_price", "created_at", "updated_at", "system"]
 
@@ -106,13 +107,6 @@ class OrderSerializer(serializers.ModelSerializer):
         validated_data["system"] = system
         return super().create(validated_data)
     
-    def get_profit(self, obj):
-        """Calculate profit for the order instance."""
-        # Check if obj is an Order instance before calling calculate_profit
-        if isinstance(obj, Order):
-            return obj.calculate_profit()
-        return 0.0  # Return 0 or handle appropriately if obj is not an Order instance
-
     def validate(self, data):
         request = self.context["request"]
         user = request.user

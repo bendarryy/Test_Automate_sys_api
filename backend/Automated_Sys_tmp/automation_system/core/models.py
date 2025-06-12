@@ -40,7 +40,7 @@ class System(models.Model):
     subdomain = models.CharField(max_length=100, unique=True, null=True, blank=True)
     custom_domain = models.CharField(max_length=255, unique=True, null=True, blank=True)
     ssl_enabled = models.BooleanField(default=False)
-    is_public = models.BooleanField(default=True)
+    is_public = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     
     # 📍 Location Information
