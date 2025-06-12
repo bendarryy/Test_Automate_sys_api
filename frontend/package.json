@@ -21,10 +21,7 @@
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@hookform/resolvers": "^5.0.1",
-<<<<<<< HEAD
-=======
     "@mui/icons-material": "^7.1.1",
->>>>>>> f3a21dea577aec3902aa07e7939eb24f115651ff
     "@mui/material": "^7.1.1",
     "@react-google-maps/api": "^2.20.6",
     "@reduxjs/toolkit": "^2.6.1",
