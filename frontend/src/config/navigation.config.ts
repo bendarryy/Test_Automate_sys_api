@@ -73,6 +73,7 @@ const navItemsData: BaseNavItem[] = [
   { name: "KDS", icon: "Dashboard", href: "/kds", systemCategory: "restaurant", showInSidebar: true, requiredPermission: "read_kds" },
   { name: "Waiter Display", icon: "UserVoice", href: "/waiterdisplay", systemCategory: "restaurant", showInSidebar: true, requiredPermission: "read_waiterdisplay" },
   { name: "Delivery Display", icon: "Truck", href: "/deliverydisplay", systemCategory: "restaurant", showInSidebar: true, requiredPermission: "read_deliverydisplay" },
+  { name: "Tables Overview", icon: "Dashboard", href: "/tables-overview", systemCategory: "restaurant", showInSidebar: true, requiredPermission: "read_order" },
   { name: "Employees", icon: "Team", href: "/employees", systemCategory: "restaurant", showInSidebar: true, requiredPermission: "update_employee" },
   { name: "Finances", icon: "MoneyDollarCircle", href: "/financesdashboards", systemCategory: "restaurant", showInSidebar: true, requiredPermission: "read_finance" },
   { name: "About", icon: "Information", href: "/about", systemCategory: "restaurant", showInSidebar: true, requiredPermission: "read_about" },
