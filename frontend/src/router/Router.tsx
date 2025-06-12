@@ -89,7 +89,6 @@ const GoodsReceivingPage = lazy(
   () => import("../page/supermarket/pages/purchase/GoodsReceivingPage")
 );
 const CreateSystemPage = lazy(() => import("../shared/pages/systems/CreateSystemPage"));
-const DisplayRestaurantTables = lazy(() => import("../page/restaurant/pages/Display Restaurant Tables Overview/DisplayRestaurantTables"));
 
 const ErrorBoundary = () => {
   return (
@@ -251,14 +250,6 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute permission="read_settings">
             <Settings />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "/tables-overview",
-        element: (
-          <ProtectedRoute permission="read_order">
-            <DisplayRestaurantTables />
           </ProtectedRoute>
         ),
       },
