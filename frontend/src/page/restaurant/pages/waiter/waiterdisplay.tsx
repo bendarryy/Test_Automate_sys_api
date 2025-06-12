@@ -1,6 +1,6 @@
 import React from 'react';
 import { Spin, Alert } from 'antd';
-import Header from '../../../../components/Header';
+import Header from '../../../../shared/componanets/Header';
 import StatusStatistics from './components/StatusStatistics';
 import ReadyOrdersSection from './components/ReadyOrdersSection';
 import ServedOrdersSection from './components/ServedOrdersSection';

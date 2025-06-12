@@ -19,6 +19,8 @@ const OrdersSection = () => {
   const [isSending, setIsSending] = useState<boolean>(false);
   const [waiter, setWaiter] = useState<number | null>(null);
   const [customerName, setCustomerName] = useState<string>('');
+  const [customerPhone, setCustomerPhone] = useState<string>('');
+  const [deliveryAddress, setDeliveryAddress] = useState<string>('');
 
   const [selectedSystemId] = useSelectedSystemId();
   const { createOrder, addItemToOrder, loading: apiLoading } = useSendOrders(Number(selectedSystemId));
@@ -26,14 +28,27 @@ const OrdersSection = () => {
   const total = React.useMemo(() => billItems.reduce((total, item) => total + (item.price * item.quantity), 0), [billItems]);
   const discountedTotal = React.useMemo(() => total - (total * discount) / 100, [total, discount]);
 
+  const [customerNameTouched, setCustomerNameTouched] = useState(false);
+  const [customerPhoneTouched, setCustomerPhoneTouched] = useState(false);
+  const [deliveryAddressTouched, setDeliveryAddressTouched] = useState(false);
+  const [submitAttempted, setSubmitAttempted] = useState(false);
+
   const handleSendBill = React.useCallback(async () => {
+    setSubmitAttempted(true);
     if (orderType === 'in_house' && !selectedTable) {
       message.error('Please select a table for in-house orders');
       return;
     }
-
     if (orderType === 'delivery' && !customerName.trim()) {
       message.error('Customer name is required for delivery orders');
+      return;
+    }
+    if (orderType === 'delivery' && !deliveryAddress.trim()) {
+      message.error('Delivery address is required for delivery orders');
+      return;
+    }
+    if (orderType === 'delivery' && !customerPhone.trim()) {
+      message.error('Customer phone is required for delivery orders');
       return;
     }
 
@@ -41,6 +56,8 @@ const OrdersSection = () => {
     try {
       const orderData = {
         customer_name: orderType === 'delivery' ? customerName.trim() : null,
+        delivery_address: orderType === 'delivery' ? deliveryAddress.trim() : null,
+        customer_phone: orderType === 'delivery' ? customerPhone.trim() : null,
         table_number: orderType === 'in_house' ? (selectedTable?.toString() || '') : null,
         waiter: orderType === 'in_house' ? waiter : null,
         order_type: orderType,
@@ -61,13 +78,19 @@ const OrdersSection = () => {
       dispatch(clearBill());
       setWaiter(null);
       setCustomerName('');
+      setCustomerPhone('');
+      setDeliveryAddress('');
+      setCustomerNameTouched(false);
+      setCustomerPhoneTouched(false);
+      setDeliveryAddressTouched(false);
+      setSubmitAttempted(false);
     } catch (err) {
       console.error(err);
       message.error("Failed to send the order. Please try again.");
     } finally {
       setIsSending(false);
     }
-  }, [billItems, createOrder, addItemToOrder, dispatch, waiter, selectedTable, orderType, customerName]);
+  }, [billItems, createOrder, addItemToOrder, dispatch, waiter, selectedTable, orderType, customerName, customerPhone, deliveryAddress]);
 
   const handlePrintBill = React.useCallback(() => {
     window.print();
@@ -158,16 +181,42 @@ const OrdersSection = () => {
             <Form.Item 
               label="Customer Name" 
               required={orderType === 'delivery'}
-              validateStatus={orderType === 'delivery' && !customerName.trim() ? 'error' : ''}
-              help={orderType === 'delivery' && !customerName.trim() ? 'Customer name is required for delivery orders' : ''}
+              validateStatus={orderType === 'delivery' && (!customerName.trim() && (customerNameTouched || submitAttempted)) ? 'error' : ''}
+              help={orderType === 'delivery' && (!customerName.trim() && (customerNameTouched || submitAttempted)) ? 'Customer name is required for delivery orders' : ''}
             >
               <Input
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
+                onBlur={() => setCustomerNameTouched(true)}
                 placeholder={orderType === 'delivery' ? "Enter customer name (required)" : "Enter customer name (optional)"}
               />
             </Form.Item>
-
+            {orderType === 'delivery' && (
+              <Form.Item label="Delivery Address" required={orderType === 'delivery'}
+                validateStatus={!deliveryAddress.trim() && (deliveryAddressTouched || submitAttempted) ? 'error' : ''}
+                help={!deliveryAddress.trim() && (deliveryAddressTouched || submitAttempted) ? 'Delivery address is required' : ''}
+              >
+                <Input
+                  value={deliveryAddress}
+                  onChange={e => setDeliveryAddress(e.target.value)}
+                  onBlur={() => setDeliveryAddressTouched(true)}
+                  placeholder="Enter delivery address (required)"
+                />
+              </Form.Item>
+            )}
+            {orderType === 'delivery' && (
+              <Form.Item label="Customer Phone" required={orderType === 'delivery'}
+                validateStatus={!customerPhone.trim() && (customerPhoneTouched || submitAttempted) ? 'error' : ''}
+                help={!customerPhone.trim() && (customerPhoneTouched || submitAttempted) ? 'Customer phone is required' : ''}
+              >
+                <Input
+                  value={customerPhone}
+                  onChange={e => setCustomerPhone(e.target.value)}
+                  onBlur={() => setCustomerPhoneTouched(true)}
+                  placeholder="Enter customer phone (required)"
+                />
+              </Form.Item>
+            )}
             {orderType === 'in_house' && (
               <Form.Item label="Waiter (Optional)">
                 <Input

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useApi } from 'shared/hooks/useApi';
 import { Button, Modal, Input, Form, Card, Typography, message, Space } from 'antd';
 import { PlusOutlined, PhoneOutlined, MailOutlined, EditOutlined, DeleteOutlined, ShopOutlined } from '@ant-design/icons';
-import Header from 'components/Header';
+import Header from 'shared/componanets/Header';
 import { useSelectedSystemId } from 'shared/hooks/useSelectedSystemId';
 
 interface Supplier {

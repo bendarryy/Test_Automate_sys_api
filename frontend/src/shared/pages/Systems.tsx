@@ -67,10 +67,28 @@ const Systems: React.FC = () => {
                   </Button>
                 </div>
               ))}
+              <Button
+                type="dashed"
+                style={{ width: '100%', height: 44, fontWeight: 'bold', borderRadius: 8, marginTop: 8 }}
+                onClick={() => navigate('/systems/create')}
+                icon={<AppstoreOutlined />}
+              >
+                + Create New System
+              </Button>
             </div>
           ) : (
             !loading && !error && (
-              <Alert message="No systems available." type="info" showIcon />
+              <>
+                <Alert message="No systems available." type="info" showIcon />
+                <Button
+                  type="dashed"
+                  style={{ width: '100%', height: 44, fontWeight: 'bold', borderRadius: 8, marginTop: 16 }}
+                  onClick={() => navigate('/systems/create')}
+                  icon={<AppstoreOutlined />}
+                >
+                  + Create New System
+                </Button>
+              </>
             )
           )}
           <Button 

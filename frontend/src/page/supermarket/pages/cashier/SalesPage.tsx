@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { Drawer, Badge, Button, message } from 'antd';
 import { ShoppingCartOutlined, PrinterOutlined, PlusOutlined } from '@ant-design/icons';
-import Header from 'components/Header';
+import Header from 'shared/componanets/Header';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../../../store';
-import { SalesProductSelection } from 'components/SalesProductSelection';
-import { SalesBillSection } from 'components/SalesBillSection';
+import { SalesProductSelection } from './components/SalesProductSelection';
+import { SalesBillSection } from './components/SalesBillSection';
 import { useApi } from 'shared/hooks/useApi';
 import { setCurrentSale, clearCurrentSale } from '../../../../store/salesSlice';
 import { useSelectedSystemId } from 'shared/hooks/useSelectedSystemId';

@@ -2,7 +2,7 @@ import { Badge, Layout } from "antd";
 import ProductsSection from "./sections/ProductSelection"
 import { ArrowRightOutlined, ArrowLeftOutlined } from "@ant-design/icons";
 import { useState, useEffect } from "react";
-import Header from "../../../../components/Header";
+import Header from "../../../../shared/componanets/Header";
 import OrdersSection from "./sections/BillSection";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../../store";

@@ -1,6 +1,6 @@
 import { Navigate, Outlet } from "react-router-dom";
-import Navbar from "./components/Navbar";
-import { Sidebar } from "./components/Sidebar";
+import Navbar from "./shared/componanets/Navbar";
+import { Sidebar } from "./shared/componanets/Sidebar";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { setPermissions } from "./store/permissionsSlice";

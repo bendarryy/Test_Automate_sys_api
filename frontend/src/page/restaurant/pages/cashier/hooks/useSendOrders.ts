@@ -12,6 +12,8 @@ interface Order {
   waiter?: number | null;
   order_type: 'in_house' | 'delivery';
   status?: string;
+  delivery_address?: string | null;
+  customer_phone?: string | null;
 }
 
 interface OrderResponse {
@@ -29,8 +31,14 @@ export const useSendOrders = (systemId: number) => {
   const { callApi, loading, error, clearCache } = useApi<OrderResponse>();
 
   const createOrder = useCallback(async (orderData: Order) => {
+    // Ensure delivery_address and customer_phone are included for delivery
+    const payload = { ...orderData };
+    if (orderData.order_type === 'delivery') {
+      payload.delivery_address = orderData.delivery_address || '';
+      payload.customer_phone = orderData.customer_phone || '';
+    }
     try {
-      const result = await callApi('post', `/restaurant/${systemId}/orders/`, orderData);
+      const result = await callApi('post', `/restaurant/${systemId}/orders/`, payload);
       clearCache(`/restaurant/${systemId}/orders/`);
       return result;
     } catch (err) {

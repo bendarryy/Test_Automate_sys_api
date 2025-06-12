@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button, Skeleton, Divider } from 'antd';
-import Header from 'components/Header';
+import Header from 'shared/componanets/Header';
 import { useOrders } from '../../hooks/useOrders';
 import { useGetMenuList } from '../../hooks/useGetMenuList';
 import { useSelectedSystemId } from 'shared/hooks/useSelectedSystemId';

@@ -1,14 +1,14 @@
 import  { memo } from "react";
 import { useState } from "react";
 import { useSelector } from "react-redux";
-import { RootState } from "../store";
+import { RootState } from "../../store";
 import { MdNotifications, MdNotificationsActive } from "react-icons/md"; // react-icons Material Design
 import { useNavigate } from "react-router-dom";
 import { Layout, Badge, Dropdown, Space, Button, Switch, theme } from 'antd';
 import type { MenuProps } from 'antd';
 import { useApi } from "shared/hooks/useApi";
-import ProfileAvatar from "./ProfileAvatar";
-import { useThemeContext } from '../theme/ThemeContext';
+import ProfileAvatar from "../../page/settings/pages/ProfileAvatar";
+import { useThemeContext } from '../../theme/ThemeContext';
 
 const { Header } = Layout;
 const { useToken } = theme;

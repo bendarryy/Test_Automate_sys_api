@@ -1,6 +1,6 @@
 import React from 'react';
 import styles from '../styles/TablesSection.module.css';
-import { Table } from '../types';
+import { Table } from '../../types';
 
 interface GridScrollXProps<T> {
   items: T[];

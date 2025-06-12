@@ -2,9 +2,9 @@ import React from 'react';
 import { Button, Select, notification, Space, Input, Tag } from 'antd';
 import { DeleteOutlined, SearchOutlined, ReloadOutlined, ShopOutlined, CarOutlined } from '@ant-design/icons';
 import { useOrders } from '../../hooks/useOrders';
-import Header from 'components/Header';
+import Header from 'shared/componanets/Header';
 import { useNavigate } from 'react-router-dom';
-import { ReusableTable } from 'components/ReusableTable';
+import { ReusableTable } from 'shared/componanets/ReusableTable';
 import type { ColumnsType } from 'antd/es/table';
 import { useSelectedSystemId } from 'shared/hooks/useSelectedSystemId';
 import { Order, OrderStatus } from './types/order';
@@ -127,36 +127,26 @@ const OrderPage: React.FC = () => {
 
   const columns: ColumnsType<Order> = [
     {
-      title: 'Order type',
+      title: 'type',
       dataIndex: 'order_type',
       key: 'order_type',
       render: (order_type: Order['order_type']) => (
-        <Space>
-          {order_type === 'delivery' ? (
-            <CarOutlined style={{ color: '#1890ff' }} />
-          ) : (
-            <ShopOutlined style={{ color: '#52c41a' }} />
-          )}
-          {order_type === 'delivery' ? 'Delivery' : 'In House'}
-        </Space>
+        <Tag color={order_type === 'delivery' ? 'geekblue' : 'green'}>
+          {order_type === 'delivery' ? <CarOutlined /> : <ShopOutlined />}{" "}
+        </Tag>
       ),
       filters: [
         { text: 'In House', value: 'in_house' },
         { text: 'Delivery', value: 'delivery' },
       ],
-      onFilter: (value: boolean | React.Key, record: Order) => {
-        if (typeof value === 'boolean') return value;
-        return (record.order_type || 'in_house') === String(value);
-      },
+      onFilter: (value: boolean | React.Key, record: Order) => record.order_type === value,
     },
     {
       title: 'Order ID',
       dataIndex: 'id',
       key: 'id',
       render: (id: string) => (
-        <Button type="link" onClick={() => navigate(`/orders/${id}`)}>
-          #{id}
-        </Button>
+        <Button type="link" onClick={() => navigate(`/orders/${id}`)}>{id}</Button>
       ),
       sorter: (a: Order, b: Order) => Number(a.id) - Number(b.id),
     },
@@ -168,33 +158,88 @@ const OrderPage: React.FC = () => {
         <div style={{ padding: 8 }}>
           <Input
             placeholder="Search customer"
-            value={selectedKeys[0]}
+            value={selectedKeys[0] as string}
             onChange={e => setSelectedKeys(e.target.value ? [e.target.value] : [])}
             onPressEnter={confirm}
             style={{ width: 188, marginBottom: 8, display: 'block' }}
           />
+          <Button
+            type="primary"
+            onClick={confirm}
+            icon={<SearchOutlined />}
+            size="small"
+            style={{ width: 90 }}
+          >
+            Search
+          </Button>
         </div>
       ),
       filterIcon: (filtered: boolean) => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />,
-      onFilter: (value: boolean | React.Key, record: Order) => {
-        if (typeof value === 'boolean') {
-          return value;
-        }
-        return (record.customer_name || '').toLowerCase().includes(String(value).toLowerCase()); // Handle null/undefined
-      },
-      sorter: (a: Order, b: Order) => {
-        const nameA = a.customer_name?.toLowerCase() || '';
-        const nameB = b.customer_name?.toLowerCase() || '';
-        return nameA.localeCompare(nameB , undefined, { numeric: true,
-          sensitivity: 'base' });
-      },
+      onFilter: (value, record: Order) => (record.customer_name || '').toLowerCase().includes((value as string).toLowerCase()),
+      sorter: (a: Order, b: Order) => (a.customer_name || '').localeCompare(b.customer_name || ''),
       render: (text: string | undefined) => text && text.trim() !== '' ? text : '-',
+    },
+    {
+      title: 'Address',
+      dataIndex: 'delivery_address',
+      key: 'delivery_address',
+      render: (text: string | undefined, record: Order) => record.order_type === 'delivery' ? (text || '-') : '-',
+      filterDropdown: ({ setSelectedKeys, selectedKeys, confirm }: { setSelectedKeys: (keys: React.Key[]) => void; selectedKeys: React.Key[]; confirm: () => void }) => (
+        <div style={{ padding: 8 }}>
+          <Input
+            placeholder="Search address"
+            value={selectedKeys[0] as string}
+            onChange={e => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+            onPressEnter={confirm}
+            style={{ width: 188, marginBottom: 8, display: 'block' }}
+          />
+          <Button
+            type="primary"
+            onClick={confirm}
+            icon={<SearchOutlined />}
+            size="small"
+            style={{ width: 90 }}
+          >
+            Search
+          </Button>
+        </div>
+      ),
+      filterIcon: (filtered: boolean) => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />,
+      onFilter: (value, record: Order) => (record.delivery_address?.toLowerCase() || '').includes((value as string).toLowerCase()),
+    },
+    {
+      title: 'phone',
+      dataIndex: 'customer_phone',
+      key: 'customer_phone',
+      render: (text: string | undefined, record: Order) => record.order_type === 'delivery' ? (text || '-') : '-',
+      filterDropdown: ({ setSelectedKeys, selectedKeys, confirm }: { setSelectedKeys: (keys: React.Key[]) => void; selectedKeys: React.Key[]; confirm: () => void }) => (
+        <div style={{ padding: 8 }}>
+          <Input
+            placeholder="Search phone"
+            value={selectedKeys[0] as string}
+            onChange={e => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+            onPressEnter={confirm}
+            style={{ width: 188, marginBottom: 8, display: 'block' }}
+          />
+          <Button
+            type="primary"
+            onClick={confirm}
+            icon={<SearchOutlined />}
+            size="small"
+            style={{ width: 90 }}
+          >
+            Search
+          </Button>
+        </div>
+      ),
+      filterIcon: (filtered: boolean) => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />,
+      onFilter: (value, record: Order) => (record.customer_phone || '').toLowerCase().includes((value as string).toLowerCase()),
     },
     {
       title: 'Table',
       dataIndex: 'table_number',
       key: 'table_number',
-      sorter: (a: Order, b: Order) => a.table_number.localeCompare(b.table_number),
+      sorter: (a: Order, b: Order) => (a.table_number || '').localeCompare(b.table_number || ''),
       render: (text: string | undefined) => text && text.trim() !== '' ? text : '-',
     },
     {
@@ -202,27 +247,20 @@ const OrderPage: React.FC = () => {
       dataIndex: 'status',
       key: 'status',
       render: (status: OrderStatus) => (
-        <Tag color={statusColors[status]} style={{ textTransform: 'capitalize' }}>
-          {status}
-        </Tag>
+        <Tag color={statusColors[status]} style={{ textTransform: 'capitalize' }}>{status}</Tag>
       ),
       filters: Object.entries(statusColors).map(([status]) => ({
         text: status.charAt(0).toUpperCase() + status.slice(1),
         value: status,
       })),
-      onFilter: (value: boolean | React.Key, record: Order) => {
-        if (typeof value === 'boolean') {
-          return value; // Handle boolean case
-        }
-        return record.status === String(value);
-      }
+      onFilter: (value, record: Order) => record.status === value,
     },
     {
       title: 'Total',
       dataIndex: 'total_price',
       key: 'total_price',
-      render: (total: string | number) => `$${total}`, // Accept string or number
-      sorter: (a: Order, b: Order) => parseFloat(String(a.total_price)) - parseFloat(String(b.total_price)), // Convert to string before parseFloat
+      render: (total: string | number) => `$${total}`,
+      sorter: (a: Order, b: Order) => parseFloat(String(a.total_price)) - parseFloat(String(b.total_price)),
     },
     {
       title: 'Date',
@@ -235,11 +273,12 @@ const OrderPage: React.FC = () => {
       title: 'Actions',
       key: 'actions',
       render: (record: Order) => (
-        <Space size="middle">
+        <Space>
           <Select
             value={record.status}
             style={{ width: 120 }}
             onChange={(value) => handleStatusChange(record.id, value as OrderStatus)}
+            onClick={(e) => e.stopPropagation()} // Prevent row selection when clicking select
           >
             <Select.Option value="pending">Pending</Select.Option>
             <Select.Option value="preparing">Preparing</Select.Option>
@@ -252,12 +291,15 @@ const OrderPage: React.FC = () => {
             <Select.Option value="completed">Completed</Select.Option>
             <Select.Option value="canceled">Canceled</Select.Option>
           </Select>
-          <Button 
-            danger 
-            onClick={async () => handleDelete(record.id)}
-          >
-            <DeleteOutlined />
-          </Button>
+            <Button
+            type="link"
+            danger
+            icon={<DeleteOutlined />}
+            onClick={e => {
+              e.stopPropagation();
+              handleDelete(record.id);
+            }}
+            />
         </Space>
       ),
     },
@@ -314,10 +356,10 @@ const OrderPage: React.FC = () => {
         searchPlaceholder="Search orders..."
       />
       <div style={{ marginTop: 16 }}>
-        <ReusableTable<Order>
-          data={filteredOrders}
+        <ReusableTable<Order & Record<string, unknown>>
+          data={filteredOrders as (Order & Record<string, unknown>)[]}
           loading={loading}
-          columns={columns}
+          columns={columns as ColumnsType<Order & Record<string, unknown>>}
           rowKey="id"
           onRowSelectionChange={(keys: React.Key[]) => setSelectedRowKeys(keys as string[])} 
           selectedRowKeys={selectedRowKeys}

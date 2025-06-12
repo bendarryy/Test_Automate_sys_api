@@ -19,7 +19,6 @@ const Loading: React.FC = () => {
           <FaIceCream className="orbit-icon" style={{ left: '-40px' }} />
           <FaFish className="orbit-icon" style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }} />
         </div>
-        <div className="loading-text">جاري تجهيز الطلب...</div>
       </div>
     </div>
   );

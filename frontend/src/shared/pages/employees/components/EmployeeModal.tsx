@@ -3,7 +3,7 @@ import { Modal, Form, Input, Select, Space, Button, Popconfirm } from 'antd';
 import { EditOutlined, DeleteOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons';
 import { Employee } from '../types/employee';
 import { SystemCategory, getRoleConfig } from '../utils/roleOptions'; // Import SystemCategory and getRoleConfig
-import LoadingSpinner from '../../../../components/Loading';
+import LoadingSpinner from '../../../componanets/Loading';
 
 interface EmployeeModalProps {
   open: boolean;

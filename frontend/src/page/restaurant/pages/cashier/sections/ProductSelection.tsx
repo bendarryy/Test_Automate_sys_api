@@ -16,7 +16,7 @@ import {
   message,
   Badge,
 } from "antd";
-import Card from "components/Card";
+import Card from "shared/componanets/Card";
 import { MdTableRestaurant, MdDeliveryDining, MdStore } from "react-icons/md";
 import { RootState } from "../../../../../store";
 import TablesSection from "./TablesSection";

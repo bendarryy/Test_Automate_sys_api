@@ -1,13 +1,13 @@
 import { Table, Typography, Button, Select, InputNumber, Divider } from 'antd';
 import { useSelector, useDispatch } from 'react-redux';
-import { RootState } from '../store';
+import { RootState } from '../../../../../store';
 import { 
   removeItemFromSale, 
   updatePaymentType,
   applyDiscount,
   clearCurrentSale,
   updateItemQuantity
-} from '../store/salesSlice';
+} from '../../../../../store/salesSlice';
 import { useApi } from 'shared/hooks/useApi';
 import { useSelectedSystemId } from 'shared/hooks/useSelectedSystemId';
 

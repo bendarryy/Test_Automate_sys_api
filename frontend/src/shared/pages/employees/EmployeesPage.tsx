@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import Header from '../../../components/Header';
+import Header from '../../componanets/Header';
 import { Card, Space, Typography, message, Form } from 'antd'; // Ensure Typography is imported
 import EmployeeTable from './components/EmployeeTable';
 import EmployeeModal from './components/EmployeeModal';

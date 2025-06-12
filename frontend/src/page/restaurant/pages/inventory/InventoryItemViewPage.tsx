@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button, Form, Input, Spin } from 'antd';
-import Header from 'components/Header';
+import Header from 'shared/componanets/Header';
 import { useInventory, InventoryItem } from './hooks/useInventory';
 import useHasPermission from 'shared/hooks/useHasPermission';
 import { useSelectedSystemId } from 'shared/hooks/useSelectedSystemId';

@@ -10,7 +10,7 @@ export interface OrderItem {
 export interface Order {
   id: string;
   system?: number;
-  customer_name?: string | null | undefined;
+  customer_name?: string | null;
   table_number: string;
   waiter?: number;
   status: OrderStatus;
@@ -19,6 +19,7 @@ export interface Order {
   order_items: OrderItem[];
   created_at: string;
   updated_at: string;
-  order_type?: 'in_house' | 'delivery';
-  [key: string]: unknown;
+  order_type?: OrderType;
+  delivery_address?: string | null;
+  customer_phone?: string | null;
 }

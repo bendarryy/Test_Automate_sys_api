@@ -3,7 +3,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import "../styles/error.css";
 import { authRoutes } from "../config/navigation.config";
 import { SalesPage } from "../page/supermarket/pages/cashier/SalesPage";
-import ProtectedRoute from "../components/ProtectedRoute";
+import ProtectedRoute from "../shared/componanets/ProtectedRoute";
 import { useSelector } from "react-redux";
 import { RootState } from "../store";
 import { useSelectedSystemId } from "../shared/hooks/useSelectedSystemId";
@@ -88,6 +88,7 @@ const PurchaseOrdersPage = lazy(
 const GoodsReceivingPage = lazy(
   () => import("../page/supermarket/pages/purchase/GoodsReceivingPage")
 );
+const CreateSystemPage = lazy(() => import("../shared/pages/systems/CreateSystemPage"));
 
 const ErrorBoundary = () => {
   return (
@@ -116,6 +117,9 @@ const authRoutesConfig = authRoutes.map((route) => {
       break;
     case "/systems":
       element = <Systems />;
+      break;
+    case "/systems/create":
+      element = <CreateSystemPage />;
       break;
     default:
       element = null;
