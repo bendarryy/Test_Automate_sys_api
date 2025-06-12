@@ -21,6 +21,17 @@ export const updateSystemSchema = z.object({
   phone_number: z.string().optional(),
   custom_link: z.string().url('Must be a valid URL').optional().or(z.literal('')),
   is_active: z.boolean().optional(),
-});
+}).refine(
+  (data) => {
+    if (data.is_public) {
+      return !!data.subdomain && data.subdomain.length > 0;
+    }
+    return true;
+  },
+  {
+    message: 'Subdomain is required when the system is public',
+    path: ['subdomain'],
+  }
+);
 
 export type UpdateSystemFormValues = z.infer<typeof updateSystemSchema>;

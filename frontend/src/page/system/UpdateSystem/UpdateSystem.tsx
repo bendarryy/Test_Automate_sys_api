@@ -4,6 +4,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Box, Typography, Button, MenuItem, Switch, FormControlLabel, Snackbar, Alert, Stack, CircularProgress } from '@mui/material';
 import { updateSystemSchema, UpdateSystemFormValues } from './utils/validation';
+import { UpdateSystemRequest } from './types';
 import { useGetSystem, useUpdateSystem } from './hooks/useUpdateSystem';
 import TextFieldWrapper from './components/TextFieldWrapper';
 
@@ -26,7 +27,7 @@ const UpdateSystem: React.FC = () => {
   const { update, loading: isPending, error: updateError } = useUpdateSystem(id!);
   const [openSnackbar, setOpenSnackbar] = React.useState(false);
 
-  const { control, handleSubmit, reset, formState: { errors } } = useForm<UpdateSystemFormValues>({
+  const { control, handleSubmit, reset, formState: { errors }, watch } = useForm<UpdateSystemFormValues>({
     resolver: zodResolver(updateSystemSchema),
     defaultValues: {
       name: '',
@@ -41,6 +42,8 @@ const UpdateSystem: React.FC = () => {
       is_active: true,
     },
   });
+
+  const isPublic = watch('is_public');
 
   React.useEffect(() => {
     if (data) {
@@ -72,23 +75,21 @@ const UpdateSystem: React.FC = () => {
   }
 
   const onSubmit = (values: UpdateSystemFormValues) => {
-    // Ensure all required fields are present and not undefined
-    const safeValues = {
+    // Remove empty, undefined, or null fields from payload
+    const filteredEntries = Object.entries(values).filter(([_, v]) => v !== '' && v !== undefined && v !== null);
+    // Always include required fields as correct type
+    const filteredValues: UpdateSystemRequest = {
       name: values.name ?? '',
-      category: values.category ?? 'restaurant',
-      description: values.description ?? '',
-      is_public: values.is_public ?? false,
-      subdomain: values.subdomain ?? '',
-      custom_domain: values.custom_domain ?? '',
-      phone_number: values.phone_number ?? '',
-      custom_link: values.custom_link ?? '',
       password: values.password ?? '',
+      category: values.category ?? 'restaurant',
+      is_public: values.is_public ?? false,
       is_active: values.is_active ?? true,
+      ...Object.fromEntries(filteredEntries)
     };
-    update(safeValues).then(() => {
+    update(filteredValues).then(() => {
       setOpenSnackbar(true);
       setTimeout(() => {
-        navigate(`/system/${id}/edit`);
+        navigate(`/systems`);
       }, 1200);
     });
   };
@@ -150,28 +151,32 @@ const UpdateSystem: React.FC = () => {
               />
             )}
           />
-          <Controller
-            name="subdomain"
-            control={control}
-            render={({ field }) => (
-              <TextFieldWrapper
-                label="Subdomain"
-                errorObj={errors.subdomain}
-                {...field}
+          {isPublic && (
+            <>
+              <Controller
+                name="subdomain"
+                control={control}
+                render={({ field }) => (
+                  <TextFieldWrapper
+                    label="Subdomain"
+                    errorObj={errors.subdomain}
+                    {...field}
+                  />
+                )}
               />
-            )}
-          />
-          <Controller
-            name="custom_domain"
-            control={control}
-            render={({ field }) => (
-              <TextFieldWrapper
-                label="Custom Domain"
-                errorObj={errors.custom_domain}
-                {...field}
+              <Controller
+                name="custom_domain"
+                control={control}
+                render={({ field }) => (
+                  <TextFieldWrapper
+                    label="Custom Domain"
+                    errorObj={errors.custom_domain}
+                    {...field}
+                  />
+                )}
               />
-            )}
-          />
+            </>
+          )}
           <Controller
             name="phone_number"
             control={control}

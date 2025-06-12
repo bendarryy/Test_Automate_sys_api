@@ -8,7 +8,7 @@ import { createSystemSchema, CreateSystemFormValues } from './utils/validation';
 import { CreateSystemRequest } from './types';
 import { useCreateSystem } from './hooks/useCreateSystem';
 import { useMutation } from '@tanstack/react-query';
-import axios from 'axios';
+
 import { useApi } from 'shared/hooks/useApi';
 import { useNavigate } from 'react-router-dom';
 
