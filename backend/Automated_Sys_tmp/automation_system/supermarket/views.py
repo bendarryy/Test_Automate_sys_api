@@ -157,6 +157,80 @@ class InventoryItemViewSet(viewsets.ModelViewSet):
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    @action(detail=False, methods=["get"], url_path="costs")
+    def cost_analysis(self, request, system_id=None):
+        system = self._get_system_or_403(system_id)
+
+        # Get all products for the system
+        products = Product.objects.filter(system=system)
+
+        result = []
+
+        for product in products:
+            # Get all purchase orders for this product
+            purchase_orders = PurchaseOrder.objects.filter(
+                product=product, status__in=["completed", "partially_received"]
+            ).order_by("-order_date")
+
+            # Group by cost
+            cost_groups = {}
+
+            for po in purchase_orders:
+                cost = po.cost
+                price = product.price
+                profit = price - cost
+
+                # Create a key for the cost group
+                group_key = f"{cost}"
+
+                if group_key not in cost_groups:
+                    cost_groups[group_key] = {
+                        "cost": cost,
+                        "price": price,
+                        "profit": profit,
+                        "total_quantity": 0,
+                        "purchase_orders": [],
+                    }
+
+                # Add purchase order to the group
+                cost_groups[group_key]["purchase_orders"].append(
+                    {
+                        "id": po.id,
+                        "order_date": po.order_date,
+                        "quantity": po.quantity,
+                        "status": po.status,
+                    }
+                )
+
+                # Update total quantity
+                cost_groups[group_key]["total_quantity"] += po.quantity
+
+            # Convert groups to list format
+            product_cost_groups = []
+            for group_key, group_data in cost_groups.items():
+                product_cost_groups.append(
+                    {
+                        "cost": float(group_data["cost"]),
+                        "price": float(group_data["price"]),
+                        "profit": float(group_data["profit"]),
+                        "total_quantity": group_data["total_quantity"],
+                        "purchase_orders": group_data["purchase_orders"],
+                    }
+                )
+
+            # Add product with its cost groups to result
+            result.append(
+                {
+                    "id": product.id,
+                    "name": product.name,
+                    "current_price": float(product.price),
+                    "current_stock": product.stock_quantity,
+                    "cost_groups": product_cost_groups,
+                }
+            )
+
+        return Response(result)
+
     def _get_system_or_403(self, system_id):
         """
         Fetch the System by ID, ensure it belongs to the current user,

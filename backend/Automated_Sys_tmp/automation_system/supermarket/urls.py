@@ -87,6 +87,15 @@ urlpatterns = [
         ),
         name="inventory-expired",
     ),
+    path(
+        "<int:system_id>/products/costs/",
+        InventoryItemViewSet.as_view(
+            {
+                "get": "cost_analysis",
+            }
+        ),
+        name="inventory-costs",
+    ),
     # Sales endpoints
     path(
         "<int:system_id>/sales/",
