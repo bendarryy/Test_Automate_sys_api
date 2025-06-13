@@ -1,5 +1,5 @@
 import React from 'react';
-import { Space, Statistic, Tooltip, Button, Spin, Alert } from 'antd';
+import { Space, Statistic, Tooltip, Button, Alert } from 'antd';
 import { ReloadOutlined } from '@ant-design/icons';
 import Header from 'shared/componanets/Header';
 import { useDeliveryDisplay } from './hooks/useDeliveryDisplay';
@@ -21,11 +21,6 @@ const DeliveryDisplay: React.FC = () => {
 
   return (
     <div className={styles.container}>
-      {isLoading && (
-        <div className={styles.centered}>
-          <Spin size="large" />
-        </div>
-      )}
       {error && (
         <Alert message={error} type="error" showIcon style={{ marginBottom: 16 }} />
       )}

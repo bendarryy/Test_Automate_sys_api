@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Card, Descriptions, Tag, Spin, Alert, Form, Input, Button, Modal, message, Row, Col, Typography } from 'antd';
+import { Card, Descriptions, Tag, Alert, Form, Input, Button, Modal, message, Row, Col, Typography } from 'antd';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../store';
 import Header from 'shared/componanets/Header';
@@ -36,14 +36,6 @@ const Profile: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [form] = Form.useForm();
   const [updateLoading, setUpdateLoading] = useState(false);
-
-  if (loading) {
-    return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <Spin size="large" />
-      </div>
-    );
-  }
 
   if (error) {
     return (
@@ -293,4 +285,4 @@ const Profile: React.FC = () => {
   );
 };
 
-export default Profile; 
+export default Profile;

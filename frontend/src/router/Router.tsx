@@ -1,4 +1,4 @@
-import React, { lazy } from "react";
+import React from "react";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import "../styles/error.css";
 import { authRoutes } from "../config/navigation.config";
@@ -7,6 +7,34 @@ import ProtectedRoute from "../shared/componanets/ProtectedRoute";
 import { useSelector } from "react-redux";
 import { RootState } from "../store";
 import { useSelectedSystemId } from "../shared/hooks/useSelectedSystemId";
+import Layout from "../Layout";
+import ProtectLogin from "../security/protectLogin";
+import DynamicHomePage from "../shared/pages/DynamicHomePage";
+import RegisterPage from "../page/auth/pages/RegisterPage";
+import OrdersPage from "../page/restaurant/pages/orders/OrderPage";
+import OrderDetailsPage from "../page/restaurant/pages/orders/OrderDetailsPage";
+import MenuManagement from "../page/restaurant/pages/menu/MenuManagementPage";
+import InventoryManagementPage from "../page/restaurant/pages/inventory/InventoryManagementPage";
+import InventoryManagementSMPage from "../page/supermarket/pages/products/ProductsManagementPage";
+import InventoryItemViewPage from "../page/restaurant/pages/inventory/InventoryItemViewPage";
+import EmployeeLogin from "../page/auth/pages/EmployeeLogin";
+import OwnerLogin from "../page/auth/pages/OwnerLogin";
+import Systems from "../shared/pages/Systems";
+import KdsPage from "../page/restaurant/pages/kitchen/KdsPage";
+import EmployeesPage from "../shared/pages/employees/EmployeesPage";
+import SupermarketEmployeesPage from "../shared/pages/employees/EmployeesPage";
+import Financesdashboards from "../page/restaurant/pages/analysis/FinancialDashboard";
+import WaiterDisplay from "../page/restaurant/pages/waiter/waiterdisplay";
+import DeliveryDisplay from "../page/restaurant/pages/delivery/deliverydisplay";
+import Profile from "../page/settings/pages/Profile";
+import Settings from "../page/settings/Settings";
+import ChangePassword from "../page/settings/pages/ChangePassword";
+import SupplierManagement from "../page/supermarket/pages/suppliers/SupplierManagement";
+import PurchaseOrdersPage from "../page/supermarket/pages/purchase/PurchaseOrdersPage";
+import GoodsReceivingPage from "../page/supermarket/pages/purchase/GoodsReceivingPage";
+import CreateSystem from "../page/system/CreateSystem/CreateSystem";
+import UpdateSystem from "../page/system/UpdateSystem/UpdateSystem";
+import EditSystemPublicProfile from "../page/system/UpdateSystem/EditSystemPublicProfile";
 
 function RootUrlPage() {
   const actions = useSelector((state: RootState) => state.permissions.actions);
@@ -29,67 +57,8 @@ function RootUrlPage() {
   if (actions.includes("read_order")) return <OrdersPage />;
   if (actions.includes("read_deliverydisplay")) return <DeliveryDisplay />;
   if (actions.includes("read_home")) return <DynamicHomePage />;
-  return <About />;
+  return <div>لا يوجد صفحة رئيسية محددة</div>;
 }
-
-const Layout = lazy(() => import("../Layout"));
-const ProtectLogin = lazy(() => import("../security/protectLogin"));
-const DynamicHomePage = lazy(() => import("../shared/pages/DynamicHomePage"));
-const RegisterPage = lazy(() => import("../page/auth/pages/RegisterPage"));
-const OrdersPage = lazy(
-  () => import("../page/restaurant/pages/orders/OrderPage")
-);
-const OrderDetailsPage = lazy(
-  () => import("../page/restaurant/pages/orders/OrderDetailsPage")
-);
-const MenuManagement = lazy(
-  () => import("../page/restaurant/pages/menu/MenuManagementPage")
-);
-const InventoryManagementPage = lazy(
-  () => import("../page/restaurant/pages/inventory/InventoryManagementPage")
-);
-const InventoryManagementSMPage = lazy(
-  () => import("../page/supermarket/pages/products/ProductsManagementPage")
-);
-const InventoryItemViewPage = lazy(
-  () => import("../page/restaurant/pages/inventory/InventoryItemViewPage")
-);
-const EmployeeLogin = lazy(() => import("../page/auth/pages/EmployeeLogin"));
-const OwnerLogin = lazy(() => import("../page/auth/pages/OwnerLogin"));
-const Systems = lazy(() => import("../shared/pages/Systems"));
-const KdsPage = lazy(() => import("../page/restaurant/pages/kitchen/KdsPage"));
-const EmployeesPage = lazy(
-  () => import("../shared/pages/employees/EmployeesPage")
-);
-const SupermarketEmployeesPage = lazy(
-  () => import("../shared/pages/employees/EmployeesPage")
-);
-const Financesdashboards = lazy(
-  () => import("../page/restaurant/pages/analysis/FinancialDashboard")
-);
-const WaiterDisplay = lazy(
-  () => import("../page/restaurant/pages/waiter/waiterdisplay")
-);
-const DeliveryDisplay = lazy(
-  () => import("../page/restaurant/pages/delivery/deliverydisplay")
-);
-const About = () => <h1>About Page</h1>;
-const Profile = lazy(() => import("../page/settings/pages/Profile"));
-const Settings = lazy(() => import("../page/settings/Settings"));
-const ChangePassword = lazy(
-  () => import("../page/settings/pages/ChangePassword")
-);
-const SupplierManagement = lazy(
-  () => import("../page/supermarket/pages/suppliers/SupplierManagement")
-);
-const PurchaseOrdersPage = lazy(
-  () => import("../page/supermarket/pages/purchase/PurchaseOrdersPage")
-);
-const GoodsReceivingPage = lazy(
-  () => import("../page/supermarket/pages/purchase/GoodsReceivingPage")
-);
-const CreateSystemPage = lazy(() => import("../page/system/CreateSystem/CreateSystem"));
-const UpdateSystemPage = lazy(() => import("../page/system/UpdateSystem/UpdateSystem"));
 
 const ErrorBoundary = () => {
   return (
@@ -120,10 +89,10 @@ const authRoutesConfig = authRoutes.map((route) => {
       element = <Systems />;
       break;
     case "/systems/create":
-      element = <CreateSystemPage />;
+      element = <CreateSystem />;
       break;
     case "/systems/edit/:id":
-      element = <UpdateSystemPage />;
+      element = <UpdateSystem />;
       return {
         path: route.path,
         element,
@@ -157,7 +126,7 @@ const router = createBrowserRouter([
       },
       {
         path: "/about",
-        element: <About />,
+        element: <div>About Page</div>,
       },
       {
         path: "/orders",
@@ -261,6 +230,23 @@ const router = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
+      {
+        path: "/systems/public-profile",
+        element: (
+          <ProtectedRoute permission="read_settings">
+            <EditSystemPublicProfile />
+          </ProtectedRoute>
+        ),
+        errorElement: <ErrorBoundary />,
+      },
+      {
+        path: "/change-password",
+        element: (
+          <ProtectedRoute permission="read_settings">
+            <ChangePassword />
+          </ProtectedRoute>
+        ),
+      },
     ],
   },
 ]);
@@ -341,15 +327,14 @@ const DynamicRouter = () => {
   // Create the router instance based on systemCategory
   const activeRouter = React.useMemo(() => {
     if (systemCategory === "supermarket") {
-      return supermarketRouter; // Assuming supermarketRouter is defined elsewhere and correctly configured
+      return supermarketRouter;
     }
     else {
       return router;
-    } // Assuming router is defined elsewhere and correctly configured for restaurant
+    }
   }, [systemCategory]);
 
-  // Add a key state to force RouterProvider re-rendering if necessary,
-  // though useMemo for activeRouter should handle the core issue.
+  // Add a key state to force RouterProvider re-rendering if necessary
   const [routerKey, setRouterKey] = React.useState(0);
   React.useEffect(() => {
     setRouterKey((prev) => prev + 1);

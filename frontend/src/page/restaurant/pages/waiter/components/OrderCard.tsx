@@ -1,40 +1,40 @@
 import React from 'react';
 import { Card, Button, Skeleton } from 'antd';
-import type { BaseOrder, DeliveryStatus } from '../types/order';
+import type { BaseOrder, WaiterStatus } from '../types/order';
 
 interface OrderCardProps {
   order: BaseOrder;
   onStatusChange: (
-    newStatus: DeliveryStatus,
+    newStatus: WaiterStatus
   ) => void;
   isUpdating: boolean;
   showRevertButton?: boolean;
-  orderType?: 'delivery';
+  orderType?: 'waiter';
   isLoading?: boolean;
-  status?: 'ready' | 'out_for_delivery';
+  status?: 'ready' | 'served';
 }
 
 const statusColors = {
   ready: 'blue',
-  out_for_delivery: 'orange',
+  served: 'orange',
   completed: 'green',
 };
 
 const statusText = {
   ready: 'Ready',
-  out_for_delivery: 'out_for_delivery',
+  served: 'Served',
   completed: 'Completed',
 };
 
 const statusAccent = {
   ready: 'linear-gradient(135deg, #1890ff 60%, #e6f7ff 100%)',
-  out_for_delivery: 'linear-gradient(135deg, #faad14 60%, #fffbe6 100%)',
+  served: 'linear-gradient(135deg, #faad14 60%, #fffbe6 100%)',
   completed: 'linear-gradient(135deg, #52c41a 60%, #f6ffed 100%)',
 };
 
 const statusbuttonColors = {
   ready: 'linear-gradient(90deg, rgba(0, 85, 255, 0.06) 25%, rgba(0, 68, 255, 0.40) 37%, rgba(0, 85, 255, 0.06) 63%)',
-  out_for_delivery: 'linear-gradient(90deg, rgba(250, 173, 20, 0.06) 25%, rgba(250, 173, 20, 0.41) 37%, rgba(250, 173, 20, 0.06) 63%)',
+  served: 'linear-gradient(90deg, rgba(250, 173, 20, 0.06) 25%, rgba(250, 173, 20, 0.41) 37%, rgba(250, 173, 20, 0.06) 63%)',
   completed: 'linear-gradient(90deg, rgba(82, 196, 26, 0.06) 25%, rgba(82, 196, 26, 0.40) 37%, rgba(82, 196, 26, 0.06) 63%)',
 };
 
@@ -174,7 +174,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
             backgroundImage: statusbuttonColors[currentStatus as keyof typeof statusbuttonColors],
           }}
           />
-          {orderType === 'waiter' && showRevertButton && currentStatus === 'out_for_delivery' && (
+          {orderType === 'waiter' && showRevertButton && currentStatus === 'served' && (
             <Button
               danger
               loading={isUpdating}
@@ -322,13 +322,13 @@ const OrderCard: React.FC<OrderCardProps> = ({
           <Button
             type="primary"
             loading={isUpdating}
-            onClick={() => onStatusChange('out_for_delivery')}
+            onClick={() => onStatusChange('served')}
             
           >
-            Mark as out_for_delivery
+            Mark as Served
           </Button>
         )}
-        {orderType === 'waiter' && currentStatus === 'out_for_delivery' && (
+        {orderType === 'waiter' && currentStatus === 'served' && (
           <Button
             type="primary"
             loading={isUpdating}
@@ -338,7 +338,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
             Complete
           </Button>
         )}
-        {orderType === 'waiter' && showRevertButton && currentStatus === 'out_for_delivery' && (
+        {orderType === 'waiter' && showRevertButton && currentStatus === 'served' && (
           <Button
             danger
             loading={isUpdating}

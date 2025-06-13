@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Card, Typography, Spin, Result , App as AntdApp } from 'antd';
+import { Card, Typography, Result , App as AntdApp } from 'antd';
 import ProductTable from './components/ProductTable';
 import ProductForm from './components/ProductForm';
 import ProductStockEditor from './components/ProductStockEditor';
@@ -101,7 +101,6 @@ const ProductsManagementPage: React.FC = () => {
       <Title level={2} style={{ textAlign: 'center', marginBottom: 24 }}>Products Management</Title>
       <ProductForm onSubmit={handleAddProduct} loading={adding} />
       <ProductFilters filter={filter} setFilter={setFilter} />
-      {(loading || deleteLoading || stockLoading) && <Spin size="large" style={{ display: 'block', margin: 'auto' }} />}
       {error && <Result status="error" title="Failed to load products" subTitle={typeof error === 'string' ? error : (error as Error)?.message} />} {/* Handled error message type */}
       {!loading && !error && (
         <ProductTable

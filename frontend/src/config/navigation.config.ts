@@ -1,5 +1,6 @@
 import { IconType } from "react-icons";
 import * as RiIcons from "react-icons/ri";
+import { tr } from "zod/v4/locales";
 
 // نوع الأيقونات المدعومة
 type IconName =
@@ -90,6 +91,7 @@ const navItemsData: BaseNavItem[] = [
   // Common
   { name: "Profile", icon: "AccountCircle", href: "/profile", systemCategory: "all", showInSidebar: true, requiredPermission: "read_profile" },
   { name: "Settings", icon: "Settings4", href: "/settings", systemCategory: "all", showInSidebar: true, requiredPermission: "read_settings" },
+  { name: "Change Password", icon: "Settings4", href: "/change-password", systemCategory: "all", showInSidebar: false , requiredPermission: "read_settings" },
 ];
 
 // دالة توليد العناصر النهائية مع الأيقونات

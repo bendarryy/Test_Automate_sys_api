@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useDispatch } from 'react-redux';
-import { Card, Col, Row, Input, Select, Space, Typography, message, Spin } from 'antd';
+import { Card, Col, Row, Input, Select, Space, Typography, message } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import { addItemToSale } from '../../../../../store/salesSlice';
 import { useApi } from 'shared/hooks/useApi';
@@ -108,39 +108,33 @@ export const SalesProductSelection = () => {
         </Space>
       </div>
 
-      {loading ? (
-        <div style={{ textAlign: 'center', padding: 24 }}>
-          <Spin size="large" />
-        </div>
-      ) : (
-        <Row gutter={[16, 16]}>
-          {filteredProducts.length > 0 ? (
-            filteredProducts.map(product => (
-              <Col key={product.id} xs={24} sm={12} md={8} lg={6} xl={4}>
-                <Card
-                  hoverable
-                  onClick={() => handleAddProduct(product)}
-                  cover={product.image ? <img alt={product.name} src={product.image} /> : null}
-                >
-                  <Card.Meta
-                    title={product.name}
-                    description={
-                      <Space direction="vertical">
-                        <Typography.Text strong>${product.price}</Typography.Text>
-                        {product.category && <Typography.Text type="secondary">{product.category}</Typography.Text>}
-                      </Space>
-                    }
-                  />
-                </Card>
-              </Col>
-            ))
-          ) : (
-            <div style={{ textAlign: 'center', padding: 24 }}>
-              <Typography.Text type="secondary">No products found</Typography.Text>
-            </div>
-          )}
-        </Row>
-      )}
+      <Row gutter={[16, 16]}>
+        {filteredProducts.length > 0 ? (
+          filteredProducts.map(product => (
+            <Col key={product.id} xs={24} sm={12} md={8} lg={6} xl={4}>
+              <Card
+                hoverable
+                onClick={() => handleAddProduct(product)}
+                cover={product.image ? <img alt={product.name} src={product.image} /> : null}
+              >
+                <Card.Meta
+                  title={product.name}
+                  description={
+                    <Space direction="vertical">
+                      <Typography.Text strong>${product.price}</Typography.Text>
+                      {product.category && <Typography.Text type="secondary">{product.category}</Typography.Text>}
+                    </Space>
+                  }
+                />
+              </Card>
+            </Col>
+          ))
+        ) : (
+          <div style={{ textAlign: 'center', padding: 24 }}>
+            <Typography.Text type="secondary">No products found</Typography.Text>
+          </div>
+        )}
+      </Row>
     </div>
   );
 };

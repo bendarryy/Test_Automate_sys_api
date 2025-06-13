@@ -7,7 +7,6 @@ import { useGetMenu, getCategoryIcon } from "shared/hooks/useGetMenu";
 import { useSelectedSystemId } from "shared/hooks/useSelectedSystemId";
 // Import necessary Ant Design components
 import {
-  Spin,
   Input,
   Select,
   Space,
@@ -359,72 +358,66 @@ const ProductSelection = () => {
 
       {/* Products Grid Section */}
       <div style={{ flex: 1, overflowY: "auto", paddingTop: "1rem" }}>
-        {loading ? (
-          <div style={{ textAlign: "center", padding: "2rem" }}>
-            <Spin size="large" />
-          </div>
-        ) : (
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-            gap: '16px',
-            padding: '10px',
-            margin: '0px'
-          }}>
-            {displayedProducts.map((product) => (
-              <div key={product.id}>
-                {/* Badge for product quantity in bill */}
-                {/* Badge in top-right */}
-                <div style={{ position: 'relative' }}>
-                {(() => {
-                    const item = billItems.find((item) => String(item.id) === String(product.id));
-                    return item && item.quantity > 0 ? (
-                      <div style={{ position: 'absolute', top: 5, right: 5 , transform: 'translate(50%, -50%)', zIndex: 1000 }}>
-                      <Badge
-                        count={item.quantity}
-                        color="blue"
-                      />
-                      </div>
-                    ) : null;
-                  })()}
-                <Card
-                  title={product.name}
-                  description={product.description}
-                  price={`$${product.price}`}
-                  badgeText={product.is_available ? '' : 'Unavailable'}
-                  $accentColor={product.is_available ? '#1677ff' : '#aaa'}
-                  $textColor="#1e293b"
-                  $imageGradient={product.is_available ? 'linear-gradient(45deg, #a78bfa, #8b5cf6)' : 'linear-gradient(45deg, #ccc, #eee)'}
-                  image={product.image}
-                  width="100%"
-                  onClick={() => {
-                    if (product.is_available) {
-                      dispatch(
-                        addItem({
-                          ...product,
-                          id: product.id.toString(),
-                          price: Number(product.price),
-                          quantity: 1,
-                        })
-                      );
-                    }
-                  }}
-                  style={{
-                    height: 260,
-                    minHeight: 260,
-                    width: '100%',
-                    opacity: product.is_available ? 1 : 0.6,
-                    cursor: product.is_available ? "pointer" : "not-allowed",
-                    position: 'relative',
-                    display: 'flex',
-                    flexDirection: 'column',
-                  }}
-                />
-                </div>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+          gap: '16px',
+          padding: '10px',
+          margin: '0px'
+        }}>
+          {displayedProducts.map((product) => (
+            <div key={product.id}>
+              {/* Badge for product quantity in bill */}
+              {/* Badge in top-right */}
+              <div style={{ position: 'relative' }}>
+              {(() => {
+                  const item = billItems.find((item) => String(item.id) === String(product.id));
+                  return item && item.quantity > 0 ? (
+                    <div style={{ position: 'absolute', top: 5, right: 5 , transform: 'translate(50%, -50%)', zIndex: 1000 }}>
+                    <Badge
+                      count={item.quantity}
+                      color="blue"
+                    />
+                    </div>
+                  ) : null;
+                })()}
+              <Card
+                title={product.name}
+                description={product.description}
+                price={`$${product.price}`}
+                badgeText={product.is_available ? '' : 'Unavailable'}
+                $accentColor={product.is_available ? '#1677ff' : '#aaa'}
+                $textColor="#1e293b"
+                $imageGradient={product.is_available ? 'linear-gradient(45deg, #a78bfa, #8b5cf6)' : 'linear-gradient(45deg, #ccc, #eee)'}
+                image={product.image}
+                width="100%"
+                onClick={() => {
+                  if (product.is_available) {
+                    dispatch(
+                      addItem({
+                        ...product,
+                        id: product.id.toString(),
+                        price: Number(product.price),
+                        quantity: 1,
+                      })
+                    );
+                  }
+                }}
+                style={{
+                  height: 260,
+                  minHeight: 260,
+                  width: '100%',
+                  opacity: product.is_available ? 1 : 0.6,
+                  cursor: product.is_available ? "pointer" : "not-allowed",
+                  position: 'relative',
+                  display: 'flex',
+                  flexDirection: 'column',
+                }}
+              />
               </div>
-            ))}
-          </div>
-        )}
+            </div>
+          ))}
+        </div>
       </div>
       {showTables && <TablesSection onClose={() => setShowTables(false)} />}
     </div>

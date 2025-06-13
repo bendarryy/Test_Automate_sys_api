@@ -1,7 +1,7 @@
 import React from 'react';
 import { Empty, Skeleton } from 'antd';
-import { CheckCircleTwoTone } from '@ant-design/icons';
-import OrderCard from '../../delivery/components/OrderCard';
+import { CheckCircleTwoTone, LoadingOutlined } from '@ant-design/icons';
+import OrderCard from './OrderCard';
 import { Order } from '../types/waiterOrder';
 
 interface ServedOrdersSectionProps {
@@ -19,7 +19,7 @@ const ServedOrdersSection: React.FC<ServedOrdersSectionProps> = ({ orders, order
       Served Orders
     </h2>
     <div className="custom-scrollbar">
-      {orderLoading ? (
+      {orderLoading? (
         <div style={{
           display: 'grid',
           gridTemplateColumns: '1fr',
@@ -30,11 +30,15 @@ const ServedOrdersSection: React.FC<ServedOrdersSectionProps> = ({ orders, order
           overflow: 'hidden',
         }}>
           {[...Array(3)].map((_, idx) => (
-            <Skeleton.Button
-              key={idx}
-              active
-              style={{ width: '100%', height: "100%", borderRadius: 12, overflow: 'hidden' }}
-            />
+            <div key={idx} style={{ height: '100%' }}>
+              <OrderCard
+                isLoading={true}
+                order={{ id: idx, total_price: 0, order_items: [], status: 'served' }}
+                onStatusChange={() => {}}
+                isUpdating={false}
+                status='served'
+              />
+            </div>
           ))}
         </div>
       ) : orders.length > 0 ? (

@@ -28,8 +28,7 @@ const MenuManagementPage: React.FC = () => {
     itemLoadingId, // تأكد من تمرير هذا إذا كنت تستخدمه في MenuTable
   } = useMenuManagement();
 
-  const isInitialLoading = loading && categories.length === 0;
-
+  // لا تعرض الجدول نهائياً أثناء التحميل، فقط Skeleton Table
   return (
     <div style={{ padding: 24 }}>
       <Header
@@ -50,20 +49,14 @@ const MenuManagementPage: React.FC = () => {
           />
         }
       />
-      {isInitialLoading ? (
-        <div style={{ textAlign: 'center', padding: 24 }}>
-          <Spin size="large" />
-        </div>
-      ) : (
-        <MenuTable
-          items={filteredItems}
-          categories={categories}
-          onEdit={handleEditClick}
-          onDelete={handleDeleteClick}
-          loading={false}
-          itemLoadingId={itemLoadingId}
-        />
-      )}
+      <MenuTable
+        items={filteredItems}
+        categories={categories}
+        onEdit={handleEditClick}
+        onDelete={handleDeleteClick}
+        loading={loading}
+        itemLoadingId={itemLoadingId}
+      />
       <MenuItemModal
         visible={showModal}
         onCancel={() => setShowModal(false)}

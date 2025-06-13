@@ -1,7 +1,7 @@
 import { ReactNode, useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useApi } from '../shared/hooks/useApi';
-import { Spin } from 'antd';
+import Loading from '../shared/componanets/Loading';
 
 // This assumes that successful login sets some identifiable value in `data` (e.g., a token or user object)
 // You may need to adapt this logic if your login state is managed elsewhere (e.g., context, localStorage, etc.)
@@ -18,7 +18,7 @@ const ProtectLogin = (props: ProtectLoginProps) => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        await callApi('get', '/core/profile/');
+        await callApi('get', '/core/check-auth/'); // Adjust the endpoint as needed
       } catch (error) {
         console.error('Auth check failed:', error);
       }
@@ -28,16 +28,7 @@ const ProtectLogin = (props: ProtectLoginProps) => {
   }, [callApi]);
 
   if (loading) {
-    return (
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '100vh' 
-      }}>
-        <Spin size="large" />
-      </div>
-    );
+    return <Loading />;
   }
 
   if (error) {

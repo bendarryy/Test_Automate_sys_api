@@ -8,7 +8,7 @@ import {
   SafetyOutlined,
   RightOutlined 
 } from '@ant-design/icons';
-import { useThemeContext } from '../theme/ThemeContext';
+import { useThemeContext } from '../../theme/ThemeContext';
 
 const { Title } = Typography;
 
@@ -47,7 +47,13 @@ const Settings: React.FC = () => {
       description: 'Manage your security settings',
       icon: <SafetyOutlined style={{ fontSize: '24px', color: '#1677ff' }} />,
       path: '/settings/security'
-    }
+    },
+    {
+      title: 'Edit Public Profile & Media',
+      description: 'Manage your public profile and media for your system',
+      icon: <UserOutlined style={{ fontSize: '24px', color: '#1677ff' }} />, // You can change the icon if you want
+      path: '/systems/public-profile', // Update this path if you want to use a dynamic system id
+    },
   ];
 
   return (
@@ -88,4 +94,4 @@ const Settings: React.FC = () => {
   );
 };
 
-export default Settings; 
+export default Settings;

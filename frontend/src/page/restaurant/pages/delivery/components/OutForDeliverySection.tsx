@@ -42,12 +42,16 @@ const OutForDeliverySection: React.FC<OutForDeliverySectionProps> = React.memo((
       <div className={styles.customScrollbar}>
         {isLoading ? (
           <div className={styles.skeletonCol}>
-            {[...Array(2)].map((_, idx) => (
-              <Skeleton.Button
-                key={idx}
-                active
-                style={{ width: '100%', height: 120, borderRadius: 12, overflow: 'hidden' }}
-              />
+            {[...Array(3)].map((_, idx) => (
+                <div key={idx} style={{ height: '100%' }}>
+                  <OrderCard
+                    isLoading={true}
+                    order={{ id: idx, total_price: 0, order_items: [], status: 'out_for_delivery' }}
+                    onStatusChange={() => {}}
+                    isUpdating={false}
+                    status='out_for_delivery'
+                  />
+              </div>
             ))}
           </div>
         ) : orders.length > 0 ? (

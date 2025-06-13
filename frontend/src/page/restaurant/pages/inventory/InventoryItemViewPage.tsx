@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Button, Form, Input, Spin } from 'antd';
+import { Button, Form, Input } from 'antd';
 import Header from 'shared/componanets/Header';
 import { useInventory, InventoryItem } from './hooks/useInventory';
 import useHasPermission from 'shared/hooks/useHasPermission';
@@ -66,7 +66,7 @@ const InventoryItemViewPage: React.FC = () => {
     }
   };
 
-  if (loading) return <div className="text-center mt-5"><Spin /></div>;
+  if (loading) return null;
   if (!item) return <div className="alert alert-danger">Item not found</div>;
 
   return (

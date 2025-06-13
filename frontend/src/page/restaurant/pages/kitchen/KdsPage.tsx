@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
 import Header from 'shared/componanets/Header';
-import { Row, Col, Spin, Alert, Button } from 'antd';
+import { Row, Col, Alert, Button } from 'antd';
 import { DashboardOutlined } from '@ant-design/icons';
 import useHasPermission from 'shared/hooks/useHasPermission';
 import { useSelectedSystemId } from 'shared/hooks/useSelectedSystemId';
@@ -49,7 +49,6 @@ const KdsPage: React.FC = () => {
         }
       />
 
-      {loading && <Spin size="large" className="center-spinner" />}
       {error && <Alert message={error} type="error" showIcon />}
 
       <StatsCards stats={stats} />

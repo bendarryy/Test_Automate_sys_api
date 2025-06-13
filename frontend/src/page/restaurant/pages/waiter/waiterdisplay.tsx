@@ -1,5 +1,5 @@
 import React from 'react';
-import { Spin, Alert } from 'antd';
+import { Alert } from 'antd';
 import Header from '../../../../shared/componanets/Header';
 import StatusStatistics from './components/StatusStatistics';
 import ReadyOrdersSection from './components/ReadyOrdersSection';
@@ -25,12 +25,6 @@ const WaiterDisplay: React.FC = () => {
 
   return (
     <div style={{ margin: '0 auto', padding: 24, height: '100%' }}>
-      {/* Loading Spinner */}
-      {orderLoading && (
-        <div style={{ textAlign: 'center', margin: '20px 0' }}>
-          <Spin size="large" />
-        </div>
-      )}
       {/* Error Alert */}
       {orderError && (
         <Alert message={orderError} type="error" showIcon style={{ marginBottom: 16 }} />

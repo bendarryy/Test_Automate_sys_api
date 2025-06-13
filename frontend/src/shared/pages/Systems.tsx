@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { useApi } from '../hooks/useApi';
 import { useNavigate } from 'react-router-dom';
 import { useSelectedSystemId } from '../hooks/useSelectedSystemId';
-import { Layout, Button, Typography, Spin, Alert, Tag } from 'antd';
+import { Layout, Button, Typography, Alert, Tag } from 'antd';
 import { UserOutlined, AppstoreOutlined } from '@ant-design/icons';
 
 const { Content } = Layout;
@@ -30,11 +30,6 @@ const Systems: React.FC = () => {
         <div style={{ background: '#fff', borderRadius: 16, boxShadow: '0 4px 24px rgba(0,0,0,0.08)', padding: 36, minWidth: 350, maxWidth: 420, width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <AppstoreOutlined style={{ fontSize: 48, color: '#1677ff', marginBottom: 16 }} />
           <Title level={3} style={{ color: '#222', textAlign: 'center', marginBottom: 32 }}>Select a System to Start</Title>
-          {loading && (
-            <div style={{ textAlign: 'center', margin: '20px 0' }}>
-              <Spin size="large" tip="Loading systems..." />
-            </div>
-          )}
           {error && <Alert message="Error loading systems" description={error} type="error" showIcon style={{ marginBottom: '24px' }} />}
           {!loading && !error && data && Array.isArray(data) && data.length > 0 ? (
             <div style={{ width: '100%', maxHeight: 400, overflow: 'auto' }}>

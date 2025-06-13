@@ -150,7 +150,7 @@ const RegisterPage: React.FC = () => {
         <Button
           type="link"
           style={{ marginTop: 16, width: '100%' }}
-          onClick={() => navigate('/login')}
+          onClick={() => navigate('/ownerLogin')}
         >
           Already have an account? Login
         </Button>

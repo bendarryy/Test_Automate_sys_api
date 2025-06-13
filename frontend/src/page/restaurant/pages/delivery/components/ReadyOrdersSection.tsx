@@ -38,11 +38,17 @@ const ReadyOrdersSection: React.FC<ReadyOrdersSectionProps> = React.memo(({
       {isLoading ? (
         <div className={styles.skeletonRow}>
           {[...Array(3)].map((_, idx) => (
-            <Skeleton.Button
-              key={idx}
-              active
-              style={{ width: 300, height: 320, borderRadius: 12, overflow: 'hidden' }}
-            />
+            <SwiperSlide key={idx} style={{ width: 370, height: '100%' }}>
+              <div style={{ height: '100%', paddingRight: 16 }}>
+                <OrderCard
+                  isLoading={true}
+                  order={{ id: idx, total_price: 0, order_items: [], status: 'ready' }}
+                  onStatusChange={() => {}}
+                  isUpdating={false}
+                  status="ready"
+                />
+              </div>
+            </SwiperSlide>
           ))}
         </div>
       ) : orders.length > 0 ? (
