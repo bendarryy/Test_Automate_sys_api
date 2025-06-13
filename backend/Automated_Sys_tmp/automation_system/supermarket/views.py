@@ -8,6 +8,9 @@ from django.db.models import F
 from datetime import date, timedelta
 from django.http import Http404
 from django.db import transaction
+from django.core.exceptions import ValidationError
+from django.utils import timezone
+from datetime import datetime
 
 from .models import (
     System,
@@ -343,8 +346,11 @@ class SaleViewSet(viewsets.ModelViewSet):
         if not cashier and system.owner != user:
             raise PermissionDenied("Only employees or system owners can create sales.")
 
-        # Create the sale without passing cashier (it's already in the context)
-        serializer.save(system=system)
+        try:
+            # Create the sale without passing cashier (it's already in the context)
+            serializer.save(system=system)
+        except ValidationError as e:
+            raise ValidationError({"detail": str(e)})
 
     @action(detail=True, methods=["get"])
     def receipt(self, request, system_id=None, pk=None):
@@ -386,6 +392,162 @@ class SaleViewSet(viewsets.ModelViewSet):
         sale.calculate_total()
 
         return Response(SaleSerializer(sale).data)
+
+    @action(detail=False, methods=["get"])
+    def yearly_profit(self, request, system_id=None):
+        """Calculate yearly profits with optional product filtering"""
+        year = request.query_params.get("year")
+        product_id = request.query_params.get("product_id")
+
+        try:
+            year = int(year) if year else timezone.now().year
+        except ValueError:
+            return Response(
+                {"error": "Invalid year format"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Get all sales for the year
+        sales = Sale.objects.filter(
+            system_id=system_id,
+            created_at__year=year,
+        )
+
+        if product_id:
+            sales = sales.filter(items__product_id=product_id)
+
+        # Calculate profits for each sale item
+        product_totals = {}
+        for sale in sales:
+            for item in sale.items.all():
+                product = item.product
+                if product.name not in product_totals:
+                    product_totals[product.name] = {
+                        "total_profit": 0,
+                        "total_quantity_sold": 0,
+                        "sales": [],
+                    }
+
+                # Calculate profit using the stored unit cost
+                profit = (item.unit_price - item.unit_cost) * item.quantity
+                product_totals[product.name]["total_profit"] += profit
+                product_totals[product.name]["total_quantity_sold"] += item.quantity
+
+                # Add sale details
+                product_totals[product.name]["sales"].append(
+                    {
+                        "product_id": product.id,
+                        "product_name": product.name,
+                        "quantity_sold": item.quantity,
+                        "unit_price": item.unit_price,
+                        "unit_cost": item.unit_cost,
+                        "profit": profit,
+                        "sale_date": sale.created_at.date(),
+                        "sale_time": sale.created_at.time(),
+                    }
+                )
+
+        # Calculate overall totals
+        total_profit = sum(item["total_profit"] for item in product_totals.values())
+        total_quantity = sum(
+            item["total_quantity_sold"] for item in product_totals.values()
+        )
+
+        return Response(
+            {
+                "year": year,
+                "total_profit": total_profit,
+                "total_quantity_sold": total_quantity,
+                "products": [
+                    {
+                        "product_name": name,
+                        "total_quantity_sold": data["total_quantity_sold"],
+                        "total_profit": data["total_profit"],
+                        "sales": data["sales"],
+                    }
+                    for name, data in product_totals.items()
+                ],
+            }
+        )
+
+    @action(detail=False, methods=["get"])
+    def daily_profit(self, request, system_id=None):
+        """Calculate daily profits with optional product filtering"""
+        date_str = request.query_params.get("date")
+        product_id = request.query_params.get("product_id")
+
+        try:
+            date = (
+                datetime.strptime(date_str, "%Y-%m-%d").date()
+                if date_str
+                else timezone.now().date()
+            )
+        except ValueError:
+            return Response(
+                {"error": "Invalid date format. Use YYYY-MM-DD"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Get all sales for the date
+        sales = Sale.objects.filter(
+            system_id=system_id,
+            created_at__date=date,
+        )
+
+        if product_id:
+            sales = sales.filter(items__product_id=product_id)
+
+        # Calculate profits for each sale item
+        product_totals = {}
+        for sale in sales:
+            for item in sale.items.all():
+                product = item.product
+                if product.name not in product_totals:
+                    product_totals[product.name] = {
+                        "total_profit": 0,
+                        "total_quantity_sold": 0,
+                        "sales": [],
+                    }
+
+                # Calculate profit using the stored unit cost
+                profit = (item.unit_price - item.unit_cost) * item.quantity
+                product_totals[product.name]["total_profit"] += profit
+                product_totals[product.name]["total_quantity_sold"] += item.quantity
+
+                # Add sale details
+                product_totals[product.name]["sales"].append(
+                    {
+                        "product_id": product.id,
+                        "product_name": product.name,
+                        "quantity_sold": item.quantity,
+                        "unit_price": item.unit_price,
+                        "unit_cost": item.unit_cost,
+                        "profit": profit,
+                        "sale_time": sale.created_at.time(),
+                    }
+                )
+
+        # Calculate overall totals
+        total_profit = sum(item["total_profit"] for item in product_totals.values())
+        total_quantity = sum(
+            item["total_quantity_sold"] for item in product_totals.values()
+        )
+
+        return Response(
+            {
+                "date": date,
+                "total_profit": total_profit,
+                "total_quantity_sold": total_quantity,
+                "products": [
+                    {
+                        "product_name": name,
+                        "total_quantity_sold": data["total_quantity_sold"],
+                        "total_profit": data["total_profit"],
+                        "sales": data["sales"],
+                    }
+                    for name, data in product_totals.items()
+                ],
+            }
+        )
 
 
 class SupplierViewSet(viewsets.ModelViewSet):
