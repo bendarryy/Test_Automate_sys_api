@@ -218,6 +218,19 @@ class SaleCreateSerializer(serializers.ModelSerializer):
         model = Sale
         fields = ["payment_type", "items"]
 
+    def validate_items(self, items_data):
+        for item_data in items_data:
+            product = item_data["product"]
+            quantity = item_data["quantity"]
+
+            # Check total stock availability
+            if product.stock_quantity < quantity:
+                raise serializers.ValidationError(
+                    f"Not enough stock available for {product.name}. Only {product.stock_quantity} units left."
+                )
+
+        return items_data
+
     def create(self, validated_data):
         items_data = validated_data.pop("items")
         system_id = self.context["system_id"]
@@ -240,12 +253,6 @@ class SaleCreateSerializer(serializers.ModelSerializer):
                 product = item_data["product"]
                 quantity = Decimal(str(item_data["quantity"]))
 
-                # Check stock availability
-                if product.stock_quantity < quantity:
-                    raise serializers.ValidationError(
-                        f"Insufficient stock for {product.name}"
-                    )
-
                 # Set unit price from product's price and calculate total
                 item_data["unit_price"] = product.price
                 item_data["total_price"] = (product.price * quantity) - item_data.get(
@@ -255,10 +262,9 @@ class SaleCreateSerializer(serializers.ModelSerializer):
                 # Create sale item
                 SaleItem.objects.create(sale=sale, **item_data)
 
-                # Update stock using F() expression to prevent race conditions
-                Product.objects.filter(id=product.id).update(
-                    stock_quantity=F("stock_quantity") - quantity
-                )
+                # Update stock quantity
+                product.stock_quantity -= quantity
+                product.save()
 
                 # Create stock change record
                 StockChange.objects.create(

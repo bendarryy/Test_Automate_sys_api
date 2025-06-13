@@ -545,9 +545,9 @@ class SystemSerializer(serializers.ModelSerializer):
     class Meta:
         model = System
         fields = [
-            'id', 'name', 'category', 'description', 'is_public',
-            'logo', 'public_title', 'public_description',
-            'primary_color', 'secondary_color',
+            'id', 'name', 'category', 'subdomain' , 'custom_domain',  'description', 'is_public',
+            'logo', 'public_title', 'public_description', 'phone_number',
+            'primary_color', 'secondary_color', 'is_active',
             'email', 'whatsapp_number',
             'social_links', 'opening_hours'
         ]

@@ -2,6 +2,8 @@ from django.db import models
 from core.models import System, Employee
 import time
 from django.core.validators import RegexValidator
+from django.core.exceptions import ValidationError
+from django.db.models import F
 
 # Create your models here.
 
@@ -52,8 +54,8 @@ class Product(models.Model):
         return earliest_batch.expiry_date if earliest_batch else None
 
     def save(self, *args, **kwargs):
-        # Only update stock and expiry if the product already exists
-        if self.pk:
+        # Only update stock and expiry if explicitly requested
+        if kwargs.pop("update_stock", False):
             # Update total stock quantity from batches
             self.stock_quantity = self.get_total_stock()
             # Update expiry date to earliest batch expiry
@@ -213,16 +215,62 @@ class SaleItem(models.Model):
     unit_price = models.DecimalField(
         max_digits=10, decimal_places=2, null=True, blank=True
     )
+    unit_cost = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True
+    )
     discount_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     total_price = models.DecimalField(
         max_digits=10, decimal_places=2, null=True, blank=True
     )
 
+    def clean(self):
+        # Check if there's enough stock before saving
+        if not self.pk:  # Only check for new items
+            if self.quantity > self.product.stock_quantity:
+                raise ValidationError(
+                    f"Not enough stock available. Only {self.product.stock_quantity} units left."
+                )
+
     def save(self, *args, **kwargs):
+        # Validate stock availability
+        self.clean()
+
+        # If this is a new sale item, set the unit cost from the product
+        if not self.pk:
+            self.unit_cost = self.product.cost
+
         # Calculate total price for this item
         if self.unit_price is not None:
             self.total_price = (self.unit_price * self.quantity) - self.discount_amount
+
+        # If this is a new sale item, update stock quantities
+        if not self.pk:
+            # Get fresh product instance to avoid race conditions
+            product = Product.objects.select_for_update().get(pk=self.product.pk)
+
+            # Double check stock availability
+            if self.quantity > product.stock_quantity:
+                raise ValidationError(
+                    f"Not enough stock available. Only {product.stock_quantity} units left."
+                )
+
+            # Update product stock quantity by subtracting exactly the sold quantity
+            product.stock_quantity = product.stock_quantity - self.quantity
+            product.save(update_fields=["stock_quantity"])
+
         super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        # If this is an existing sale item being deleted, restore stock quantities
+        if self.pk:
+            # Get fresh product instance to avoid race conditions
+            product = Product.objects.select_for_update().get(pk=self.product.pk)
+
+            # Update product stock quantity by adding back exactly the sold quantity
+            product.stock_quantity = product.stock_quantity + self.quantity
+            product.save(update_fields=["stock_quantity"])
+
+        super().delete(*args, **kwargs)
 
 
 class Discount(models.Model):
@@ -359,42 +407,24 @@ class GoodsReceiving(models.Model):
             po.status = "pending"
         po.save()
 
-        # Create or update product batch
+        # Update product stock quantity
         product = po.product
         if self.pk:
-            # If updating, subtract the old quantity from the batch
+            # If updating, subtract the old quantity
             old_record = GoodsReceiving.objects.get(pk=self.pk)
-            old_batch = ProductBatch.objects.get(
-                product=product, purchase_order=po, expiry_date=old_record.expiry_date
-            )
-            old_batch.quantity -= old_record.received_quantity
-            old_batch.save()
+            product.stock_quantity -= old_record.received_quantity
 
-        # Create or update batch with new quantity
-        batch, created = ProductBatch.objects.get_or_create(
-            product=product,
-            purchase_order=po,
-            expiry_date=self.expiry_date,
-            defaults={"quantity": self.received_quantity},
-        )
-        if not created:
-            batch.quantity += self.received_quantity
-            batch.save()
-
-        # Update product total stock without changing cost
-        product.save()  # This will update total stock quantity from batches
+        # Add new quantity to product stock
+        product.stock_quantity += self.received_quantity
+        product.save()
 
         super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
-        # Update batch quantity before deleting
-        batch = ProductBatch.objects.get(
-            product=self.purchase_order.product,
-            purchase_order=self.purchase_order,
-            expiry_date=self.expiry_date,
-        )
-        batch.quantity -= self.received_quantity
-        batch.save()
+        # Update product stock quantity
+        product = self.purchase_order.product
+        product.stock_quantity -= self.received_quantity
+        product.save()
 
         # Update PO status
         po = self.purchase_order
@@ -409,9 +439,5 @@ class GoodsReceiving(models.Model):
         else:
             po.status = "pending"
         po.save()
-
-        # Update product total stock
-        product = po.product
-        product.save()  # This will update total stock quantity from batches
 
         super().delete(*args, **kwargs)

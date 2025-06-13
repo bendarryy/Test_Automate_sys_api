@@ -137,6 +137,24 @@ urlpatterns = [
         ),
         name="sale-apply-discount",
     ),
+    path(
+        "<int:system_id>/sales/profit/year/",
+        SaleViewSet.as_view(
+            {
+                "get": "yearly_profit",
+            }
+        ),
+        name="sale-yearly-profit",
+    ),
+    path(
+        "<int:system_id>/sales/profit/day/",
+        SaleViewSet.as_view(
+            {
+                "get": "daily_profit",
+            }
+        ),
+        name="sale-daily-profit",
+    ),
     # Supplier endpoints
     path(
         "<int:system_id>/suppliers/",
