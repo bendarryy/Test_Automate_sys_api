@@ -58,6 +58,8 @@ INSTALLED_APPS = [
 CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:5173",  # React development server
     "http://localhost:5173",  # React development server alternative
+    "http://127.0.0.1:5174",  # React development server
+    "http://localhost:5174",  # React development server alternative
     "http://127.0.0.1:5500" # React development server alternative
 ]
 
@@ -70,6 +72,8 @@ CORS_ALLOW_HEADERS = list(default_headers) + [
 CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1:5173",  # Trust frontend for CSRF
     "http://localhost:5173",  # Trust frontend for CSRF alternative
+    "http://127.0.0.1:5174",  # Trust frontend for CSRF
+    "http://localhost:5174",  # Trust frontend for CSRF alternative
     "http://127.0.0.1:5500" # Trust frontend for CSRF alternative
 ]
 # Ensure cookie settings are correct (already set based on your headers)
