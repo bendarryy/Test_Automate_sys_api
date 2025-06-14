@@ -549,7 +549,7 @@ class SystemSerializer(serializers.ModelSerializer):
             'logo', 'public_title', 'public_description', 'phone_number',
             'primary_color', 'secondary_color', 'is_active',
             'email', 'whatsapp_number',
-            'social_links', 'opening_hours'
+            'social_links', 'opening_hours' , 'design_settings'
         ]
         extra_kwargs = {
             'logo': {'required': False, 'allow_null': True},
@@ -559,7 +559,8 @@ class SystemSerializer(serializers.ModelSerializer):
             'secondary_color': {'required': False, 'allow_blank': True},
             'email': {'required': False, 'allow_blank': True, 'allow_null': True},
             'whatsapp_number': {'required': False, 'allow_blank': True, 'allow_null': True},
-            'social_links': {'required': False}
+            'social_links': {'required': False},
+            'design_settings': {'required': False, 'allow_blank': True}
         }
 
 class PublicSliderImageSerializer(serializers.ModelSerializer):
@@ -611,7 +612,8 @@ class SystemPublicProfileSerializer(serializers.ModelSerializer):
             'email',
             'whatsapp_number',
             'social_links',
-            'logo'
+            'logo',
+            'design_settings'
         ]
         extra_kwargs = {
             'is_public': {'required': False},
@@ -623,7 +625,8 @@ class SystemPublicProfileSerializer(serializers.ModelSerializer):
             'whatsapp_number': {'required': False},
             'social_links': {'required': False},
             "subdomain": {'required': False, 'allow_null': True},
-            "custom_link": {'required': False, 'allow_null': True}
+            "custom_link": {'required': False, 'allow_null': True},
+            'design_settings': {'required': False}
         }
 
 

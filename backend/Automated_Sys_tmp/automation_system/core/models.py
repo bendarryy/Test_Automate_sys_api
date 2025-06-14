@@ -63,12 +63,18 @@ class System(models.Model):
         "facebook": "url",
         "instagram": "url",
         "twitter": "url",
-        "linkedin": "url",
-        "youtube": "url",
+            "youtube": "url",
         "tiktok": "url"
     }""")
+    design_settings = models.JSONField(default=dict, blank=True, help_text="""Format: {
+    "primaryColor": "#00bfff",
+    "secondaryColor": "#ffffff",
+    "background": "#ffffff",
+    "foreground": "#0a0a0a",
+    "border": "#e5e5e5",
+    "radius": "0.5rem"
+    }""")
     
-
     # 🕒 Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
