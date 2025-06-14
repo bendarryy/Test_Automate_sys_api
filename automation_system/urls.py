@@ -18,11 +18,13 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework import permissions
+from django.http import HttpResponseForbidden
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 from django.conf import settings
 from django.conf.urls.static import static
-
+from django.http import JsonResponse
+from django.middleware.common import MiddlewareMixin
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -35,31 +37,31 @@ schema_view = get_schema_view(
     permission_classes=(permissions.AllowAny,),
 )
 
+def block_root(request):
+    return HttpResponseForbidden("Forbidden: Private API.")
+
+
+
 urlpatterns = [
-    path("admin/", admin.site.urls),  # Admin panel URL
+    # path("admin/", admin.site.urls),  # Admin panel URL
     path("api/accounts/", include("django.contrib.auth.urls")),  # Authentication URLs
     path("api/core/", include("core.urls")),  # Core app URLs
     path("api/restaurant/", include("restaurant.urls")),  # Restaurant app URLs
     path("api/supermarket/", include("supermarket.urls")),  # Supermarket app URLs
     # path("api/cafe/", include("cafe.urls")),  # Cafe app URLs
-    # Swagger & Redoc
-    path(
-        "swagger/",
-        schema_view.with_ui("swagger", cache_timeout=0),
-        name="schema-swagger-ui",
-    ),
-    path("redoc/", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc"),
-    path('', include('public.urls')),  # Add public URLs at root level
+    # Swagger & Redoc documentation
+    # path("swagger/", schema_view.with_ui("swagger", cache_timeout=0), name="schema-swagger-ui"),
+    # path("redoc/", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc"),
+    path('', block_root, name='api-root'),  # Provide API root response
+    path('public/', include('public.urls')),  # Restrict public API access
 ]
 
 # Add subdomain handling only in DEBUG mode
-if settings.DEBUG:
-    # This will only handle requests from subdomains
-    urlpatterns = [
-        path('restaurant/', include('restaurant.urls')),  # This will handle the public view for subdomains
-        path('supermarket/', include('supermarket.urls')),  # This will handle the public view for subdomains
+# if settings.DEBUG:
+#     urlpatterns = [
+#         path('restaurant/', include('restaurant.urls')),  # Handle public view for subdomains
+#         path('supermarket/', include('supermarket.urls')),  # Handle public view for subdomains
+#     ] + urlpatterns  # Add all other URLs after
 
-    ] + urlpatterns  # Add all other URLs after
-
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+# if settings.DEBUG:
+#     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

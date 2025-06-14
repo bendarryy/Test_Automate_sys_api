@@ -21,6 +21,8 @@ from django.http import HttpResponseNotFound
 import logging
 from core.serializers import PublicSystemSerializer 
 from .serializers import RestaurantDataSerializer
+from rest_framework.renderers import JSONRenderer
+
 # Define a custom exception for table conflicts
 class TableConflict(APIException):
     status_code = 409  # Use 409 Conflict
@@ -634,10 +636,14 @@ def restaurant_public_view(request, system):
             menu_by_category[category] = []
         menu_by_category[category].append(PublicMenuItemSerializer(item).data)
 
-    return Response({
+    response = Response({
         'system': PublicSystemSerializer(system).data,
         'menu': menu_by_category
     })
+    response.accepted_renderer = JSONRenderer()
+    response.accepted_media_type = 'application/json'
+    response.renderer_context = {'request': request}
+    return response
 
 
 # waiter display By Ali

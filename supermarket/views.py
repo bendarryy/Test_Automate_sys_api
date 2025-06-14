@@ -12,6 +12,7 @@ from django.core.exceptions import ValidationError
 from django.utils import timezone
 from datetime import datetime
 from django.db.models.functions import TruncHour, TruncDate
+from rest_framework.renderers import JSONRenderer
 
 from .models import (
     System,
@@ -753,9 +754,13 @@ def supermarket_public_view(request, system):
         for product in products
     ]
 
-    return Response(
+    response = Response(
         {"system": PublicSystemSerializer(system).data, "products": products_data}
     )
+    response.accepted_renderer = JSONRenderer()
+    response.accepted_media_type = 'application/json'
+    response.renderer_context = {'request': request}
+    return response
 
 # Analytics Views by ali for the supermarket
 @api_view(['GET'])
