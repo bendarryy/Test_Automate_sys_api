@@ -1,8 +1,0 @@
-django-cors-headers
-djangorestframework
-Pillow
-djangorestframework-simplejwt
-django_ratelimit
-drf-yasg
-weasyprint
-drf-nested-routers
