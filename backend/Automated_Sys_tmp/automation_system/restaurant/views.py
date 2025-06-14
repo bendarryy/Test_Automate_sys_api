@@ -70,86 +70,9 @@ class MenuItemViewSet(viewsets.ModelViewSet):
             ]
         return [IsAuthenticated(), OR(IsSystemOwner(), IsEmployeeRolePermission())]
 
-    def perform_create(self, serializer):
-        """Link order to correct system and check table availability."""
-        system_id = self.kwargs.get("system_id")
-        system = get_object_or_404(System, id=system_id)
-        
-        # Get the table number and order type from the request data
-        table_number = serializer.validated_data.get('table_number')
-        order_type = serializer.validated_data.get('order_type', 'in_house')
-        
-        # Check delivery requirements for delivery orders
-        if order_type == 'delivery':
-            delivery_address = serializer.validated_data.get('delivery_address')
-            customer_phone = serializer.validated_data.get('customer_phone')
-            
-            if not delivery_address:
-                raise ValidationError("Delivery address is required for delivery orders")
-            if not customer_phone:
-                raise ValidationError("Customer phone number is required for delivery orders")
-        
-        # Check table availability for in-house orders
-        if order_type == 'in_house' and table_number:
-            # Check if there's an active order on this table
-            active_order = Order.objects.filter(
-                system=system,
-                table_number=table_number,
-                order_type='in_house',
-                status__in=['pending', 'preparing', 'ready', 'served']
-            ).first()
-            
-            if active_order:
-                raise TableConflict(detail=f"Table {table_number} is already occupied by order #{active_order.id}")
-        
-        # If all validations pass, save the order
-        serializer.save(system=system)
-
     def perform_update(self, serializer):
-        """Restrict update fields for waiters."""
-        user = self.request.user
-        system = get_object_or_404(System, id=self.kwargs.get("system_id"))
-
-        if user != system.owner:
-            try:
-                employee = Employee.objects.get(system=system, user=user)
-                if employee.role == "waiter":
-                    allowed_fields = {"customer_name", "table_number", "waiter"}
-                    if any(
-                        field not in allowed_fields
-                        for field in self.request.data.keys()
-                    ):
-                        raise PermissionDenied(
-                            "Waiters can only update limited fields."
-                        )
-            except Employee.DoesNotExist:
-                raise PermissionDenied(
-                    "You do not have permission to update this order."
-                )
-
+        """Allow partial updates without requiring fields."""
         serializer.save()
-
-    def get_permissions(self):
-        """
-        Role-based access control for order actions:
-        - Owners, waiters, and cashiers: Full access (create, update, delete)
-        - Others (chef, delivery): Read-only
-        """
-        editable_roles = [
-            "waiter",
-            "cashier",
-            "manager",
-        ]  # You can expand this if needed
-        if self.action in ["create", "update", "partial_update", "destroy"]:
-            return [
-                IsAuthenticated(),
-                OR(IsSystemOwner(), IsEmployeeRolePermission(*editable_roles)),
-            ]
-        # editable_roles.append()
-        return [
-            IsAuthenticated(),
-            OR(IsSystemOwner(), IsEmployeeRolePermission(*editable_roles)),
-        ]
 
 # pagination.py
 from rest_framework.pagination import PageNumberPagination

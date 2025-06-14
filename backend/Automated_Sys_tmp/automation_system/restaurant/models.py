@@ -6,6 +6,8 @@ from django.core.exceptions import ValidationError
 
 
 
+from django.core.validators import MinValueValidator, MaxValueValidator
+
 class MenuItem(BaseMultiTenantModel):
     """Menu for restaurants and cafes"""
     DEFAULT_CATEGORIES = [
@@ -21,19 +23,29 @@ class MenuItem(BaseMultiTenantModel):
     price = models.DecimalField(max_digits=10, decimal_places=2)
     cost = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     is_available = models.BooleanField(default=True)
-    category = models.CharField(max_length=50, null=True)  # Remove choices to allow any category
+    is_special = models.BooleanField(default=False)
+    is_best_deal = models.BooleanField(default=False)  # 👉 Add this
+    discount_percent = models.DecimalField(             # 👉 And this
+        max_digits=5,
+        decimal_places=2,
+        default=0,
+        validators=[MinValueValidator(0), MaxValueValidator(100)]
+    )
+    category = models.CharField(max_length=50, null=True)
     image = models.ImageField(upload_to="images/menu_images/", blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, null=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.name
-    # def __str__(self):
-    #     return f"{self.name} - {self.price} {('✅' if self.is_available else '❌')}"
+
+    def get_discounted_price(self):
+        if self.is_best_deal and self.discount_percent > 0:
+            return self.price * (1 - self.discount_percent / 100)
+        return self.price
 
     @classmethod
     def get_categories_for_system(cls, system):
-        """Get all categories used in a specific system"""
         return cls.objects.filter(system=system).values_list('category', flat=True).distinct()
 
 
@@ -79,11 +91,20 @@ class Order(models.Model):
         self.total_price = sum(item.total_price() for item in self.order_items.all())
         self.save()
     
+    
     def calculate_profit(self):
-        """Calculate total profit from all order items."""
+        """Calculate total profit from all order items, after discount."""
         return sum(
-            (item.menu_item.price - item.menu_item.cost) * item.quantity
-            for item in self.order_items.all())
+            (item.menu_item.get_discounted_price() - item.menu_item.cost) * item.quantity
+            for item in self.order_items.all()
+        )
+
+
+    # def calculate_profit(self):
+    #     """Calculate total profit from all order items."""
+    #     return sum(
+    #         (item.menu_item.price - item.menu_item.cost) * item.quantity
+    #         for item in self.order_items.all())
 
     def __str__(self):
         return f"Order {self.id} - {self.customer_name or 'Table ' + self.table_number} ({self.status})"
@@ -96,8 +117,13 @@ class OrderItem(models.Model):
     quantity = models.PositiveIntegerField(default=1)
 
     def total_price(self):
-        """Calculate total price for this order item."""
-        return self.menu_item.price * self.quantity
+        """Calculate total price for this order item, applying discount if any."""
+        unit_price = self.menu_item.get_discounted_price()
+        return unit_price * self.quantity
+
+    # def total_price(self):
+    #     """Calculate total price for this order item."""
+    #     return self.menu_item.price * self.quantity
 
     def __str__(self):
         return f"{self.quantity} x {self.menu_item.name} in Order {self.order.id}"

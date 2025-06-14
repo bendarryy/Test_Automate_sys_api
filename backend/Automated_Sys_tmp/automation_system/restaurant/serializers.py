@@ -6,6 +6,7 @@ from .models import Order, OrderItem
 from .models import InventoryItem
 from django.shortcuts import get_object_or_404
 from .models import RestaurantData
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 from rest_framework.exceptions import NotFound, PermissionDenied
 
@@ -16,14 +17,33 @@ class MenuItemSerializer(serializers.ModelSerializer):
         model = MenuItem
         fields = [
             "id", "system", "name", "description", "price", "is_available",
-            "category", "image", "created_at", "updated_at", "cost"
+            "category", "image", "created_at", "updated_at", "cost",
+            "is_special", "is_best_deal", "discount_percent"
         ]
         read_only_fields = ["id", "created_at", "updated_at", "system"]
 
     description = serializers.CharField(required=False, allow_blank=True)
-    price = serializers.DecimalField(required=True, max_digits=10, decimal_places=2)
+    price = serializers.DecimalField(
+        required=False,  # Not required for PATCH
+        max_digits=10,
+        decimal_places=2
+    )
     image = serializers.ImageField(required=False, allow_null=True, allow_empty_file=True)
-    cost = serializers.DecimalField(required=True, max_digits=10, decimal_places=2)
+    cost = serializers.DecimalField(
+        required=False,  # Not required for PATCH
+        max_digits=10,
+        decimal_places=2
+    )
+    name = serializers.CharField(required=False)  # Not required for PATCH
+    is_special = serializers.BooleanField(required=False, default=False)
+    is_best_deal = serializers.BooleanField(required=False, default=False)
+    discount_percent = serializers.DecimalField(
+        required=False,  # Not required for PATCH
+        max_digits=5,
+        decimal_places=2,
+        default=0,
+        validators=[MinValueValidator(0), MaxValueValidator(100)]
+    )
 
     def create(self, validated_data):
         request = self.context["request"]
@@ -38,21 +58,29 @@ class MenuItemSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
     def validate(self, attrs):
-        price = attrs.get("price")
-        cost = attrs.get("cost")
+        request = self.context["request"]
+        if request.method == 'POST':  # Apply stricter validation for create
+            price = attrs.get("price")
+            cost = attrs.get("cost")
+            name = attrs.get("name")
+            discount_percent = attrs.get("discount_percent")
 
-        if price is None:
-            raise serializers.ValidationError("Price is required.")
-        if cost is None:
-            raise serializers.ValidationError("Cost is required.")
-
-        if price <= 0:
-            raise serializers.ValidationError("The price must be a positive number.")
-
-        if cost <= 0:
-            raise serializers.ValidationError("The cost must be a positive number.")
-        if cost >= price:
-            raise serializers.ValidationError("The cost must be lower than the price.")
+            if price is None:
+                raise serializers.ValidationError("Price is required.")
+            if cost is None:
+                raise serializers.ValidationError("Cost is required.")
+            if name is None or not name.strip():
+                raise serializers.ValidationError("Name is required.")
+            if price <= 0:
+                raise serializers.ValidationError("The price must be a positive number.")
+            if cost <= 0:
+                raise serializers.ValidationError("The cost must be a positive number.")
+            if cost >= price:
+                raise serializers.ValidationError("The cost must be lower than the price.")
+            if discount_percent and discount_percent < 0:
+                raise serializers.ValidationError("Discount percent must be a positive number.")
+            if discount_percent and discount_percent > 100:
+                raise serializers.ValidationError("Discount percent cannot exceed 100.")
 
         return attrs
 
@@ -161,10 +189,12 @@ class InventoryItemSerializer(serializers.ModelSerializer):
 class PublicMenuItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = MenuItem
-        fields = ['id', 'name', 'description', 'price', 'is_available', 'category', 'image', 'created_at', 'updated_at']
+        fields = ['id', 'name', 'description', 'category', 'price', 'discount_percent', 'is_best_deal' , 'is_special'  , 'is_available',  'image', 'created_at', 'updated_at']
 
 class RestaurantDataSerializer(serializers.ModelSerializer):
     class Meta:
         model = RestaurantData
         fields = ['id', 'system', 'number_of_tables']
         read_only_fields = ['id', 'system']
+        
+  
