@@ -2,15 +2,16 @@ from django.shortcuts import get_object_or_404, render
 from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import PermissionDenied
-from rest_framework.decorators import action, api_view
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
-from django.db.models import F
+from django.db.models import F, Count, Q
 from datetime import date, timedelta
 from django.http import Http404
 from django.db import transaction
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 from datetime import datetime
+from django.db.models.functions import TruncHour, TruncDate
 
 from .models import (
     System,
@@ -36,6 +37,10 @@ from .serializers import (
     PurchaseOrderSerializer,
     GoodsReceivingSerializer,
     PublicProductSerializer,
+    OrderSummarySerializer,
+    OrderTrendSerializer,
+    CashierPerformanceSerializer,
+    PeakHourSerializer,
 )
 from core.permissions import IsSystemOwner, IsEmployeeRolePermission
 from rest_framework.permissions import OR
@@ -751,3 +756,210 @@ def supermarket_public_view(request, system):
     return Response(
         {"system": PublicSystemSerializer(system).data, "products": products_data}
     )
+
+# Analytics Views by ali for the supermarket
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def order_summary(request, system_id):
+    """Get order count summary for today, week, and month with change percentages"""
+    try:
+        # Get current date and calculate previous periods
+        now = timezone.now()
+        today = now.date()
+        yesterday = today - timedelta(days=1)
+        last_week_start = today - timedelta(days=7)
+        last_month_start = today - timedelta(days=30)
+
+        # Get sales for current periods
+        today_sales = Sale.objects.filter(
+            system_id=system_id,
+            created_at__date=today
+        ).count()
+
+        week_sales = Sale.objects.filter(
+            system_id=system_id,
+            created_at__date__gte=last_week_start
+        ).count()
+
+        month_sales = Sale.objects.filter(
+            system_id=system_id,
+            created_at__date__gte=last_month_start
+        ).count()
+
+        # Get sales for previous periods
+        yesterday_sales = Sale.objects.filter(
+            system_id=system_id,
+            created_at__date=yesterday
+        ).count()
+
+        last_week_sales = Sale.objects.filter(
+            system_id=system_id,
+            created_at__date__gte=last_week_start - timedelta(days=7),
+            created_at__date__lt=last_week_start
+        ).count()
+
+        last_month_sales = Sale.objects.filter(
+            system_id=system_id,
+            created_at__date__gte=last_month_start - timedelta(days=30),
+            created_at__date__lt=last_month_start
+        ).count()
+
+        # Calculate change percentages
+        def calculate_change(current, previous):
+            if previous == 0:
+                return 0 if current == 0 else 100
+            return ((current - previous) / previous) * 100
+
+        day_change = calculate_change(today_sales, yesterday_sales)
+        week_change = calculate_change(week_sales, last_week_sales)
+        month_change = calculate_change(month_sales, last_month_sales)
+
+        data = {
+            'day_orders': today_sales,
+            'day_change': round(day_change, 1),
+            'week_orders': week_sales,
+            'week_change': round(week_change, 1),
+            'month_orders': month_sales,
+            'month_change': round(month_change, 1)
+        }
+        
+        serializer = OrderSummarySerializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        return Response(serializer.data)
+
+    except Exception as e:
+        return Response({'error': str(e)}, status=400)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def order_trend(request, system_id):
+    """Get order trend data for daily or monthly view"""
+    view_type = request.GET.get('view', 'daily')  # Default to daily view
+    
+    try:
+        if view_type == 'daily':
+            # Get last 30 days of data
+            start_date = timezone.now().date() - timedelta(days=30)
+            sales = Sale.objects.filter(
+                system_id=system_id,
+                created_at__date__gte=start_date
+            ).annotate(
+                date=TruncDate('created_at')
+            ).values('date').annotate(
+                orders=Count('id')
+            ).order_by('date')
+            
+            # Format dates and ensure all dates are included
+            result = []
+            current_date = start_date
+            while current_date <= timezone.now().date():
+                date_str = current_date.isoformat()
+                day_data = next((item for item in sales if item['date'] == current_date), None)
+                result.append({
+                    'date': current_date,
+                    'orders': day_data['orders'] if day_data else 0
+                })
+                current_date += timedelta(days=1)
+                
+        else:  # monthly view
+            # Get last 12 months of data
+            start_date = timezone.now().date() - timedelta(days=365)
+            sales = Sale.objects.filter(
+                system_id=system_id,
+                created_at__date__gte=start_date
+            ).annotate(
+                month=TruncDate('created_at')
+            ).values('month').annotate(
+                orders=Count('id')
+            ).order_by('month')
+            
+            result = []
+            current_date = start_date
+            while current_date <= timezone.now().date():
+                month_data = next((item for item in sales if item['month'].strftime('%Y-%m') == current_date.strftime('%Y-%m')), None)
+                result.append({
+                    'date': current_date,
+                    'orders': month_data['orders'] if month_data else 0
+                })
+                # Move to first day of next month
+                if current_date.month == 12:
+                    current_date = current_date.replace(year=current_date.year + 1, month=1)
+                else:
+                    current_date = current_date.replace(month=current_date.month + 1)
+
+        serializer = OrderTrendSerializer(data=result, many=True)
+        serializer.is_valid(raise_exception=True)
+        return Response(serializer.data)
+
+    except Exception as e:
+        return Response({'error': str(e)}, status=400)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def top_cashiers(request, system_id):
+    """Get top cashiers by order count for different time ranges"""
+    range_type = request.GET.get('range', 'day')  # Default to daily view
+    
+    try:
+        now = timezone.now()
+        if range_type == 'day':
+            start_date = now.date()
+        elif range_type == 'week':
+            start_date = now.date() - timedelta(days=7)
+        else:  # month
+            start_date = now.date() - timedelta(days=30)
+
+        cashiers = Sale.objects.filter(
+            system_id=system_id,
+            created_at__date__gte=start_date,
+            cashier__isnull=False
+        ).values(
+            'cashier__user__username'
+        ).annotate(
+            orders=Count('id')
+        ).order_by('-orders')[:10]  # Top 10 cashiers
+
+        data = [{
+            'cashier': item['cashier__user__username'],
+            'orders': item['orders']
+        } for item in cashiers]
+
+        serializer = CashierPerformanceSerializer(data=data, many=True)
+        serializer.is_valid(raise_exception=True)
+        return Response(serializer.data)
+
+    except Exception as e:
+        return Response({'error': str(e)}, status=400)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def peak_hours(request, system_id):
+    """Get order count by hour for the last 7 days"""
+    try:
+        start_date = timezone.now().date() - timedelta(days=7)
+        
+        # Get orders grouped by hour
+        hourly_orders = Sale.objects.filter(
+            system_id=system_id,
+            created_at__date__gte=start_date
+        ).annotate(
+            hour=TruncHour('created_at')
+        ).values('hour').annotate(
+            orders=Count('id')
+        ).order_by('hour')
+
+        # Format the response
+        data = []
+        for item in hourly_orders:
+            hour = item['hour'].strftime('%H:00')
+            data.append({
+                'hour': hour,
+                'orders': item['orders']
+            })
+
+        serializer = PeakHourSerializer(data=data, many=True)
+        serializer.is_valid(raise_exception=True)
+        return Response(serializer.data)
+
+    except Exception as e:
+        return Response({'error': str(e)}, status=400)
