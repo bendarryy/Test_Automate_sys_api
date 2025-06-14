@@ -25,13 +25,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-+%24%sui+fq=vq(9h)cnuv7-j@nq5f)!vg6vzqa2fx2&z9^nmg"
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "unsafe-default-key")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get("DEBUG", "False") == "True"
 
 # ALLOWED_HOSTS = []
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.public.localhost']
+ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1,.public.localhost").split(",")
 
 
 # Application definition
@@ -43,7 +43,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-     'rest_framework',
+    'rest_framework',
     'rest_framework.authtoken',
     'corsheaders',
     # Core app (handles admin and shared models)
@@ -57,13 +57,8 @@ INSTALLED_APPS = [
     'drf_yasg',
 ]
 
-CORS_ALLOWED_ORIGINS = [
-    "http://127.0.0.1:5173",  # React development server
-    "http://localhost:5173",  # React development server alternative
-    "http://127.0.0.1:5174",  # React development server
-    "http://localhost:5174",  # React development server alternative
-    "http://127.0.0.1:5500" # React development server alternative
-]
+
+CORS_ALLOWED_ORIGINS = os.environ.get("CORS_ALLOWED_ORIGINS", "http://127.0.0.1:5173,http://localhost:5173").split(",")
 
 CORS_ALLOW_CREDENTIALS = True
 
@@ -71,13 +66,7 @@ CORS_ALLOW_HEADERS = list(default_headers) + [
     'x-subdomain',  # Allow subdomain header
 ]
 
-CSRF_TRUSTED_ORIGINS = [
-    "http://127.0.0.1:5173",  # Trust frontend for CSRF
-    "http://localhost:5173",  # Trust frontend for CSRF alternative
-    "http://127.0.0.1:5174",  # Trust frontend for CSRF
-    "http://localhost:5174",  # Trust frontend for CSRF alternative
-    "http://127.0.0.1:5500" # Trust frontend for CSRF alternative
-]
+CSRF_TRUSTED_ORIGINS = os.environ.get("CSRF_TRUSTED_ORIGINS", "http://127.0.0.1:5173,http://localhost:5173").split(",")
 # Ensure cookie settings are correct (already set based on your headers)
 # SESSION_COOKIE_SAMESITE = 'None'
 # SESSION_COOKIE_SECURE = True
@@ -86,7 +75,7 @@ CSRF_TRUSTED_ORIGINS = [
 
 
 # Optional: Allow all origins (use only for development)
-# CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_ALL_ORIGINS = True  # Allow all origins for initial testing (remove/comment for production)
 
 
 MIDDLEWARE = [
@@ -149,10 +138,10 @@ WSGI_APPLICATION = "automation_system.wsgi.application"
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
+    "default": dj_database_url.config(
+        default=os.environ.get("DATABASE_URL", f"sqlite:///{BASE_DIR / 'db.sqlite3'}"),
+        conn_max_age=600,
+    )
 }
 
 
@@ -197,18 +186,18 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 # Create a function to ensure media directories exist
-def create_media_dirs():
-    media_dirs = [
-        MEDIA_ROOT / 'public',
-        MEDIA_ROOT / 'public' / 'logos',
-        MEDIA_ROOT / 'public' / 'menus',
-        MEDIA_ROOT / 'public' / 'sliders',
-    ]
-    for directory in media_dirs:
-        directory.mkdir(parents=True, exist_ok=True)
+# def create_media_dirs():
+#     media_dirs = [
+#         MEDIA_ROOT / 'public',
+#         MEDIA_ROOT / 'public' / 'logos',
+#         MEDIA_ROOT / 'public' / 'menus',
+#         MEDIA_ROOT / 'public' / 'sliders',
+#     ]
+#     for directory in media_dirs:
+#         directory.mkdir(parents=True, exist_ok=True)
 
 # Call the function when Django starts
-create_media_dirs()
+# create_media_dirs()
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
