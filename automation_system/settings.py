@@ -101,7 +101,7 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
-        'rest_framework.renderers.BrowsableAPIRenderer',  # This enables the browsable API
+        # 'rest_framework.renderers.BrowsableAPIRenderer',  # This enables the browsable API
     ],
 #     'DEFAULT_AUTHENTICATION_CLASSES': (
 #         'rest_framework.authentication.SessionAuthentication',  # for managers (session-based)
