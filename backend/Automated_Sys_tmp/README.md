@@ -723,3 +723,165 @@ This section documents the endpoints related to managing tables and creating ord
 ```
 
 ---
+
+# 📊 Supermarket Analytics Dashboard API Documentation
+
+## Overview
+This section documents the analytics endpoints for the supermarket system, providing insights into order counts, trends, and performance metrics.
+
+## Authentication
+- All endpoints require authentication (Token Authentication)
+- Accessible by system owners, managers, and cashiers
+
+## Endpoints
+
+### 1. Order Summary
+**GET** `/api/supermarket/{system_id}/orders/analytics/order-summary/`
+
+Returns a summary of order counts for different time periods with change percentages.
+
+**Response Example:**
+```json
+{
+    "day_orders": 45,
+    "day_change": 10.5,
+    "week_orders": 230,
+    "week_change": -3.2,
+    "month_orders": 812,
+    "month_change": 5.7
+}
+```
+
+**Fields Description:**
+- `day_orders`: Number of orders today
+- `day_change`: Percentage change compared to yesterday
+- `week_orders`: Number of orders this week
+- `week_change`: Percentage change compared to last week
+- `month_orders`: Number of orders this month
+- `month_change`: Percentage change compared to last month
+
+---
+
+### 2. Order Trend
+**GET** `/api/supermarket/{system_id}/orders/analytics/order-trend/?view=daily|monthly`
+
+Returns order trend data for either daily (last 30 days) or monthly (last 12 months) view.
+
+**Query Parameters:**
+- `view`: Type of view (default: 'daily')
+  - `daily`: Shows last 30 days of data
+  - `monthly`: Shows last 12 months of data
+
+**Response Example (Daily):**
+```json
+[
+    {
+        "date": "2025-04-01",
+        "orders": 32
+    },
+    {
+        "date": "2025-04-02",
+        "orders": 42
+    }
+]
+```
+
+**Response Example (Monthly):**
+```json
+[
+    {
+        "date": "2025-01",
+        "orders": 1250
+    },
+    {
+        "date": "2025-02",
+        "orders": 1380
+    }
+]
+```
+
+---
+
+### 3. Top Cashiers
+**GET** `/api/supermarket/{system_id}/orders/analytics/cashiers/?range=day|week|month`
+
+Returns a list of top 10 cashiers by order count for different time ranges.
+
+**Query Parameters:**
+- `range`: Time range for analysis (default: 'day')
+  - `day`: Today's data
+  - `week`: Last 7 days
+  - `month`: Last 30 days
+
+**Response Example:**
+```json
+[
+    {
+        "cashier": "Ali Hassan",
+        "orders": 34
+    },
+    {
+        "cashier": "Sara Nabil",
+        "orders": 29
+    }
+]
+```
+
+---
+
+### 4. Peak Hours
+**GET** `/api/supermarket/{system_id}/orders/analytics/peak-hours/`
+
+Returns order count by hour for the last 7 days, helping identify peak business hours.
+
+**Response Example:**
+```json
+[
+    {
+        "hour": "09:00",
+        "orders": 15
+    },
+    {
+        "hour": "10:00",
+        "orders": 25
+    },
+    {
+        "hour": "11:00",
+        "orders": 30
+    }
+]
+```
+
+## Error Responses
+
+All endpoints may return the following error responses:
+
+**401 Unauthorized:**
+```json
+{
+    "detail": "Authentication credentials were not provided."
+}
+```
+
+**400 Bad Request:**
+```json
+{
+    "error": "Error message describing the issue"
+}
+```
+
+## Notes
+- All order counts are based on completed sales
+- Percentages are rounded to one decimal place
+- Dates are returned in ISO format (YYYY-MM-DD)
+- Time is in 24-hour format (HH:00)
+- Cashier names are based on their usernames
+- Peak hours analysis includes data from the last 7 days only
+
+## Implementation Details
+- Created by: Ali
+- Last Updated: [Current Date]
+- Dependencies: Django REST Framework, Django
+- Database: Uses existing Sale and SaleItem models
+
+---

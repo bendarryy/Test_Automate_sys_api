@@ -584,3 +584,24 @@ class PublicProductSerializer(serializers.ModelSerializer):
             "minimum_stock",
             "image",
         ]
+
+# Analytics Serializers by ali for the supermarket
+class OrderSummarySerializer(serializers.Serializer):
+    day_orders = serializers.IntegerField()
+    day_change = serializers.FloatField()
+    week_orders = serializers.IntegerField()
+    week_change = serializers.FloatField()
+    month_orders = serializers.IntegerField()
+    month_change = serializers.FloatField()
+
+class OrderTrendSerializer(serializers.Serializer):
+    date = serializers.DateField()
+    orders = serializers.IntegerField()
+
+class CashierPerformanceSerializer(serializers.Serializer):
+    cashier = serializers.CharField()
+    orders = serializers.IntegerField()
+
+class PeakHourSerializer(serializers.Serializer):
+    hour = serializers.CharField()
+    orders = serializers.IntegerField()

@@ -6,6 +6,10 @@ from .views import (
     SupplierViewSet,
     PurchaseOrderViewSet,
     GoodsReceivingViewSet,
+    order_summary,
+    order_trend,
+    top_cashiers,
+    peak_hours,
 )
 import json
 from django.conf import settings
@@ -251,4 +255,9 @@ urlpatterns = [
         ),
         name="goods-receiving-by-po",
     ),
+    # Analytics URLs
+    path('<int:system_id>/orders/analytics/order-summary/', order_summary, name='order-summary'),
+    path('<int:system_id>/orders/analytics/order-trend/', order_trend, name='order-trend'),
+    path('<int:system_id>/orders/analytics/cashiers/', top_cashiers, name='top-cashiers'),
+    path('<int:system_id>/orders/analytics/peak-hours/', peak_hours, name='peak-hours'),
 ]
