@@ -4,26 +4,22 @@ import {
   Input,
   Button,
   Avatar,
-  Spin,
   Alert,
-  Tabs,
   Switch,
   Divider,
   Row,
   Col,
-  message,
   Upload,
   Modal,
   Popover,
 } from 'antd';
-import { AiOutlinePicture, AiOutlineEye, AiOutlineBgColors } from 'react-icons/ai';
+import { AiOutlinePicture } from 'react-icons/ai';
 import { useApi } from '../../../shared/hooks/useApi';
 import { z } from 'zod';
 import { useSelectedSystemId } from 'shared/hooks/useSelectedSystemId';
 import { Swiper, SwiperSlide } from 'swiper/react';
-import 'swiper/bundle';
 import { Navigation } from 'swiper/modules';
-import 'swiper/core';
+import 'swiper/bundle';
 
 // Zod schema for validation
 const socialLinksSchema = z.object({
@@ -38,7 +34,7 @@ const socialLinksSchema = z.object({
 const profileSchema = z.object({
   description: z.string().optional(),
   is_public: z.boolean(),
-  public_title: z.string().max(200, 'Max 200 characters').min(2, 'Title is required'),
+  public_title: z.string().max(200, 'Max 200 characters').optional().or(z.literal('')),
   public_description: z.string().optional(),
   primary_color: z.string().regex(/^#([0-9A-Fa-f]{6})$/, 'Invalid hex color'),
   secondary_color: z.string().regex(/^#([0-9A-Fa-f]{6})$/, 'Invalid hex color'),
@@ -131,8 +127,10 @@ const EditSystemPublicProfile: React.FC = () => {
   }, [systemId]);
 
   // Handle input change
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target;
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value, type } = e.target;
     if (name.startsWith('social_links.')) {
       const key = name.split('.')[1];
       setForm((prev) => ({
@@ -142,8 +140,8 @@ const EditSystemPublicProfile: React.FC = () => {
           [key]: value,
         },
       }));
-    } else if (type === 'checkbox') {
-      setForm((prev) => ({ ...prev, [name]: checked }));
+    } else if (type === 'checkbox' && 'checked' in e.target) {
+      setForm((prev) => ({ ...prev, [name]: (e.target as HTMLInputElement).checked }));
     } else {
       setForm((prev) => ({ ...prev, [name]: value }));
     }
@@ -193,8 +191,7 @@ const EditSystemPublicProfile: React.FC = () => {
   };
 
   // Handle PATCH submit for public profile
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     if (!validate() || !systemId) {
       console.log('Validation failed or id missing', { form, systemId });
       setFormErrors((prev) => ({ ...prev, global: 'يرجى التأكد من صحة البيانات أو وجود رقم النظام.' }));
@@ -364,12 +361,6 @@ const EditSystemPublicProfile: React.FC = () => {
           </a>
         ))}
       </div>
-      <div style={{ marginBottom: 12 }}>
-        <strong>Name:</strong> {form.name || <span style={{color:'#bbb'}}>غير متوفر</span>}<br />
-        <strong>Category:</strong> {form.category || <span style={{color:'#bbb'}}>غير متوفر</span>}<br />
-        <strong>Subdomain:</strong> {form.subdomain || <span style={{color:'#bbb'}}>غير متوفر</span>}<br />
-        <strong>Custom Link:</strong> {form.custom_link || <span style={{color:'#bbb'}}>غير متوفر</span>}
-      </div>
     </div>
   );
 
@@ -387,11 +378,11 @@ const EditSystemPublicProfile: React.FC = () => {
               <Form.Item
                 label="Public Title"
                 name="public_title"
-                rules={[{ required: true, message: 'Title is required' }, { max: 200, message: 'Max 200 characters' }]}
+                rules={[{ max: 200, message: 'Max 200 characters' }]}
                 style={{ marginBottom: 16 }}
                 extra="This will be shown to customers on your public page."
               >
-                <Input value={form.public_title} onChange={handleChange} />
+                <Input name="public_title" value={form.public_title} onChange={handleChange} />
               </Form.Item>
               <Form.Item
                 label="Public Description"
@@ -399,7 +390,7 @@ const EditSystemPublicProfile: React.FC = () => {
                 style={{ marginBottom: 16 }}
                 extra="Describe your system for customers."
               >
-                <Input.TextArea value={form.public_description} onChange={handleChange} rows={2} />
+                <Input.TextArea name="public_description" value={form.public_description} onChange={handleChange} rows={2} />
               </Form.Item>
               <Form.Item
                 label="General Description"
@@ -407,12 +398,13 @@ const EditSystemPublicProfile: React.FC = () => {
                 style={{ marginBottom: 16 }}
                 extra="Internal description for your team."
               >
-                <Input.TextArea value={form.description} onChange={handleChange} rows={2} />
+                <Input.TextArea name="description" value={form.description} onChange={handleChange} rows={2} />
               </Form.Item>
               <Row gutter={16}>
                 <Col span={12}>
                   <Form.Item label="Primary Color" name="primary_color" style={{ marginBottom: 16 }}>
                     <Input
+                      name="primary_color"
                       value={form.primary_color}
                       onChange={(e) => handleColorChange('primary_color', e.target.value)}
                       suffix={<ColorPicker value={form.primary_color} onChange={color => handleColorChange('primary_color', color)} />}
@@ -422,6 +414,7 @@ const EditSystemPublicProfile: React.FC = () => {
                 <Col span={12}>
                   <Form.Item label="Secondary Color" name="secondary_color" style={{ marginBottom: 16 }}>
                     <Input
+                      name="secondary_color"
                       value={form.secondary_color}
                       onChange={(e) => handleColorChange('secondary_color', e.target.value)}
                       suffix={<ColorPicker value={form.secondary_color} onChange={color => handleColorChange('secondary_color', color)} />}
@@ -434,14 +427,14 @@ const EditSystemPublicProfile: React.FC = () => {
                 name="email"
                 style={{ marginBottom: 16 }}
               >
-                <Input value={form.email} onChange={handleChange} />
+                <Input name="email" value={form.email} onChange={handleChange} />
               </Form.Item>
               <Form.Item
                 label="WhatsApp Number"
                 name="whatsapp_number"
                 style={{ marginBottom: 16 }}
               >
-                <Input value={form.whatsapp_number} onChange={handleChange} />
+                <Input name="whatsapp_number" value={form.whatsapp_number} onChange={handleChange} />
               </Form.Item>
               <Divider style={{ margin: '16px 0' }}>Social Links</Divider>
               <Row gutter={16}>
@@ -453,6 +446,7 @@ const EditSystemPublicProfile: React.FC = () => {
                       style={{ marginBottom: 16 }}
                     >
                       <Input
+                        name={`social_links.${key}`}
                         value={form.social_links[key as keyof typeof initialForm.social_links] || ''}
                         onChange={handleChange}
                       />
@@ -504,7 +498,8 @@ const EditSystemPublicProfile: React.FC = () => {
                       input.type = 'file';
                       input.accept = 'image/png,image/jpeg,image/webp';
                       input.onchange = (e) => {
-                        const files = e.target.files;
+                        const target = e.target as HTMLInputElement;
+                        const files = target.files;
                         if (files && files[0]) {
                           setForm((prev) => ({ ...prev, logo: files[0] }));
                           setLogoPreview(URL.createObjectURL(files[0]));
@@ -592,11 +587,11 @@ const EditSystemPublicProfile: React.FC = () => {
                   modules={[Navigation]}
                 >
                   {form.sliderImages.map((img, idx) => (
-                    <SwiperSlide key={img.id || img.image || idx}>
+                    <SwiperSlide key={img.id}>
                       <div style={{ position: 'relative', width: '100%', height: 200, borderRadius: 8, overflow: 'hidden', boxShadow: '0 1px 4px #eee', background: '#fafafa' }}>
-                        {img.image ? (
+                        {img.image_url ? (
                           <img
-                            src={img.image}
+                            src={img.image_url}
                             alt={img.caption}
                             style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                             onError={e => { e.currentTarget.onerror = null; e.currentTarget.src = 'https://via.placeholder.com/400x200?text=No+Image'; }}
@@ -647,15 +642,16 @@ const EditSystemPublicProfile: React.FC = () => {
           </Col>
         </Row>
       </Col>
-      <Alert
-        message="Profile updated successfully!"
-        type="success"
-        showIcon
-        closable
-        style={{ position: 'fixed', top: 16, right: 16, zIndex: 1000, width: 300 }}
-        onClose={() => setSuccess(false)}
-        visible={success}
-      />
+      {success && (
+        <Alert
+          message="Profile updated successfully!"
+          type="success"
+          showIcon
+          closable
+          style={{ position: 'fixed', top: 16, right: 16, zIndex: 1000, width: 300 }}
+          onClose={() => setSuccess(false)}
+        />
+      )}
     </Row>
   );
 };

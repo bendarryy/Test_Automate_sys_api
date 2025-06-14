@@ -4,6 +4,7 @@
 
 body {
   font-family: Arial, Helvetica, sans-serif;
+  background: var(--secondary-color);
 }
 
 @layer utilities {
@@ -47,6 +48,15 @@ body {
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+    --primary-color: #00bfff; /* سيتم استبدالها ديناميكياً من الـ API */
+    --secondary-color: #FFFFFF; /* سيتم استبدالها ديناميكياً من الـ API */
+    --brand-red: var(--primary-color); /* ربط brand-red باللون الأساسي */
+  }
+  .text-brand-red {
+    color: var(--primary-color) !important;
+  }
+  .bg-brand-red {
+    background-color: var(--primary-color) !important;
   }
   .dark {
     --background: 0 0% 3.9%;

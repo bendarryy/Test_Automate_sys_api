@@ -451,7 +451,7 @@ export default function KingsBurgerPage() {
           <div className="grid md:grid-cols-3 gap-8 items-center">
             <div className="space-y-6">
               <div className="flex items-start space-x-4">
-                <div className="bg-brand-yellow p-3 rounded-full mt-1">
+                <div className="bg-brand-yellow p-3 rounded-full mt-1" style={{background: 'var(--secondary-color)'}}>
                   <Bike className="w-6 h-6 text-brand-dark" />
                 </div>
                 <div>
@@ -464,7 +464,7 @@ export default function KingsBurgerPage() {
                 </div>
               </div>
               <div className="flex items-start space-x-4">
-                <div className="bg-brand-yellow p-3 rounded-full mt-1">
+                <div className="bg-brand-yellow p-3 rounded-full mt-1" style={{background: 'var(--secondary-color)'}}>
                   <Gift className="w-6 h-6 text-brand-dark" />
                 </div>
                 <div>
@@ -971,6 +971,8 @@ export default function KingsBurgerPage() {
           </div>
         </div>
       </footer>
+
+
     </div>
   );
 }

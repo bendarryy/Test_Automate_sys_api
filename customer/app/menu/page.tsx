@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useEffect } from "react" // Added useEffect
+import { useState, useMemo, useEffect, useRef } from "react"
 import Image from "next/image"
 import { Search, Filter, Star, Clock, Heart, ShoppingCart } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -12,11 +12,45 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Slider } from "@/components/ui/slider"
 import { useApp } from "@/contexts/app-context"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
-import { getAbsoluteImageUrl } from "@/lib/utils"; // Import the utility
+import { getAbsoluteImageUrl } from "@/lib/utils";
+import { useRouter, useSearchParams } from "next/navigation"
 
 export default function MenuPage() {
   const { state, dispatch } = useApp()
-  const { restaurantData: apiRestaurantData, isLoading } = state; // Get data and loading state from context
+  const { restaurantData: apiRestaurantData, isLoading } = state;
+
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const firstLoad = useRef(true);
+
+  // عند تحميل الصفحة: اجلب قيمة البحث من URL وضعها في state
+  useEffect(() => {
+    const urlSearch = searchParams.get("search") || "";
+    if (urlSearch !== state.searchQuery) {
+      dispatch({ type: "SET_SEARCH_QUERY", payload: urlSearch });
+    }
+    // eslint-disable-next-line
+  }, [searchParams, dispatch]);
+
+  // عند تغيير البحث من input: حدث الـ URL فقط إذا تغيرت القيمة
+  useEffect(() => {
+    // لا تحدث الرابط أول مرة (عند تحميل الصفحة)
+    if (firstLoad.current) {
+      firstLoad.current = false;
+      return;
+    }
+    const current = searchParams.get("search") || "";
+    if (state.searchQuery !== current) {
+      const params = new URLSearchParams(Array.from(searchParams.entries()));
+      if (state.searchQuery) {
+        params.set("search", state.searchQuery);
+      } else {
+        params.delete("search");
+      }
+      router.replace(`?${params.toString()}`);
+    }
+    // eslint-disable-next-line
+  }, [state.searchQuery]);
 
   const [sortBy, setSortBy] = useState("name")
   const [priceRange, setPriceRange] = useState([0, 50])

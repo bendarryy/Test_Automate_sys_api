@@ -9,6 +9,7 @@ import { NotificationToast } from "@/components/ui/notification-toast";
 import { fetchRestaurantData } from "@/lib/data";
 import { RestaurantAPIData } from "@/lib/types";
 import { useEffect } from "react";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -24,9 +25,12 @@ export default function RootLayout({
           <DataInitializer />
           <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors">
             <Header />
-            <main>{children}</main>
+            <main className="min-h-[calc(100vh-200px)]">
+              {children}
+            </main>
             <Footer />
             <NotificationToast />
+            <ThemeToggle />
           </div>
         </AppProvider>
       </body>
@@ -43,6 +47,11 @@ function DataInitializer() {
         dispatch({ type: "SET_LOADING", payload: true });
         const data = await fetchRestaurantData();
         dispatch({ type: "SET_RESTAURANT_DATA", payload: data });
+        // تعيين ألوان الثيم كمتغيرات CSS في body
+        if (data?.system?.primary_color && data?.system?.secondary_color) {
+          document.body.style.setProperty('--primary-color', data.system.primary_color);
+          document.body.style.setProperty('--secondary-color', data.system.secondary_color);
+        }
       } catch (error) {
         console.error("Failed to load restaurant data:", error);
         dispatch({
