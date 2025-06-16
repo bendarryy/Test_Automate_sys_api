@@ -560,7 +560,7 @@ class SystemSerializer(serializers.ModelSerializer):
             'email': {'required': False, 'allow_blank': True, 'allow_null': True},
             'whatsapp_number': {'required': False, 'allow_blank': True, 'allow_null': True},
             'social_links': {'required': False},
-            'design_settings': {'required': False, 'allow_blank': True}
+            'design_settings': {'required': False}
         }
 
 class PublicSliderImageSerializer(serializers.ModelSerializer):
