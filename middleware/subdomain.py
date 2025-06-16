@@ -8,13 +8,14 @@ class PublicSubdomainMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        host = request.get_host().split(':')[0]  # remove port if any
-
-        if host.endswith('.public.localhost'):
-            subdomain = host.split('.public.localhost')[0]
-            request.subdomain = subdomain
+        # Extract subdomain from X-Subdomain header
+        x_subdomain = request.headers.get('X-Subdomain')
+        if x_subdomain:
+            request.subdomain = x_subdomain
+            logger.info(f"Subdomain extracted from header: {x_subdomain}")
         else:
             request.subdomain = None
+            logger.warning("Subdomain could not be extracted from header.")
 
         response = self.get_response(request)
         return response

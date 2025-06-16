@@ -8,6 +8,16 @@ from rest_framework.response import Response
 from rest_framework import status
 from core.serializers import PublicSystemSerializer, PublicSliderImageSerializer
 from rest_framework.request import Request as DRFRequest
+from rest_framework.renderers import JSONRenderer
+from rest_framework.views import APIView
+
+
+def extract_subdomain_from_url(request):
+    """
+    Extract subdomain from the request URL.
+    """
+    host = request.get_host().split(':')[0]
+    return host.split('.')[0]
 
 
 def get_system_from_request(request):
@@ -19,20 +29,19 @@ def get_system_from_request(request):
         # Handle both Django and DRF request types
         if isinstance(request, DRFRequest):
             request = request._request  # Convert to native Django HttpRequest
-            
-        host = request.get_host().split(':')[0]
-        subdomain = host.split('.')[0]
 
+        # Use x-subdomain header directly
+        subdomain = request.headers.get('x-subdomain')
         if not subdomain:
             return None, Response(
-                {"error": "Subdomain not found"},
-                status=status.HTTP_404_NOT_FOUND
+                {"error": "Access denied"},
+                status=status.HTTP_403_FORBIDDEN
             )
 
         system = System.objects.get(subdomain=subdomain)
         if not system.is_public or not system.is_active:
             return None, Response(
-                {"error": "System is not public or active"},
+                {"error": "Access denied"},
                 status=status.HTTP_403_FORBIDDEN
             )
 
@@ -40,8 +49,8 @@ def get_system_from_request(request):
 
     except System.DoesNotExist:
         return None, Response(
-            {"error": "System not found"},
-            status=status.HTTP_404_NOT_FOUND
+            {"error": "Access denied"},
+            status=status.HTTP_403_FORBIDDEN
         )
 
 
@@ -76,31 +85,35 @@ def get_common_system_data(system):
     }
 
 
-def public_view(request):
+class public_view(APIView):
     """
     Main public view that routes based on system type.
     """
-    # Convert DRF request to Django request if needed
-    django_request = request._request if isinstance(request, DRFRequest) else request
-    
-    system, error_response = get_system_from_request(django_request)
-    if error_response:
-        return error_response
+    def get(self, request):
+        # Convert DRF request to Django HttpRequest
+        if isinstance(request, DRFRequest):
+            request = request._request
 
-    # Get common system data
-    common_data = get_common_system_data(system)
+        system, error_response = get_system_from_request(request)
+        if error_response:
+            return error_response
 
-    # Route to specific view based on category
-    if system.category == 'restaurant':
-        response = restaurant_public_view(django_request, system)
-        response.data['system'] = common_data
+        # Get common system data
+        common_data = get_common_system_data(system)
+
+        # Route to specific view based on category
+        if system.category == 'restaurant':
+            response = restaurant_public_view(request, system)
+            response.data['system'] = common_data
+            response['x-category'] = 'restaurant'  # Add x-category header
+        elif system.category == 'supermarket': 
+            response = supermarket_public_view(request, system)
+            response.data['system'] = common_data
+            response['x-category'] = 'supermarket'  # Add x-category header
+        else:
+            return Response(
+                {"error": "Invalid system category"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         return response
-    elif system.category == 'supermarket':
-        response = supermarket_public_view(django_request, system)
-        response.data['system'] = common_data
-        return response
-    else:
-        return Response(
-            {"error": "Invalid system category"},
-            status=status.HTTP_400_BAD_REQUEST
-        )
