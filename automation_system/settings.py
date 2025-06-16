@@ -52,7 +52,7 @@ CORS_EXPOSE_HEADERS = [
 CORS_ALLOWED_ORIGIN_REGEXES = [
     r.strip() for r in os.environ.get(
         "CORS_ALLOWED_ORIGIN_REGEXES",
-        r"^http://.*\.public\.localhost(:[0-9]+)?$,^https://.*\.tarkeeb\.com$"
+        r"^http://.*\.public\.localhost(:[0-9]+)?$,^https://.*\.tarkeeb\.online$"
     ).split(",")
     if r.strip()
 ]
