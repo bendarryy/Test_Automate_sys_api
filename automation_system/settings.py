@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 import os
 import dj_database_url
+import re
 
 from datetime import timedelta
 from pathlib import Path
@@ -43,6 +44,18 @@ CORS_ALLOW_HEADERS = list(default_headers) + [
 # CORS_ALLOW_ALL_ORIGINS = True 
 CSRF_TRUSTED_ORIGINS = os.environ.get("CSRF_TRUSTED_ORIGINS", "http://127.0.0.1:5173,http://localhost:5173").split(",")
 
+CORS_EXPOSE_HEADERS = [
+    "x-category"
+]
+
+# Parse regexes from environment variable (strip whitespace)
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r.strip() for r in os.environ.get(
+        "CORS_ALLOWED_ORIGIN_REGEXES",
+        r"^http://.*\.public\.localhost(:[0-9]+)?$,^https://.*\.tarkeeb\.com$"
+    ).split(",")
+    if r.strip()
+]
 # Application definition
 
 INSTALLED_APPS = [
