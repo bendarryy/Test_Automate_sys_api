@@ -53,6 +53,7 @@ CORS_ALLOWED_ORIGIN_REGEXES = [
     r.strip() for r in os.environ.get("CORS_ALLOWED_ORIGIN_REGEXES", "").split(",") if r.strip()
 ]
 
+CSRF_COOKIE_DOMAIN =  ".tarkeeb.online"
 # Application definition
 
 INSTALLED_APPS = [
