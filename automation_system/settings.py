@@ -50,12 +50,9 @@ CORS_EXPOSE_HEADERS = [
 
 # Parse regexes from environment variable (strip whitespace)
 CORS_ALLOWED_ORIGIN_REGEXES = [
-    r.strip() for r in os.environ.get(
-        "CORS_ALLOWED_ORIGIN_REGEXES",
-        r"^http://.*\.public\.localhost(:[0-9]+)?$,^https://.*\.tarkeeb\.online$"
-    ).split(",")
-    if r.strip()
+    r.strip() for r in os.environ.get("CORS_ALLOWED_ORIGIN_REGEXES", "").split(",") if r.strip()
 ]
+
 # Application definition
 
 INSTALLED_APPS = [
