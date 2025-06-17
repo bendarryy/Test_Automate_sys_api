@@ -77,15 +77,13 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'corsheaders',
-    # Core app (handles admin and shared models)
     'core',
-
-    # Category apps (each representing a different type of system)
     'restaurant',
-    # 'cafe',
     'supermarket',
     'workshop',
     'drf_yasg',
+    'cloudinary',
+    'cloudinary_storage',
 ]
 
 
@@ -204,8 +202,16 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # required for deployment
 
-MEDIA_URL = '/media/'
+MEDIA_URL = '/media/'  # just to avoid crashes, not actually used
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# Cloudinary storage configuration
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': 'div18qgkh',
+    'API_KEY': '399661479568463',
+    'API_SECRET': 'SmJ7aSX22KFfoJJqHZaa1mWFLOI',
+}
 
 # Create a function to ensure media directories exist
 # def create_media_dirs():
