@@ -56,6 +56,17 @@ CORS_ALLOWED_ORIGIN_REGEXES = [
 CSRF_COOKIE_DOMAIN =  ".tarkeeb.online"
 # Application definition
 
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.zoho.com'
+EMAIL_PORT = 587
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "non@none.none")
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "unsafe-default-password")
+EMAIL_USE_TLS = True
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+
+
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
