@@ -5,6 +5,7 @@ from django.contrib.auth.models import  User ,Group, Permission
 from django.contrib.auth.hashers import make_password, check_password
 from django.core.exceptions import ValidationError
 import uuid
+from django.utils import timezone
 
 
 
@@ -566,10 +567,13 @@ class SystemSerializer(serializers.ModelSerializer):
 class PublicSliderImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = PublicSliderImage
-        fields = ['image', 'caption', 'is_active']
+        fields = ['id', 'image', 'caption', 'is_active', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at']  # Make these fields read-only
         extra_kwargs = {
             'caption': {'required': False},
-            'is_active': {'required': False}
+            'is_active': {'required': False},
+            'created_at': {'required': False},
+            'updated_at': {'required': False}
         }
 
     def validate(self, data):
@@ -587,6 +591,11 @@ class PublicSliderImageSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("System context is required")
         validated_data['system'] = system
         return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        # Update the updated_at field when the instance is updated
+        instance.updated_at = timezone.now()
+        return super().update(instance, validated_data)
 
 class SystemPublicProfileSerializer(serializers.ModelSerializer):
     # Add read-only fields

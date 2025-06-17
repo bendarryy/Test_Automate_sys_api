@@ -138,10 +138,13 @@ class PublicSliderImage(models.Model):
     """Rotating banner/slider images"""
     MAX_SLIDER_IMAGES = 5
 
+    id = models.AutoField(primary_key=True)
     system = models.ForeignKey(System, on_delete=models.CASCADE, related_name='slider_images')
     image = models.ImageField(upload_to='public/slider/')
     caption = models.CharField(max_length=200, blank=True)
     is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(null=True, blank=True, default=timezone.now)  # Make nullable with default
+    updated_at = models.DateTimeField(null=True, blank=True, default=timezone.now)  # Make nullable with default
 
     def save(self, *args, **kwargs):
         if not self.pk:  # New image
@@ -153,7 +156,7 @@ class PublicSliderImage(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"Slider Image - {self.system.name}"
+        return f"Slider Image {self.id} - {self.system.name}"
 
 
 from django.contrib.auth.hashers import make_password, check_password

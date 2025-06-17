@@ -27,10 +27,24 @@ urlpatterns = [
         'put': 'update',
         'patch': 'partial_update'
     }), name='system-public-profile'),
-    path('systems/<int:system_id>/slider-images/', views.PublicSliderImageViewSet.as_view({
-        'get': 'list',
-        'post': 'create'
-    }), name='system-slider-images'),
+    path(
+        '<int:system_id>/slider-images/',
+        views.PublicSliderImageViewSet.as_view({
+            'get': 'list',
+            'post': 'create',
+        }),
+        name='slider-image-list',
+    ),
+    path(
+        '<int:system_id>/slider-images/<int:pk>/',
+        views.PublicSliderImageViewSet.as_view({
+            'get': 'retrieve',
+            'put': 'update',
+            'patch': 'partial_update',
+            'delete': 'destroy',
+        }),
+        name='slider-image-detail',
+    ),
     
     # Employee management endpoints
     path('systems/<int:system_id>/employees/', views.EmployeeListView.as_view(), name='employee-list'),
@@ -38,4 +52,6 @@ urlpatterns = [
     path('systems/<int:system_id>/employees/invite/', views.EmployeeInviteView.as_view(), name='employee-invite'),
     path('employee/login/', views.EmployeeLoginView.as_view(), name='employee-login'),
     path('employee/logout/', views.EmployeeLogoutView.as_view(), name='employee-logout'),
+    path('send-test-email/', views.SendTestEmailView.as_view(), name='send-test-email'),
+
 ]

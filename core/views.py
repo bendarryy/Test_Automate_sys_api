@@ -47,6 +47,7 @@ from django.conf import settings
 from drf_yasg import openapi
 from rest_framework import serializers
 from rest_framework import viewsets
+from django.utils.decorators import method_decorator
 
 @csrf_exempt
 @api_view(["POST"])
@@ -709,6 +710,7 @@ class PublicProfileViewSet(viewsets.ModelViewSet):
         system_id = self.kwargs.get('system_id')
         return get_object_or_404(System, id=system_id)
 
+@method_decorator(csrf_exempt, name='dispatch')
 class PublicSliderImageViewSet(viewsets.ModelViewSet):
     """Handle slider image operations"""
     permission_classes = [IsAuthenticated, IsSystemOwner]
@@ -732,6 +734,19 @@ class PublicSliderImageViewSet(viewsets.ModelViewSet):
         system_id = self.kwargs.get('system_id')
         system = get_object_or_404(System, id=system_id, owner=self.request.user)
         serializer.save(system=system)
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 class PublicSystemView(APIView):
     """Public view for accessing system information"""
@@ -806,3 +821,28 @@ class SystemDetailView(APIView):
         system = get_object_or_404(System, id=system_id)
         serializer = SystemSerializer(system)
         return Response(serializer.data)
+    
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from django.core.mail import send_mail
+
+class SendTestEmailView(APIView):
+    def get(self, request):
+        email = request.query_params.get('email')
+        if not email:
+            return Response({'error': 'Email is required in query string'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        from_email = 'Tarkeeb online <noreply@tarkeeb.online>'  # Set display name here
+
+        try:
+            send_mail(
+                subject='Test Email',
+                message='Hello Sir Mail server is wokring',
+                from_email=from_email,
+                recipient_list=[email],
+                fail_silently=False,
+            )
+            return Response({'message': f'Email sent to {email}'}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
