@@ -1,9 +1,10 @@
 from django.db import models
 from core.models import System, Employee
 import time
-from django.core.validators import RegexValidator
+from django.core.validators import RegexValidator, MinValueValidator, MaxValueValidator
 from django.core.exceptions import ValidationError
 from django.db.models import F
+import uuid
 
 # Create your models here.
 
@@ -15,6 +16,7 @@ class Product(models.Model):
         System, on_delete=models.CASCADE, related_name="products"
     )
     name = models.CharField(max_length=100)
+    barcode = models.CharField(max_length=13, unique=True, null=True, blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     cost = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     stock_quantity = models.PositiveIntegerField(default=0)
@@ -22,9 +24,86 @@ class Product(models.Model):
     minimum_stock = models.PositiveIntegerField(default=10)
     received_date = models.DateField(auto_now_add=True)  # Track when stock was received
     image = models.ImageField(upload_to="product_images/", null=True, blank=True)
+    discount_percentage = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=0,
+        help_text="Discount percentage (0-100)",
+    )
+
+    # Add category field with default choices
+    CATEGORY_CHOICES = [
+        ("fruits_vegetables", "Fruits & Vegetables"),
+        ("meat_seafood", "Meat & Seafood"),
+        ("dairy_eggs", "Dairy & Eggs"),
+        ("bakery_bread", "Bakery & Bread"),
+        ("pantry", "Pantry"),
+        ("snacks_sweets", "Snacks & Sweets"),
+        ("beverages", "Beverages"),
+        ("frozen_foods", "Frozen Foods"),
+        ("personal_care", "Personal Care"),
+        ("cleaning_household", "Cleaning & Household"),
+        ("baby_products", "Baby Products"),
+        ("pet_supplies", "Pet Supplies"),
+    ]
+
+    category = models.CharField(
+        max_length=100,
+        default="pantry",  # Set a default value from the choices
+        help_text="Product category (default or custom)",
+    )
+
+    def clean(self):
+        # Validate category if it's a default choice
+        if self.category in dict(self.CATEGORY_CHOICES).values():
+            return
+        # For custom categories, ensure they're not empty
+        if not self.category.strip():
+            raise ValidationError("Category cannot be empty")
 
     def __str__(self):
         return f"{self.name} - {self.system.name}"
+
+    def generate_barcode(self):
+        """Generate a unique 13-digit barcode"""
+        while True:
+            # Get the first 8 digits from system ID and product ID
+            system_id = str(self.system.id).zfill(3)
+            product_id = str(self.id).zfill(5)
+            prefix = f"{system_id}{product_id}"
+
+            # Generate remaining 5 digits using UUID
+            unique_part = str(uuid.uuid4().int)[:5]
+
+            # Combine to create 13-digit barcode
+            barcode = f"{prefix}{unique_part}"
+
+            # Ensure it's exactly 13 digits
+            barcode = barcode[:13]
+
+            # Check if this barcode already exists
+            if not Product.objects.filter(barcode=barcode).exists():
+                return barcode
+
+    def save(self, *args, **kwargs):
+        # Handle stock updates if requested
+        update_stock = kwargs.pop("update_stock", False)
+        if update_stock:
+            # Update total stock quantity from batches
+            self.stock_quantity = self.get_total_stock()
+            # Update expiry date to earliest batch expiry
+            self.expiry_date = self.get_earliest_expiry_date()
+
+        # Generate barcode if it doesn't exist
+        if not self.barcode:
+            # First save to get an ID
+            super().save(*args, **kwargs)
+            # Generate barcode using the ID
+            self.barcode = self.generate_barcode()
+            # Save again with the barcode
+            super().save(update_fields=["barcode"])
+        else:
+            super().save(*args, **kwargs)
 
     def get_total_stock(self):
         """Calculate total stock from all batches"""
@@ -52,15 +131,6 @@ class Product(models.Model):
             self.batches.filter(quantity__gt=0).order_by("expiry_date").first()
         )
         return earliest_batch.expiry_date if earliest_batch else None
-
-    def save(self, *args, **kwargs):
-        # Only update stock and expiry if explicitly requested
-        if kwargs.pop("update_stock", False):
-            # Update total stock quantity from batches
-            self.stock_quantity = self.get_total_stock()
-            # Update expiry date to earliest batch expiry
-            self.expiry_date = self.get_earliest_expiry_date()
-        super().save(*args, **kwargs)
 
     def get_stock_by_date(self):
         """Get stock quantities grouped by received date"""
@@ -210,7 +280,9 @@ class SaleItem(models.Model):
     """Individual items in a sale"""
 
     sale = models.ForeignKey(Sale, on_delete=models.CASCADE, related_name="items")
-    product = models.ForeignKey(Product, on_delete=models.PROTECT)
+    product = models.ForeignKey(
+        Product, on_delete=models.SET_NULL, null=True, related_name="sale_items"
+    )
     quantity = models.PositiveIntegerField()
     unit_price = models.DecimalField(
         max_digits=10, decimal_places=2, null=True, blank=True

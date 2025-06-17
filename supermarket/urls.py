@@ -10,6 +10,11 @@ from .views import (
     order_trend,
     top_cashiers,
     peak_hours,
+    daily_profit_history,
+    get_categories,
+    get_used_categories,
+    get_product_by_barcode,
+    supermarket_public_barcode_view,
 )
 import json
 from django.conf import settings
@@ -159,6 +164,11 @@ urlpatterns = [
         ),
         name="sale-daily-profit",
     ),
+    path(
+        "<int:system_id>/sales/profit/all-days/",
+        daily_profit_history,
+        name="sale-daily-profit-history",
+    ),
     # Supplier endpoints
     path(
         "<int:system_id>/suppliers/",
@@ -256,8 +266,32 @@ urlpatterns = [
         name="goods-receiving-by-po",
     ),
     # Analytics URLs
-    path('<int:system_id>/orders/analytics/order-summary/', order_summary, name='order-summary'),
-    path('<int:system_id>/orders/analytics/order-trend/', order_trend, name='order-trend'),
-    path('<int:system_id>/orders/analytics/cashiers/', top_cashiers, name='top-cashiers'),
-    path('<int:system_id>/orders/analytics/peak-hours/', peak_hours, name='peak-hours'),
+    path(
+        "<int:system_id>/orders/analytics/order-summary/",
+        order_summary,
+        name="order-summary",
+    ),
+    path(
+        "<int:system_id>/orders/analytics/order-trend/", order_trend, name="order-trend"
+    ),
+    path(
+        "<int:system_id>/orders/analytics/cashiers/", top_cashiers, name="top-cashiers"
+    ),
+    path("<int:system_id>/orders/analytics/peak-hours/", peak_hours, name="peak-hours"),
+    path(
+        "<int:system_id>/categories/",
+        get_categories,
+        name="category-list",
+    ),
+    path(
+        "<int:system_id>/categories/used/",
+        get_used_categories,
+        name="category-used",
+    ),
+    path(
+        "<int:system_id>/products/barcode/<str:barcode>/",
+        get_product_by_barcode,
+        name="product-by-barcode",
+    ),
+    path('barcode/<str:barcode>/', supermarket_public_barcode_view, name='public-barcode-view'),
 ]

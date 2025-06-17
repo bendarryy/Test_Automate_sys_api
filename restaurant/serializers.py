@@ -177,24 +177,19 @@ class InventoryItemSerializer(serializers.ModelSerializer):
             'min_threshold': {'required': False, 'allow_null': True},
         }
 
-
-
-
-
-
-
-
-
-
 class PublicMenuItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = MenuItem
-        fields = ['id', 'name', 'description', 'category', 'price', 'discount_percent', 'is_best_deal' , 'is_special'  , 'is_available',  'image', 'created_at', 'updated_at']
+        fields = [
+            "id", "name", "description", "category", "price", 
+            "discount_percent", "is_best_deal", "is_special", 
+            "is_available", "image", "created_at", "updated_at"
+        ]
+        read_only_fields = ["id", "created_at", "updated_at"]
 
 class RestaurantDataSerializer(serializers.ModelSerializer):
     class Meta:
         model = RestaurantData
         fields = ['id', 'system', 'number_of_tables']
         read_only_fields = ['id', 'system']
-        
-  
+

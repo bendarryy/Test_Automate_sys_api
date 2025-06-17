@@ -44,7 +44,7 @@ api_urlpatterns = [
 ]
 # Public URLs - these will be handled by the subdomain middleware
 public_urlpatterns = [
-    path('menu/',  public_view.as_view() , name='public-view'),  # Changed from '' to 'menu/'
+    path('menu/', public_view.as_view(), name='public-view'),  # Changed from '' to 'menu/'
 ]
 
 # Combine both URL patterns

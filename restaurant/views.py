@@ -21,8 +21,6 @@ from django.http import HttpResponseNotFound
 import logging
 from core.serializers import PublicSystemSerializer 
 from .serializers import RestaurantDataSerializer
-from rest_framework.renderers import JSONRenderer
-
 # Define a custom exception for table conflicts
 class TableConflict(APIException):
     status_code = 409  # Use 409 Conflict
@@ -73,7 +71,15 @@ class MenuItemViewSet(viewsets.ModelViewSet):
         return [IsAuthenticated(), OR(IsSystemOwner(), IsEmployeeRolePermission())]
 
     def perform_update(self, serializer):
-        """Allow partial updates without requiring fields."""
+        """Handle image replacement during update."""
+        instance = serializer.instance
+        new_image = self.request.data.get("image")
+
+        # Delete the old image if a new one is uploaded
+        if new_image and instance.image and instance.image.path != new_image:
+            if instance.image and os.path.isfile(instance.image.path):
+                os.remove(instance.image.path)
+
         serializer.save()
 
 # pagination.py
@@ -636,14 +642,10 @@ def restaurant_public_view(request, system):
             menu_by_category[category] = []
         menu_by_category[category].append(PublicMenuItemSerializer(item).data)
 
-    response = Response({
+    return Response({
         'system': PublicSystemSerializer(system).data,
         'menu': menu_by_category
     })
-    response.accepted_renderer = JSONRenderer()
-    response.accepted_media_type = 'application/json'
-    response.renderer_context = {'request': request}
-    return response
 
 
 # waiter display By Ali

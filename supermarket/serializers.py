@@ -22,17 +22,25 @@ from django.db.models import F
 
 
 class InventorysupItemSerializer(serializers.ModelSerializer):
+    def validate_category(self, value):
+        if not value.strip():
+            raise serializers.ValidationError("Category cannot be empty")
+        return value
+
     class Meta:
         model = Product
         fields = [
             "id",
             "name",
+            "barcode",
             "price",
             "cost",
             "stock_quantity",
             "minimum_stock",
             "expiry_date",
             "image",
+            "category",
+            "discount_percentage",
         ]
         extra_kwargs = {
             "minimum_stock": {"required": False, "default": 10},
@@ -42,6 +50,13 @@ class InventorysupItemSerializer(serializers.ModelSerializer):
             "name": {"required": False},
             "price": {"required": False},
             "stock_quantity": {"required": False},
+            "barcode": {"required": False},
+            "category": {"required": True},
+            "discount_percentage": {
+                "required": False,
+                "min_value": 0,
+                "max_value": 100,
+            },
         }
 
     def validate_price(self, value):
@@ -103,12 +118,15 @@ class ProductSerializer(serializers.ModelSerializer):
     stock_by_date = serializers.SerializerMethodField()
     stock_by_expiry = serializers.SerializerMethodField()
     image = serializers.ImageField(required=False, allow_null=True)
+    category = serializers.CharField(max_length=100)
+    available_categories = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
         fields = [
             "id",
             "name",
+            "barcode",
             "price",
             "cost",
             "stock_quantity",
@@ -122,7 +140,10 @@ class ProductSerializer(serializers.ModelSerializer):
             "oldest_batch",
             "stock_by_date",
             "stock_by_expiry",
+            "category",
+            "available_categories",
         ]
+        read_only_fields = ["barcode"]
 
     def get_batch_groups(self, obj):
         """Group batches by expiry date"""
@@ -171,9 +192,35 @@ class ProductSerializer(serializers.ModelSerializer):
         """Get stock quantities grouped by expiry date"""
         return obj.get_stock_by_expiry()
 
+    def get_available_categories(self, obj):
+        """Get all available categories for the system"""
+        # Get default categories
+        default_categories = dict(Product.CATEGORY_CHOICES)
+
+        # Get custom categories used in the system
+        custom_categories = (
+            Product.objects.filter(system=obj.system)
+            .exclude(category__in=default_categories.values())
+            .values_list("category", flat=True)
+            .distinct()
+        )
+
+        return {"default": default_categories, "custom": list(custom_categories)}
+
+    def validate_category(self, value):
+        if not value.strip():
+            raise serializers.ValidationError("Category cannot be empty")
+        return value
+
 
 class SaleItemSerializer(serializers.ModelSerializer):
     product_name = serializers.CharField(source="product.name", read_only=True)
+    original_price = serializers.DecimalField(
+        max_digits=10, decimal_places=2, read_only=True
+    )
+    discounted_price = serializers.DecimalField(
+        max_digits=10, decimal_places=2, read_only=True
+    )
 
     class Meta:
         model = SaleItem
@@ -183,9 +230,33 @@ class SaleItemSerializer(serializers.ModelSerializer):
             "product_name",
             "quantity",
             "unit_price",
+            "original_price",
+            "discounted_price",
             "discount_amount",
             "total_price",
         ]
+
+    def validate(self, data):
+        product = data.get("product")
+        quantity = data.get("quantity")
+
+        if product and quantity:
+            # Get the original price
+            original_price = product.price
+
+            # Calculate discounted price if product has a discount
+            discounted_price = original_price
+            if product.discount_percentage > 0:
+                discount_amount = original_price * (product.discount_percentage / 100)
+                discounted_price = original_price - discount_amount
+
+            # Set the unit price to the discounted price
+            data["unit_price"] = discounted_price
+            data["unit_cost"] = product.cost
+            data["discount_amount"] = original_price - discounted_price
+            data["total_price"] = discounted_price * quantity
+
+        return data
 
 
 class SaleSerializer(serializers.ModelSerializer):
@@ -585,6 +656,7 @@ class PublicProductSerializer(serializers.ModelSerializer):
             "image",
         ]
 
+
 # Analytics Serializers by ali for the supermarket
 class OrderSummarySerializer(serializers.Serializer):
     day_orders = serializers.IntegerField()
@@ -594,14 +666,34 @@ class OrderSummarySerializer(serializers.Serializer):
     month_orders = serializers.IntegerField()
     month_change = serializers.FloatField()
 
+
 class OrderTrendSerializer(serializers.Serializer):
     date = serializers.DateField()
     orders = serializers.IntegerField()
+
 
 class CashierPerformanceSerializer(serializers.Serializer):
     cashier = serializers.CharField()
     orders = serializers.IntegerField()
 
+
 class PeakHourSerializer(serializers.Serializer):
     hour = serializers.CharField()
     orders = serializers.IntegerField()
+
+
+class ProductBarcodeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = [
+            "id",
+            "name",
+            "barcode",
+            "price",
+            "cost",
+            "stock_quantity",
+            "minimum_stock",
+            "expiry_date",
+            "image",
+            "discount_percentage",
+        ]
