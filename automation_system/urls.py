@@ -54,14 +54,4 @@ urlpatterns = [
     # path("redoc/", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc"),
     path('', block_root, name='api-root'),  # Provide API root response
     path('public/', include('public.urls')),  # Restrict public API access
-]
-
-# Add subdomain handling only in DEBUG mode
-# if settings.DEBUG:
-#     urlpatterns = [
-#         path('restaurant/', include('restaurant.urls')),  # Handle public view for subdomains
-#         path('supermarket/', include('supermarket.urls')),  # Handle public view for subdomains
-#     ] + urlpatterns  # Add all other URLs after
-
-# if settings.DEBUG:
-#     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
