@@ -10,7 +10,13 @@ from core.serializers import PublicSystemSerializer, PublicSliderImageSerializer
 from rest_framework.request import Request as DRFRequest
 from rest_framework.renderers import JSONRenderer
 from rest_framework.views import APIView
+from supermarket.models import Product
+import logging
 
+logger = logging.getLogger(__name__)
+
+# Debug: Print when the view is defined
+print("Defining public_barcode_view")
 
 def extract_subdomain_from_url(request):
     """
@@ -117,3 +123,31 @@ class public_view(APIView):
             )
 
         return response
+
+
+class public_barcode_view(APIView):
+    """
+    Public barcode view that handles subdomain checking and returns product details.
+    """
+    def get(self, request, barcode):
+        # Use the existing system check logic
+        system, error_response = get_system_from_request(request)
+        if error_response:
+            return error_response
+
+        try:
+            product = Product.objects.get(system=system, barcode=barcode, stock_quantity__gt=0)
+            product_data = {
+                "id": product.id,
+                "name": product.name,
+                "category": product.category,
+                "price": str(product.price),
+                "barcode": product.barcode,
+                "image": product.image.url if product.image else None,
+            }
+            return Response(product_data)
+        except Product.DoesNotExist:
+            return Response(
+                {"detail": "Product not found with the given barcode."},
+                status=status.HTTP_404_NOT_FOUND,
+            )

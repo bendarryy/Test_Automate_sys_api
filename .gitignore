@@ -6,4 +6,5 @@ reports overwrite=false html=true json=true
 frontend/cypress/screenshots/
 upload_media_to_cloudinary.py
 clean.py
- repair_image_paths.py
+repair_image_paths.py
+Automated_Sys_tmp/db.sqlite3
