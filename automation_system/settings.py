@@ -50,6 +50,10 @@ CORS_EXPOSE_HEADERS = [
 
 # Parse regexes from environment variable (strip whitespace)
 CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^file://.*$",  # Allow Electron apps
+    r"^http://localhost(:[0-9]+)?$",  # Allow localhost with any port
+    r"^http://127\\.0\\.0\\.1(:[0-9]+)?$",  # Allow 127.0.0.1 with any port
+] + [
     r.strip() for r in os.environ.get("CORS_ALLOWED_ORIGIN_REGEXES", "").split(",") if r.strip()
 ]
 
