@@ -26,7 +26,6 @@ from django.conf.urls.static import static
 from django.http import JsonResponse
 from django.middleware.common import MiddlewareMixin
 from rest_framework_simplejwt.views import TokenRefreshView
-from public.views import MyTokenObtainPairView
 from core.views import MyTokenObtainPairView
 
 
