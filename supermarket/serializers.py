@@ -1,6 +1,5 @@
-from core.models import System, UserRole, Employee
+from core.models import System
 from rest_framework import serializers
-from rest_framework.validators import UniqueValidator
 from .models import (
     Product,
     StockChange,
@@ -18,10 +17,49 @@ import time
 from django.shortcuts import get_object_or_404
 from datetime import datetime
 from django.db import transaction
-from django.db.models import F
+import requests
+import cloudinary
+import cloudinary.uploader
+from io import BytesIO
+from django.core.files.base import ContentFile
+
+
+def upload_image_from_url_to_cloudinary(image_url):
+    """
+    Download image from URL and upload to Cloudinary
+    Returns the Cloudinary URL or None if failed
+    """
+    try:
+        # Download the image
+        response = requests.get(image_url, timeout=10)
+        response.raise_for_status()
+        
+        # Get file extension from URL or default to jpg
+        file_extension = image_url.split('.')[-1].split('?')[0].lower()
+        if file_extension not in ['jpg', 'jpeg', 'png', 'gif', 'webp']:
+            file_extension = 'jpg'
+        
+        # Create a unique filename
+        filename = f"product_images/{int(time.time())}_{file_extension}"
+        
+        # Upload to Cloudinary
+        upload_result = cloudinary.uploader.upload(
+            BytesIO(response.content),
+            public_id=filename,
+            folder="product_images",
+            resource_type="image"
+        )
+        
+        return upload_result.get('secure_url')
+        
+    except Exception as e:
+        print(f"Error uploading image from URL {image_url}: {e}")
+        return None
 
 
 class InventorysupItemSerializer(serializers.ModelSerializer):
+    image_url = serializers.URLField(write_only=True, required=False, allow_null=True)
+    
     def validate_category(self, value):
         if not value.strip():
             raise serializers.ValidationError("Category cannot be empty")
@@ -39,6 +77,7 @@ class InventorysupItemSerializer(serializers.ModelSerializer):
             "minimum_stock",
             "expiry_date",
             "image",
+            "image_url",
             "category",
             "discount_percentage",
         ]
@@ -51,7 +90,7 @@ class InventorysupItemSerializer(serializers.ModelSerializer):
             "price": {"required": False},
             "stock_quantity": {"required": False},
             "barcode": {"required": False},
-            "category": {"required": True},
+            "category": {"required": False, "default": "pantry"},
             "discount_percentage": {
                 "required": False,
                 "min_value": 0,
@@ -74,7 +113,34 @@ class InventorysupItemSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Minimum stock cannot be negative")
         return value
 
+    def create(self, validated_data):
+        image_url = validated_data.pop('image_url', None)
+        
+        if image_url:
+            # Upload image from URL to Cloudinary
+            cloudinary_url = upload_image_from_url_to_cloudinary(image_url)
+            if cloudinary_url:
+                validated_data['image'] = cloudinary_url
+            else:
+                raise serializers.ValidationError({
+                    "image_url": "Failed to upload image from URL. Please check the URL and try again."
+                })
+        
+        return super().create(validated_data)
+
     def update(self, instance, validated_data):
+        image_url = validated_data.pop('image_url', None)
+        
+        if image_url:
+            # Upload image from URL to Cloudinary
+            cloudinary_url = upload_image_from_url_to_cloudinary(image_url)
+            if cloudinary_url:
+                validated_data['image'] = cloudinary_url
+            else:
+                raise serializers.ValidationError({
+                    "image_url": "Failed to upload image from URL. Please check the URL and try again."
+                })
+        
         # Only update the fields that were provided in the request
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
@@ -264,6 +330,7 @@ class SaleSerializer(serializers.ModelSerializer):
     cashier_name = serializers.CharField(
         source="cashier.user.get_full_name", read_only=True
     )
+    calculated_discount_amount = serializers.SerializerMethodField()
 
     class Meta:
         model = Sale
@@ -273,21 +340,27 @@ class SaleSerializer(serializers.ModelSerializer):
             "cashier",
             "cashier_name",
             "total_price",
-            "discount_amount",
+            "discount_percentage",
+            "calculated_discount_amount",
             "payment_type",
             "created_at",
-            "vat_amount",
-            "vat_rate",
             "items",
         ]
+
+    def get_calculated_discount_amount(self, obj):
+        subtotal = sum(item.total_price for item in obj.items.all())
+        return subtotal * (obj.discount_percentage / Decimal(100))
 
 
 class SaleCreateSerializer(serializers.ModelSerializer):
     items = SaleItemSerializer(many=True)
+    discount_percentage = serializers.DecimalField(
+        required=False, max_digits=5, decimal_places=2, default=0
+    )
 
     class Meta:
         model = Sale
-        fields = ["payment_type", "items"]
+        fields = ["payment_type", "items", "discount_percentage"]
 
     def validate_items(self, items_data):
         for item_data in items_data:
@@ -297,13 +370,15 @@ class SaleCreateSerializer(serializers.ModelSerializer):
             # Check total stock availability
             if product.stock_quantity < quantity:
                 raise serializers.ValidationError(
-                    f"Not enough stock available for {product.name}. Only {product.stock_quantity} units left."
+                    f"Not enough stock available for {product.name}. "
+                    f"Only {product.stock_quantity} units left."
                 )
 
         return items_data
 
     def create(self, validated_data):
         items_data = validated_data.pop("items")
+        discount_percentage = validated_data.pop("discount_percentage", 0)
         system_id = self.context["system_id"]
         cashier = self.context["cashier"]
 
@@ -316,6 +391,7 @@ class SaleCreateSerializer(serializers.ModelSerializer):
                 system_id=system_id,
                 cashier=cashier,
                 receipt_number=receipt_number,
+                discount_percentage=discount_percentage,
                 **validated_data,
             )
 
@@ -386,7 +462,7 @@ class SupplierSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "created_at", "updated_at"]
 
     def create(self, validated_data):
-        request = self.context["request"]
+        # request = self.context["request"]
         system_id = self.context["view"].kwargs.get("system_id")
         system = get_object_or_404(System, id=system_id)
         validated_data["system"] = system
@@ -532,6 +608,9 @@ class GoodsReceivingSerializer(serializers.ModelSerializer):
         source="purchase_order", read_only=True
     )
     purchase_order_id = serializers.IntegerField(write_only=True, required=False)
+    received_quantity = serializers.IntegerField(
+        required=False, allow_null=True, min_value=0
+    )
     received_date = CustomDateField()
     expiry_date = CustomDateField(required=False, allow_null=True)
     batch_details = ProductBatchSerializer(
@@ -556,7 +635,7 @@ class GoodsReceivingSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "created_at", "updated_at", "purchase_order"]
 
     def validate_received_quantity(self, value):
-        if value <= 0:
+        if value is not None and value <= 0:
             raise serializers.ValidationError(
                 "Received quantity must be greater than zero"
             )
@@ -606,17 +685,20 @@ class GoodsReceivingSerializer(serializers.ModelSerializer):
                 "Received date cannot be before order date"
             )
 
-        # Validate received_quantity doesn't exceed remaining quantity
-        total_received = sum(gr.received_quantity for gr in po.goods_receiving.all())
-        if self.instance:  # If updating, subtract current record's quantity
-            total_received -= self.instance.received_quantity
-        remaining_quantity = po.quantity - total_received
-
-        if received_quantity > remaining_quantity:
-            raise serializers.ValidationError(
-                f"Received quantity ({received_quantity}) exceeds remaining "
-                f"quantity ({remaining_quantity})"
+        # Validate received_quantity doesn't exceed remaining quantity if provided
+        if received_quantity is not None:
+            total_received = sum(
+                gr.received_quantity or 0 for gr in po.goods_receiving.all()
             )
+            if self.instance:  # If updating, subtract current record's quantity
+                total_received -= self.instance.received_quantity or 0
+            remaining_quantity = po.quantity - total_received
+
+            if received_quantity > remaining_quantity:
+                raise serializers.ValidationError(
+                    f"Received quantity ({received_quantity}) exceeds remaining "
+                    f"quantity ({remaining_quantity})"
+                )
 
         # Validate expiry_date is in the future if provided
         if expiry_date and expiry_date <= timezone.now().date():

@@ -7,18 +7,23 @@ from .models import InventoryItem
 from django.shortcuts import get_object_or_404
 from .models import RestaurantData
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.files.base import ContentFile
+import requests
+import os
 
 from rest_framework.exceptions import NotFound, PermissionDenied
 
 class MenuItemSerializer(serializers.ModelSerializer):
     VALID_CATEGORIES = ['food', 'soups', 'drink', 'dessert']
+    image_url = serializers.URLField(write_only=True, required=False)
 
     class Meta:
         model = MenuItem
         fields = [
             "id", "system", "name", "description", "price", "is_available",
             "category", "image", "created_at", "updated_at", "cost",
-            "is_special", "is_best_deal", "discount_percent"
+            "is_special", "is_best_deal", "discount_percent",
+            "image_url",
         ]
         read_only_fields = ["id", "created_at", "updated_at", "system"]
 
@@ -46,16 +51,36 @@ class MenuItemSerializer(serializers.ModelSerializer):
     )
 
     def create(self, validated_data):
+        image_url = validated_data.pop('image_url', None)
         request = self.context["request"]
         system_id = self.context["view"].kwargs.get("system_id")
-
         try:
             system = System.objects.get(id=system_id, owner=request.user)
         except System.DoesNotExist:
             raise serializers.ValidationError("Invalid system or unauthorized access.")
-
         validated_data["system"] = system
-        return super().create(validated_data)
+        instance = super().create(validated_data)
+        if image_url:
+            self._fetch_and_save_image(instance, image_url)
+        return instance
+
+    def update(self, instance, validated_data):
+        image_url = validated_data.pop('image_url', None)
+        instance = super().update(instance, validated_data)
+        if image_url:
+            self._fetch_and_save_image(instance, image_url)
+        return instance
+
+    def _fetch_and_save_image(self, instance, image_url):
+        try:
+            response = requests.get(image_url)
+            response.raise_for_status()
+            file_name = os.path.basename(image_url.split("?")[0])
+            if not file_name:
+                file_name = "menuitem_image.jpg"
+            instance.image.save(file_name, ContentFile(response.content), save=True)
+        except Exception as e:
+            raise serializers.ValidationError({"image_url": f"Failed to fetch image: {e}"})
 
     def validate(self, attrs):
         request = self.context["request"]

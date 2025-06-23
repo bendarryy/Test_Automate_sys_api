@@ -12,6 +12,7 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.views import APIView
 from supermarket.models import Product
 import logging
+from rest_framework.permissions import AllowAny
 
 logger = logging.getLogger(__name__)
 
@@ -95,6 +96,7 @@ class public_view(APIView):
     """
     Main public view that routes based on system type.
     """
+    permission_classes = [AllowAny]
     def get(self, request):
         # Convert DRF request to Django HttpRequest
         if isinstance(request, DRFRequest):
@@ -129,6 +131,7 @@ class public_barcode_view(APIView):
     """
     Public barcode view that handles subdomain checking and returns product details.
     """
+    permission_classes = [AllowAny]
     def get(self, request, barcode):
         # Use the existing system check logic
         system, error_response = get_system_from_request(request)

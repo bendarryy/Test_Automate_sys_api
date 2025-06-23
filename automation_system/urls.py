@@ -25,6 +25,10 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.http import JsonResponse
 from django.middleware.common import MiddlewareMixin
+from rest_framework_simplejwt.views import TokenRefreshView
+from public.views import MyTokenObtainPairView
+from core.views import MyTokenObtainPairView
+
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -54,4 +58,7 @@ urlpatterns = [
     # path("redoc/", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc"),
     path('', block_root, name='api-root'),  # Provide API root response
     path('public/', include('public.urls')),  # Restrict public API access
+     path('api/token/', MyTokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+
     ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

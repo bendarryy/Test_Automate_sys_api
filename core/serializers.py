@@ -634,7 +634,7 @@ class SystemPublicProfileSerializer(serializers.ModelSerializer):
             'whatsapp_number': {'required': False},
             'social_links': {'required': False},
             "subdomain": {'required': False, 'allow_null': True},
-            "custom_link": {'required': False, 'allow_null': True},
+            "custom_link": {'required': False, 'allow_null': True },
             'design_settings': {'required': False}
         }
 
@@ -647,3 +647,54 @@ class SystemLogoUpdateSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'logo': {'required': False, 'allow_null': True}
         }
+# forget password by ali
+class ForgotPasswordSerializer(serializers.Serializer):
+    """Serializer for forgot password request"""
+    email = serializers.EmailField()
+    
+    def validate_email(self, value):
+        """Validate that the email exists in the system"""
+        if not User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("No user found with this email address.")
+        return value
+
+class VerifyOTPSerializer(serializers.Serializer):
+    """Serializer for OTP verification"""
+    email = serializers.EmailField()
+    otp_code = serializers.CharField(max_length=6, min_length=6)
+    
+    def validate_email(self, value):
+        """Validate that the email exists in the system"""
+        if not User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("No user found with this email address.")
+        return value
+    
+    def validate_otp_code(self, value):
+        """Validate OTP format"""
+        if not value.isdigit():
+            raise serializers.ValidationError("OTP code must contain only digits.")
+        return value
+
+class ResetPasswordSerializer(serializers.Serializer):
+    """Serializer for password reset"""
+    email = serializers.EmailField()
+    otp_code = serializers.CharField(max_length=6, min_length=6)
+    new_password = serializers.CharField(min_length=8, write_only=True)
+    
+    def validate_email(self, value):
+        """Validate that the email exists in the system"""
+        if not User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("No user found with this email address.")
+        return value
+    
+    def validate_otp_code(self, value):
+        """Validate OTP format"""
+        if not value.isdigit():
+            raise serializers.ValidationError("OTP code must contain only digits.")
+        return value
+    
+    def validate_new_password(self, value):
+        """Validate new password strength"""
+        if len(value) < 8:
+            raise serializers.ValidationError("Password must be at least 8 characters long.")
+        return value

@@ -1,29 +1,29 @@
 from django.shortcuts import get_object_or_404, render
-from rest_framework import viewsets, status, permissions
+from rest_framework import viewsets, status
 from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from django.utils import timezone
 from datetime import date, timedelta, datetime
-from decimal import Decimal
+from django.db.models import F, Q, Count
+from django.db.models.functions import TruncDate, TruncHour
 
 from core.models import System, Employee
 from .models import (
     Product,
     StockChange,
     Sale,
-    SaleItem,
     Discount,
     Supplier,
     PurchaseOrder,
     GoodsReceiving,
 )
 from .serializers import (
+    ApplyDiscountSerializer,
     InventorysupItemSerializer,
     SaleSerializer,
-    SaleItemSerializer,
     SaleCreateSerializer,
     SupplierSerializer,
     PurchaseOrderSerializer,
@@ -33,41 +33,51 @@ from .serializers import (
     CashierPerformanceSerializer,
     PeakHourSerializer,
     ProductBarcodeSerializer,
+    StockChangeSerializer,
+    StockUpdateSerializer,
+    ProductSerializer,
 )
 from core.permissions import IsSystemOwner, IsEmployeeRolePermission
 from rest_framework.permissions import OR
 from core.serializers import PublicSystemSerializer
+from core.pagination import CustomPagination
 
 
 class InventoryItemViewSet(viewsets.ModelViewSet):
     serializer_class = InventorysupItemSerializer
-    permission_classes = [IsAuthenticated]
+    
+    def get_permissions(self):
+        """
+        Instantiates and returns the list of permissions that this view requires.
+        - Owners, managers, and cashiers have full access to all product actions.
+        """
+        return [
+            IsAuthenticated(),
+            OR(
+                IsSystemOwner(),
+                OR(
+                    IsEmployeeRolePermission("manager_supermarket"),
+                    IsEmployeeRolePermission("cashier_supermarket")
+                )
+            )
+        ]
 
     def get_queryset(self):
+        """
+        Returns the queryset for this view.
+        Permissions are handled by `get_permissions`, so we only need to filter.
+        """
         system_id = self.kwargs.get("system_id")
-        user = self.request.user
-
-        # Make sure the system belongs to the authenticated user
-        try:
-            system = System.objects.get(id=system_id, owner=user)
-        except System.DoesNotExist:
-            raise PermissionDenied(
-                "You do not have permission to access this system's inventory."
-            )
-
-        return Product.objects.filter(system=system)
+        return Product.objects.filter(system_id=system_id)
 
     @transaction.atomic
     def perform_create(self, serializer):
+        """
+        Handles the creation of a new product.
+        Permissions are already verified.
+        """
         system_id = self.kwargs.get("system_id")
-        user = self.request.user
-
-        try:
-            system = System.objects.get(id=system_id, owner=user)
-        except System.DoesNotExist:
-            raise PermissionDenied(
-                "You do not have permission to add inventory to this system."
-            )
+        system = get_object_or_404(System, id=system_id)
 
         # Create the product using serializer's save method
         product = serializer.save(system=system)
@@ -85,109 +95,76 @@ class InventoryItemViewSet(viewsets.ModelViewSet):
         return product
 
     def perform_update(self, serializer):
-        system = serializer.instance.system
-        if system.owner != self.request.user:
-            raise PermissionDenied(
-                "You do not have permission to update inventory in this system."
-            )
+        # Permissions are handled by get_permissions, so we just save.
         serializer.save()
 
     def perform_destroy(self, instance):
-        system = instance.system
-        if system.owner != self.request.user:
-            raise PermissionDenied(
-                "You do not have permission to delete inventory from this system."
-            )
+        # Permissions are handled by get_permissions, so we just delete.
         instance.delete()
 
     @action(detail=False, methods=["get"])
     def low_stock(self, request, system_id=None):
-        system = self._get_system_or_403(system_id)
-        products = Product.objects.filter(
-            system=system, stock_quantity__lt=F("minimum_stock")
-        )
+        # _get_system_or_403 is no longer needed as permissions are checked globally.
+        products = self.get_queryset().filter(stock_quantity__lt=F("minimum_stock"))
         serializer = self.get_serializer(products, many=True)
         return Response(serializer.data)
 
     @action(detail=False, methods=["get"], url_path="expiring-soon")
     def expiring_soon(self, request, system_id=None):
-
         try:
-            system = System.objects.get(id=system_id, owner=request.user)
-        except System.DoesNotExist:
+            days_ahead = int(request.query_params.get("days", 7))
+            if days_ahead <= 0:
+                return Response(
+                    {"detail": "Days parameter must be a positive number."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        except ValueError:
             return Response(
-                {"detail": "System not found."}, status=status.HTTP_403_FORBIDDEN
+                {"detail": "Invalid days parameter. Must be a number."},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
-        days_ahead = int(request.query_params.get("days", 7))
         today = date.today()
         soon = today + timedelta(days=days_ahead)
 
-        expiring_products = Product.objects.filter(
-            system=system, expiry_date__gte=today, expiry_date__lte=soon
-        )
+        expiring_products = self.get_queryset().filter(
+            Q(expiry_date__gte=today, expiry_date__lte=soon) |
+            Q(batches__expiry_date__gte=today, batches__expiry_date__lte=soon)
+        ).distinct()
 
-        serializer = ProductSerializer(
-            expiring_products, many=True, context={"request": request}
-        )
+        serializer = ProductSerializer(expiring_products, many=True, context={"request": request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=["get"], url_path="stock-history")
     def stock_history(self, request, system_id=None):
-        system = get_object_or_404(System, id=system_id, owner=request.user)
-
-        # Get stock changes related to the products in the system
-        stock_changes = StockChange.objects.filter(product__system=system).order_by(
-            "-created_at"
-        )  # Use 'created_at' instead of 'timestamp'
-
-        # Check if we have any stock changes
+        stock_changes = StockChange.objects.filter(product__system_id=system_id).order_by("-created_at")
         if not stock_changes:
             return Response({"message": "No stock changes found"}, status=200)
-
-        # Serialize the stock changes
         serializer = StockChangeSerializer(stock_changes, many=True)
-
-        # Return the response with serialized data
         return Response(serializer.data)
 
     @action(detail=True, methods=["patch"], url_path="stock")
     def update_stock(self, request, system_id=None, pk=None):
-        system = get_object_or_404(System, id=system_id, owner=request.user)
-        product = get_object_or_404(Product, id=pk, system=system)
-
+        product = self.get_object()
         serializer = StockUpdateSerializer(product, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=["get"], url_path="costs")
     def cost_analysis(self, request, system_id=None):
-        system = self._get_system_or_403(system_id)
-
-        # Get all products for the system
-        products = Product.objects.filter(system=system)
-
+        products = self.get_queryset()
         result = []
-
         for product in products:
-            # Get all purchase orders for this product
             purchase_orders = PurchaseOrder.objects.filter(
                 product=product, status__in=["completed", "partially_received"]
             ).order_by("-order_date")
-
-            # Group by cost
             cost_groups = {}
-
             for po in purchase_orders:
                 cost = po.cost
                 price = product.price
                 profit = price - cost
-
-                # Create a key for the cost group
                 group_key = f"{cost}"
-
                 if group_key not in cost_groups:
                     cost_groups[group_key] = {
                         "cost": cost,
@@ -196,117 +173,65 @@ class InventoryItemViewSet(viewsets.ModelViewSet):
                         "total_quantity": 0,
                         "purchase_orders": [],
                     }
-
-                # Add purchase order to the group
-                cost_groups[group_key]["purchase_orders"].append(
-                    {
-                        "id": po.id,
-                        "order_date": po.order_date,
-                        "quantity": po.quantity,
-                        "status": po.status,
-                    }
-                )
-
-                # Update total quantity
+                cost_groups[group_key]["purchase_orders"].append({
+                    "id": po.id,
+                    "order_date": po.order_date,
+                    "quantity": po.quantity,
+                    "status": po.status,
+                })
                 cost_groups[group_key]["total_quantity"] += po.quantity
-
-            # Convert groups to list format
-            product_cost_groups = []
-            for group_key, group_data in cost_groups.items():
-                product_cost_groups.append(
-                    {
-                        "cost": float(group_data["cost"]),
-                        "price": float(group_data["price"]),
-                        "profit": float(group_data["profit"]),
-                        "total_quantity": group_data["total_quantity"],
-                        "purchase_orders": group_data["purchase_orders"],
-                    }
-                )
-
-            # Add product with its cost groups to result
-            result.append(
-                {
-                    "id": product.id,
-                    "name": product.name,
-                    "current_price": float(product.price),
-                    "current_stock": product.stock_quantity,
-                    "cost_groups": product_cost_groups,
-                }
-            )
-
+            
+            product_cost_groups = list(cost_groups.values())
+            
+            result.append({
+                "product_id": product.id,
+                "product_name": product.name,
+                "cost_groups": product_cost_groups
+            })
+            
         return Response(result)
-
-    def _get_system_or_403(self, system_id):
-        """
-        Fetch the System by ID, ensure it belongs to the current user,
-        or raise PermissionDenied.
-        """
-        try:
-            return System.objects.get(id=system_id, owner=self.request.user)
-        except System.DoesNotExist:
-            raise PermissionDenied("You do not have permission for this system.")
-
+    
     @action(detail=False, methods=["get"], url_path="expired")
     def expired_products(self, request, system_id=None):
         today = date.today()
-        expired_products = Product.objects.filter(
-            system_id=system_id, expiry_date__lt=today
-        )
-
-        serializer = ProductSerializer(
-            expired_products, many=True, context={"request": request}
-        )
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    def get_permissions(self):
-        """
-        Define permission rules for each action.
-        """
-        if self.action in ["create", "update", "partial_update", "destroy"]:
-            return [
-                IsAuthenticated(),
-                OR(IsSystemOwner(), IsEmployeeRolePermission("manager", "head chef")),
-            ]
-
-        if self.action == "expired_products":  # Custom action name
-            return [
-                IsAuthenticated(),
-                OR(IsSystemOwner(), IsEmployeeRolePermission("manager")),
-            ]
-
-        return [IsAuthenticated(), OR(IsSystemOwner(), IsEmployeeRolePermission())]
-
+        expired_products = self.get_queryset().filter(expiry_date__lt=today)
+        serializer = self.get_serializer(expired_products, many=True)
+        return Response(serializer.data)
+        
     def get_serializer_context(self):
-        context = super().get_serializer_context()
-        system_id = self.kwargs.get("system_id")
-        if system_id:
-            try:
-                context["system"] = System.objects.get(
-                    id=system_id, owner=self.request.user
-                )
-            except System.DoesNotExist:
-                pass
-        return context
+        """
+        Extra context provided to the serializer class.
+        """
+        return {"request": self.request}
 
 
 class SaleViewSet(viewsets.ModelViewSet):
     serializer_class = SaleSerializer
-    permission_classes = [IsAuthenticated]
+
+    def get_permissions(self):
+        """
+        Role-based access control for sales actions.
+        - Owners, supermarket managers, and cashiers have full access.
+        - All other authenticated employees have read-only access.
+        """
+        if self.action in ['create', 'update', 'partial_update', 'destroy', 'apply_discount']:
+            # Write actions
+            return [
+                IsAuthenticated(),
+                OR(IsSystemOwner(), IsEmployeeRolePermission("manager_supermarket", "cashier_supermarket"))
+            ]
+        else:
+            # Read-only actions for any authenticated employee of the system
+            return [IsAuthenticated(), OR(IsSystemOwner(), IsEmployeeRolePermission())]
 
     def get_queryset(self):
+        """
+        Returns the queryset for this view.
+        Permissions are handled by `get_permissions`.
+        """
         system_id = self.kwargs.get("system_id")
-        user = self.request.user
-
-        try:
-            system = System.objects.get(id=system_id, owner=user)
-        except System.DoesNotExist:
-            raise PermissionDenied(
-                "You do not have permission to access this system's sales."
-            )
-
-        # Get sales and exclude those with null products
         return (
-            Sale.objects.filter(system=system, items__product__isnull=False)
+            Sale.objects.filter(system_id=system_id, items__product__isnull=False)
             .distinct()
             .order_by("-created_at")
         )
@@ -335,28 +260,12 @@ class SaleViewSet(viewsets.ModelViewSet):
         return context
 
     def perform_create(self, serializer):
+        """
+        Creates a sale. Permissions and cashier context are already handled.
+        """
         system_id = self.kwargs.get("system_id")
-        user = self.request.user
-
-        try:
-            system = System.objects.get(id=system_id, owner=user)
-        except System.DoesNotExist:
-            raise PermissionDenied(
-                "You do not have permission to create sales in this system."
-            )
-
-        # Get cashier from context
-        cashier = serializer.context.get("cashier")
-
-        # If no cashier and user is not the owner, deny permission
-        if not cashier and system.owner != user:
-            raise PermissionDenied("Only employees or system owners can create sales.")
-
-        try:
-            # Create the sale without passing cashier (it's already in the context)
-            serializer.save(system=system)
-        except ValidationError as e:
-            raise ValidationError({"detail": str(e)})
+        system = get_object_or_404(System, id=system_id)
+        serializer.save(system=system)
 
     @action(detail=True, methods=["get"])
     def receipt(self, request, system_id=None, pk=None):
@@ -401,12 +310,8 @@ class SaleViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=["get"])
     def daily_profit(self, request, system_id=None):
-        """Calculate daily profit with optional product filtering"""
-        try:
-            system = System.objects.get(id=system_id, owner=request.user)
-        except System.DoesNotExist:
-            raise PermissionDenied("You do not have permission for this system.")
-
+        """Calculate daily profit with optional product filtering.
+           Permissions are handled by get_permissions."""
         date = request.query_params.get("date")
         product_id = request.query_params.get("product_id")
 
@@ -423,10 +328,7 @@ class SaleViewSet(viewsets.ModelViewSet):
             )
 
         # Get all sales for the date
-        sales = Sale.objects.filter(
-            system=system,
-            created_at__date=date,
-        )
+        sales = self.get_queryset().filter(created_at__date=date)
 
         if product_id:
             sales = sales.filter(items__product_id=product_id)
@@ -440,6 +342,8 @@ class SaleViewSet(viewsets.ModelViewSet):
         for sale in sales:
             for item in sale.items.all():
                 if not item.product:
+                    continue
+                if None in (item.unit_price, item.unit_cost, item.quantity, item.discount_amount, item.total_price):
                     continue
 
                 product = item.product
@@ -604,11 +508,11 @@ class SupplierViewSet(viewsets.ModelViewSet):
         if self.action in ["create", "update", "partial_update", "destroy"]:
             return [
                 IsAuthenticated(),
-                OR(IsSystemOwner(), IsEmployeeRolePermission("manager")),
+                OR(IsSystemOwner(), IsEmployeeRolePermission("manager_supermarket", "inventory_manager")),
             ]
         return [
             IsAuthenticated(),
-            OR(IsSystemOwner(), IsEmployeeRolePermission("manager")),
+            OR(IsSystemOwner(), IsEmployeeRolePermission("manager_supermarket", "inventory_manager")),
         ]
 
     def perform_create(self, serializer):
@@ -628,19 +532,29 @@ class SupplierViewSet(viewsets.ModelViewSet):
 class PurchaseOrderViewSet(viewsets.ModelViewSet):
     serializer_class = PurchaseOrderSerializer
     permission_classes = [IsAuthenticated]
+    pagination_class = CustomPagination
 
+    
     def get_queryset(self):
         system_id = self.kwargs.get("system_id")
         user = self.request.user
 
         try:
-            system = System.objects.get(id=system_id, owner=user)
+            system = System.objects.get(id=system_id)
         except System.DoesNotExist:
-            raise PermissionDenied(
-                "You do not have permission to access this system's purchase orders."
-            )
+            raise PermissionDenied("System not found.")
 
-        # Get purchase orders and exclude those with null products
+        is_owner = system.owner == user
+        is_manager = False
+        try:
+            employee = Employee.objects.get(user=user, system=system)
+            is_manager = employee.role in ["manager_supermarket", "inventory_manager_supermarket"]
+        except Employee.DoesNotExist:
+            pass
+
+        if not (is_owner or is_manager):
+            raise PermissionDenied("You do not have permission to access this system's purchase orders.")
+
         return (
             PurchaseOrder.objects.filter(system=system, product__isnull=False)
             .distinct()
@@ -651,16 +565,16 @@ class PurchaseOrderViewSet(viewsets.ModelViewSet):
         if self.action in ["create", "update", "partial_update", "destroy"]:
             return [
                 IsAuthenticated(),
-                OR(IsSystemOwner(), IsEmployeeRolePermission("manager")),
+                OR(IsSystemOwner(), IsEmployeeRolePermission("manager_supermarket", "inventory_manager_supermarket")),
             ]
-        return [IsAuthenticated(), OR(IsSystemOwner(), IsEmployeeRolePermission())]
+        return [IsAuthenticated(), OR(IsSystemOwner(), IsEmployeeRolePermission("manager_supermarket", "inventory_manager_supermarket"))]
 
     def perform_create(self, serializer):
         system_id = self.kwargs.get("system_id")
         user = self.request.user
 
         try:
-            system = System.objects.get(id=system_id, owner=user)
+            system = System.objects.get(id=system_id)
         except System.DoesNotExist:
             raise PermissionDenied(
                 "You do not have permission to create purchase orders in this system."
@@ -695,23 +609,43 @@ class PurchaseOrderViewSet(viewsets.ModelViewSet):
         except System.DoesNotExist:
             raise PermissionDenied("You do not have permission for this system.")
 
+    def list_sorted_by_id(self, request, system_id, *args, **kwargs):
+        """
+        Return a list of purchase orders sorted by ID descending.
+        """
+        queryset = self.filter_queryset(
+            self.get_queryset().filter(system_id=system_id).order_by("-id")
+        )
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
 
 class GoodsReceivingViewSet(viewsets.ModelViewSet):
     serializer_class = GoodsReceivingSerializer
     permission_classes = [IsAuthenticated]
+    pagination_class = CustomPagination
 
     def get_queryset(self):
         system_id = self.kwargs.get("system_id")
         user = self.request.user
 
+        # Allow both owner and manager_supermarket (and inventory_manager_supermarket)
         try:
-            system = System.objects.get(id=system_id, owner=user)
+            system = System.objects.get(id=system_id)
         except System.DoesNotExist:
-            raise PermissionDenied(
-                "You do not have permission to access this system's goods receiving."
-            )
+            raise PermissionDenied("System not found.")
 
-        # Get goods receiving records and exclude those with null products
+        is_owner = system.owner == user
+        is_manager = False
+        try:
+            employee = Employee.objects.get(user=user, system=system)
+            is_manager = employee.role in ["manager_supermarket", "inventory_manager_supermarket"]
+        except Employee.DoesNotExist:
+            pass
+
+        if not (is_owner or is_manager):
+            raise PermissionDenied("You do not have permission to access this system's goods receiving.")
+
         return (
             GoodsReceiving.objects.filter(
                 purchase_order__system=system, purchase_order__product__isnull=False
@@ -721,12 +655,11 @@ class GoodsReceivingViewSet(viewsets.ModelViewSet):
         )
 
     def get_permissions(self):
-        if self.action in ["create", "update", "partial_update", "destroy"]:
-            return [
-                IsAuthenticated(),
-                OR(IsSystemOwner(), IsEmployeeRolePermission("manager")),
-            ]
-        return [IsAuthenticated(), OR(IsSystemOwner(), IsEmployeeRolePermission())]
+        # Allow both owner and manager_supermarket for all actions
+        return [
+            IsAuthenticated(),
+            OR(IsSystemOwner(), IsEmployeeRolePermission("manager_supermarket", "inventory_manager_supermarket")),
+        ]
 
     def perform_create(self, serializer):
         po_id = serializer.validated_data["purchase_order"].id
@@ -774,6 +707,17 @@ class GoodsReceivingViewSet(viewsets.ModelViewSet):
         except System.DoesNotExist:
             raise PermissionDenied("You do not have permission for this system.")
 
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        try:
+            self.perform_destroy(instance)
+        except ValidationError as e:
+            return Response(
+                {"detail": e.messages[0] if hasattr(e, "messages") else str(e)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 @api_view(["GET"])
 def supermarket_public_view(request, system):
@@ -816,7 +760,9 @@ def supermarket_public_barcode_view(request, system, barcode):
     Uses subdomain from X-Subdomain header via middleware.
     """
     try:
-        product = Product.objects.get(system=system, barcode=barcode, stock_quantity__gt=0)
+        product = Product.objects.get(
+            system=system, barcode=barcode, stock_quantity__gt=0
+        )
         product_data = {
             "id": product.id,
             "name": product.name,
@@ -1065,11 +1011,21 @@ def peak_hours(request, system_id):
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def daily_profit_history(request, system_id):
-    """Get daily profit history for the system"""
     try:
-        system = System.objects.get(id=system_id, owner=request.user)
+        # Allow both owner and manager to access the system
+        system = System.objects.get(id=system_id)
+        user = request.user
+        is_owner = system.owner == user
+        is_manager = False
+        try:
+            employee = Employee.objects.get(user=user, system=system)
+            is_manager = employee.role == "manager_supermarket"
+        except Employee.DoesNotExist:
+            pass
+        if not (is_owner or is_manager):
+            raise PermissionDenied("You do not have permission for this system.")
     except System.DoesNotExist:
-        raise PermissionDenied("You do not have permission for this system.")
+        raise PermissionDenied("System not found.")
 
     # Get all sales for the system
     sales = Sale.objects.filter(system=system).order_by("created_at")
@@ -1089,6 +1045,8 @@ def daily_profit_history(request, system_id):
         # Calculate profit for each sale item
         for item in sale.items.all():
             if not item.product:
+                continue
+            if None in (item.unit_price, item.unit_cost, item.quantity, item.discount_amount, item.total_price):
                 continue
 
             # Calculate profit using the actual unit price (which includes discounts)
@@ -1118,11 +1076,10 @@ def daily_profit_history(request, system_id):
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def get_categories(request, system_id):
-    """Get all possible categories (default + custom)"""
     try:
-        system = System.objects.get(id=system_id, owner=request.user)
+        system = System.objects.get(id=system_id)
     except System.DoesNotExist:
-        raise PermissionDenied("You do not have permission for this system.")
+        raise PermissionDenied("System not found.")
 
     # Get default categories
     default_categories = [choice[1] for choice in Product.CATEGORY_CHOICES]
@@ -1145,9 +1102,9 @@ def get_categories(request, system_id):
 def get_used_categories(request, system_id):
     """Get all categories that are currently used by products"""
     try:
-        system = System.objects.get(id=system_id, owner=request.user)
+        system = System.objects.get(id=system_id)
     except System.DoesNotExist:
-        raise PermissionDenied("You do not have permission for this system.")
+        raise PermissionDenied("System not found.")
 
     # Get all unique categories used by products in the system
     used_categories = (
@@ -1165,9 +1122,9 @@ def get_used_categories(request, system_id):
 def get_product_by_barcode(request, system_id, barcode):
     """Get a product by its barcode"""
     try:
-        system = System.objects.get(id=system_id, owner=request.user)
+        system = System.objects.get(id=system_id)
     except System.DoesNotExist:
-        raise PermissionDenied("You do not have permission for this system.")
+        raise PermissionDenied("System not found.")
 
     try:
         product = Product.objects.get(system=system, barcode=barcode)

@@ -3,10 +3,13 @@ from core.models import System , BaseMultiTenantModel
 from django.contrib.auth.models import User 
 from core.models import Employee
 from django.core.exceptions import ValidationError
-
-
-
+from django.db.models.signals import pre_delete, post_save
+from django.dispatch import receiver
+from django.core.files.storage import default_storage
 from django.core.validators import MinValueValidator, MaxValueValidator
+# Add Cloudinary imports
+import cloudinary
+import cloudinary.uploader
 
 class MenuItem(BaseMultiTenantModel):
     """Menu for restaurants and cafes"""
@@ -24,15 +27,15 @@ class MenuItem(BaseMultiTenantModel):
     cost = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     is_available = models.BooleanField(default=True)
     is_special = models.BooleanField(default=False)
-    is_best_deal = models.BooleanField(default=False)  # 👉 Add this
-    discount_percent = models.DecimalField(             # 👉 And this
+    is_best_deal = models.BooleanField(default=False)
+    discount_percent = models.DecimalField(
         max_digits=5,
         decimal_places=2,
         default=0,
         validators=[MinValueValidator(0), MaxValueValidator(100)]
     )
     category = models.CharField(max_length=50, null=True)
-    image = models.ImageField(upload_to="images/menu_images/", blank=True, null=True)
+    image = models.ImageField(upload_to="images/menu_images/", blank=True, null=True)  # This will work with Cloudinary
     created_at = models.DateTimeField(auto_now_add=True, null=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -47,6 +50,55 @@ class MenuItem(BaseMultiTenantModel):
     @classmethod
     def get_categories_for_system(cls, system):
         return cls.objects.filter(system=system).values_list('category', flat=True).distinct()
+
+    def delete(self, *args, **kwargs):
+        # Delete the associated image file using the storage backend and Cloudinary
+        if self.image:
+            try:
+                # Remove extension for Cloudinary public_id
+                public_id = self.image.name.rsplit('.', 1)[0]
+                cloudinary.uploader.destroy(public_id)
+            except Exception:
+                pass
+            try:
+                default_storage.delete(self.image.name)
+            except Exception:
+                pass
+        super().delete(*args, **kwargs)
+
+@receiver(pre_delete, sender=MenuItem)
+def delete_menu_item_image(sender, instance, **kwargs):
+    # Delete the associated image file before the MenuItem record is deleted
+    if instance.image:
+        try:
+            public_id = instance.image.name.rsplit('.', 1)[0]
+            cloudinary.uploader.destroy(public_id)
+        except Exception:
+            pass
+        try:
+            default_storage.delete(instance.image.name)
+        except Exception:
+            pass
+
+@receiver(post_save, sender=MenuItem)
+def update_menu_item_image(sender, instance, **kwargs):
+    # Handle image replacement: delete the old image if a new one is uploaded
+    if instance.pk:
+        try:
+            old_instance = sender.objects.get(pk=instance.pk)
+            if old_instance.image and old_instance.image != instance.image:
+                try:
+                    # Remove extension for Cloudinary public_id
+                    public_id = old_instance.image.name.rsplit('.', 1)[0]
+                    cloudinary.uploader.destroy(public_id)
+                except Exception:
+                    pass
+                try:
+                    default_storage.delete(old_instance.image.name)
+                except Exception:
+                    pass
+        except sender.DoesNotExist:
+            pass
 
 
 
@@ -180,3 +232,9 @@ class RestaurantData(models.Model):
         if self.system.category != 'restaurant':
             raise ValidationError("RestaurantData can only be associated with restaurant systems")
         super().save(*args, **kwargs)
+
+@receiver(post_save, sender=System)
+def create_restaurant_data(sender, instance, created, **kwargs):
+    if created and instance.category == 'restaurant':
+        from .models import RestaurantData
+        RestaurantData.objects.get_or_create(system=instance)

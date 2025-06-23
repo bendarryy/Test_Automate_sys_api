@@ -197,7 +197,7 @@ urlpatterns = [
         "<int:system_id>/purchase-orders/",
         PurchaseOrderViewSet.as_view(
             {
-                "get": "list",
+                "get": "list_sorted_by_id",  # Use the descending order method
                 "post": "create",
             }
         ),

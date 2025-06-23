@@ -1,10 +1,11 @@
 from django.db import models
-from core.models import System, Employee
-import time
+from core.models import System, Employee, delete_cloudinary_image, delete_cloudinary_image_on_update
 from django.core.validators import RegexValidator, MinValueValidator, MaxValueValidator
 from django.core.exceptions import ValidationError
-from django.db.models import F
 import uuid
+from decimal import Decimal
+from django.db.models.signals import pre_delete, post_save
+from django.dispatch import receiver
 
 # Create your models here.
 
@@ -15,12 +16,12 @@ class Product(models.Model):
     system = models.ForeignKey(
         System, on_delete=models.CASCADE, related_name="products"
     )
-    name = models.CharField(max_length=100)
-    barcode = models.CharField(max_length=13, unique=True, null=True, blank=True)
+    name = models.CharField(max_length=100, unique=False)
+    barcode = models.CharField(max_length=50, unique=True, null=True, blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     cost = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     stock_quantity = models.PositiveIntegerField(default=0)
-    expiry_date = models.DateField(blank=True, null=True)
+    expiry_date = models.DateField(null=True, blank=True)
     minimum_stock = models.PositiveIntegerField(default=10)
     received_date = models.DateField(auto_now_add=True)  # Track when stock was received
     image = models.ImageField(upload_to="product_images/", null=True, blank=True)
@@ -30,6 +31,7 @@ class Product(models.Model):
         default=0,
         help_text="Discount percentage (0-100)",
     )
+    description = models.TextField(blank=True, null=True)
 
     # Add category field with default choices
     CATEGORY_CHOICES = [
@@ -47,11 +49,7 @@ class Product(models.Model):
         ("pet_supplies", "Pet Supplies"),
     ]
 
-    category = models.CharField(
-        max_length=100,
-        default="pantry",  # Set a default value from the choices
-        help_text="Product category (default or custom)",
-    )
+    category = models.CharField(max_length=100, default="pantry")
 
     def clean(self):
         # Validate category if it's a default choice
@@ -134,7 +132,6 @@ class Product(models.Model):
 
     def get_stock_by_date(self):
         """Get stock quantities grouped by received date"""
-        from django.db.models import Sum
         from django.utils import timezone
         from datetime import timedelta
 
@@ -188,6 +185,19 @@ class Product(models.Model):
                 expiry_groups["expiring_later"] += record.received_quantity
 
         return expiry_groups
+
+    def delete(self, *args, **kwargs):
+        delete_cloudinary_image(self.image)
+        super().delete(*args, **kwargs)
+
+
+@receiver(post_save, sender=Product)
+def update_product_image(sender, instance, **kwargs):
+    delete_cloudinary_image_on_update(sender, instance, 'image')
+
+@receiver(pre_delete, sender=Product)
+def delete_product_image(sender, instance, **kwargs):
+    delete_cloudinary_image(instance.image)
 
 
 class ProductBatch(models.Model):
@@ -244,14 +254,16 @@ class Sale(models.Model):
     total_price = models.DecimalField(
         max_digits=10, decimal_places=2, null=True, blank=True
     )
-    discount_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    discount_percentage = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=0,
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+        help_text="Discount percentage (0-100)",
+    )
     payment_type = models.CharField(max_length=10, choices=PAYMENT_CHOICES)
     created_at = models.DateTimeField(auto_now_add=True)
     receipt_number = models.CharField(max_length=50, unique=True, null=True, blank=True)
-    vat_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    vat_rate = models.DecimalField(
-        max_digits=5, decimal_places=2, default=0.16
-    )  # 16% VAT
 
     def __str__(self):
         return f"Sale #{self.receipt_number} - {self.created_at}"
@@ -264,15 +276,12 @@ class Sale(models.Model):
         super().save(*args, **kwargs)
 
     def calculate_total(self):
-        """Calculate total price including VAT and discounts"""
+        """Calculate total price with discount percentage"""
         from decimal import Decimal
 
         subtotal = sum(item.total_price for item in self.items.all())
-        # Convert vat_rate to Decimal if needed
-        self.vat_amount = subtotal * Decimal(str(self.vat_rate))
-        self.total_price = (
-            subtotal + self.vat_amount - Decimal(str(self.discount_amount))
-        )
+        discount_amount = subtotal * (self.discount_percentage / Decimal(100))
+        self.total_price = subtotal - discount_amount
         self.save()
 
 
@@ -447,7 +456,7 @@ class GoodsReceiving(models.Model):
     purchase_order = models.ForeignKey(
         PurchaseOrder, on_delete=models.CASCADE, related_name="goods_receiving"
     )
-    received_quantity = models.PositiveIntegerField()
+    received_quantity = models.PositiveIntegerField(null=True, blank=True)
     received_date = models.DateField()
     expiry_date = models.DateField(null=True, blank=True)
     location = models.CharField(max_length=100, default="Main Warehouse")
@@ -460,15 +469,17 @@ class GoodsReceiving(models.Model):
     def save(self, *args, **kwargs):
         # Update PO status based on received quantity
         po = self.purchase_order
-        total_received = sum(gr.received_quantity for gr in po.goods_receiving.all())
+        total_received = sum(
+            gr.received_quantity or 0 for gr in po.goods_receiving.all()
+        )
 
         # If this is an update, subtract the old quantity
         if self.pk:
             old_record = GoodsReceiving.objects.get(pk=self.pk)
-            total_received -= old_record.received_quantity
+            total_received -= old_record.received_quantity or 0
 
         # Add the new quantity
-        total_received += self.received_quantity
+        total_received += self.received_quantity or 0
 
         # Update PO status
         if total_received >= po.quantity:
@@ -484,10 +495,10 @@ class GoodsReceiving(models.Model):
         if self.pk:
             # If updating, subtract the old quantity
             old_record = GoodsReceiving.objects.get(pk=self.pk)
-            product.stock_quantity -= old_record.received_quantity
+            product.stock_quantity -= old_record.received_quantity or 0
 
         # Add new quantity to product stock
-        product.stock_quantity += self.received_quantity
+        product.stock_quantity += self.received_quantity or 0
         product.save()
 
         super().save(*args, **kwargs)
@@ -495,15 +506,20 @@ class GoodsReceiving(models.Model):
     def delete(self, *args, **kwargs):
         # Update product stock quantity
         product = self.purchase_order.product
-        product.stock_quantity -= self.received_quantity
+        if product.stock_quantity < (self.received_quantity or 0):
+            from django.core.exceptions import ValidationError
+
+            raise ValidationError(
+                "Cannot delete: not enough stock to remove this goods receiving record."
+            )
+        product.stock_quantity -= self.received_quantity or 0
         product.save()
 
         # Update PO status
         po = self.purchase_order
-        total_received = (
-            sum(gr.received_quantity for gr in po.goods_receiving.all())
-            - self.received_quantity
-        )
+        total_received = sum(
+            gr.received_quantity or 0 for gr in po.goods_receiving.all()
+        ) - (self.received_quantity or 0)
         if total_received >= po.quantity:
             po.status = "completed"
         elif total_received > 0:

@@ -21,6 +21,9 @@ from django.http import HttpResponseNotFound
 import logging
 from core.serializers import PublicSystemSerializer 
 from .serializers import RestaurantDataSerializer
+import csv
+from django.http import HttpResponse
+
 # Define a custom exception for table conflicts
 class TableConflict(APIException):
     status_code = 409  # Use 409 Conflict
@@ -56,13 +59,9 @@ class MenuItemViewSet(viewsets.ModelViewSet):
             .values_list("category", flat=True)
             .distinct()
         )
-        return Response(list(filter(None, categories)))  # Filter out None values
+        return Response(list(filter(None, categories)))
 
     def get_permissions(self):
-        """
-        Restrict create, update, and delete actions to system owners only.
-        Employees can only perform list and retrieve actions.
-        """
         if self.action in ["create", "update", "partial_update", "destroy"]:
             return [
                 IsAuthenticated(),
@@ -71,34 +70,32 @@ class MenuItemViewSet(viewsets.ModelViewSet):
         return [IsAuthenticated(), OR(IsSystemOwner(), IsEmployeeRolePermission())]
 
     def perform_update(self, serializer):
-        """Handle image replacement during update."""
-        instance = serializer.instance
-        new_image = self.request.data.get("image")
+        """Handle image update with Cloudinary."""
+        serializer.save()  # Cloudinary will handle the image storage automatically
 
-        # Delete the old image if a new one is uploaded
-        if new_image and instance.image and instance.image.path != new_image:
-            if instance.image and os.path.isfile(instance.image.path):
-                os.remove(instance.image.path)
+    def list(self, request, *args, **kwargs):
+        export = request.query_params.get('export')
+        queryset = self.get_queryset()
 
-        serializer.save()
+        if export == 'csv':
+            # Define the fields you want to export
+            fieldnames = ['id', 'name', 'price', 'category', 'is_available', 'image']
+            response = HttpResponse(content_type='text/csv')
+            response['Content-Disposition'] = 'attachment; filename="menu_items.csv"'
+            writer = csv.writer(response)
+            writer.writerow(fieldnames)
+            for item in queryset:
+                writer.writerow([getattr(item, f) for f in fieldnames])
+            return response
+
+        return super().list(request, *args, **kwargs)
 
 # pagination.py
-from rest_framework.pagination import PageNumberPagination
 
-class CustomPagination(PageNumberPagination):
-    page_query_param = 'page'
-    page_size_query_param = 'rows'
-    max_page_size = 100
 
-    def get_page_size(self, request):
-        rows = request.query_params.get(self.page_size_query_param)
-        if rows == 'mid':
-            return 20
-        elif rows == 'high':
-            return 50
-        elif rows == 'low':
-            return 10
-        return super().get_page_size(request)
+from core.pagination import CustomPagination
+
+
 
 
 class OrderViewSet(viewsets.ModelViewSet):
@@ -106,10 +103,10 @@ class OrderViewSet(viewsets.ModelViewSet):
     pagination_class = CustomPagination  # Add custom pagination here
 
     def get_queryset(self):
-        """Filter orders by the requested system."""
+        """Filter orders by the requested system, ordered by most recent."""
         system_id = self.kwargs.get("system_id")
         system = get_object_or_404(System, id=system_id)
-        return Order.objects.filter(system=system)
+        return Order.objects.filter(system=system).order_by('-created_at')
 
     def perform_create(self, serializer):
         """Link order to correct system and check table availability."""
@@ -365,7 +362,7 @@ class ProfitSummaryView(APIView):
     def get_permissions(self):
         return [
             IsAuthenticated(),
-            OR(IsSystemOwner(), IsEmployeeRolePermission("manager", "cashier")),
+            OR(IsSystemOwner(), IsEmployeeRolePermission("manager")),
         ]
 
     def get(self, request, system_id):
@@ -457,7 +454,7 @@ class ProfitTrendView(APIView):
     def get_permissions(self):
         return [
             IsAuthenticated(),
-            OR(IsSystemOwner(), IsEmployeeRolePermission("manager", "cashier")),
+            OR(IsSystemOwner(), IsEmployeeRolePermission("manager", )),
         ]
 
     def get(self, request, system_id):
@@ -522,7 +519,7 @@ class OrderSummaryView(APIView):
     def get_permissions(self):
         return [
             IsAuthenticated(),
-            OR(IsSystemOwner(), IsEmployeeRolePermission("manager", "cashier")),
+            OR(IsSystemOwner(), IsEmployeeRolePermission("manager", )),
         ]
 
     def get(self, request, system_id):
@@ -582,7 +579,7 @@ class WaiterStatsView(APIView):
     def get_permissions(self):
         return [
             IsAuthenticated(),
-            OR(IsSystemOwner(), IsEmployeeRolePermission("manager", "cashier")),
+            OR(IsSystemOwner(), IsEmployeeRolePermission("manager")),
         ]
 
     def get(self, request, system_id):
@@ -657,10 +654,10 @@ class WaiterDisplayViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         """
         Access control for Waiter Display System:
-        - Owner, Waiter, Cashier, Manager: Full access
+        - Owner, Waiter, Manager: Full access
         - Others: Read-only access
         """
-        editable_roles = ["waiter", "cashier", "manager"]
+        editable_roles = ["waiter", "manager"]
         if self.action in ["partial_update"]:
             return [
                 IsAuthenticated(),
@@ -748,7 +745,7 @@ class DeliveryViewSet(viewsets.ModelViewSet):
                 IsAuthenticated(),
                 OR(IsSystemOwner(), IsEmployeeRolePermission(*editable_roles)),
             ]
-        editable_roles = ["delivery_driver", "manager", "cashier"]
+        editable_roles = ["delivery_driver", "manager"]
         return [IsAuthenticated(), OR(IsSystemOwner(), IsEmployeeRolePermission(*editable_roles))]
 
     def get_queryset(self):
