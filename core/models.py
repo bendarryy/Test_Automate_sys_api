@@ -178,7 +178,7 @@ class OpeningHours(models.Model):
 class PublicSliderImage(models.Model):
     """Rotating banner/slider images"""
 
-    MAX_SLIDER_IMAGES = 5
+    MAX_SLIDER_IMAGES = 10
 
     id = models.AutoField(primary_key=True)
     system = models.ForeignKey(
@@ -302,6 +302,8 @@ class UserTwoFactorInfo(models.Model):
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
     last_selected_system_id = models.IntegerField(null=True, blank=True)  # Field to store the last selected system
+    email_confirm_token = models.CharField(max_length=128, blank=True, null=True)
+    email_confirmed = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.user.username}'s Profile"

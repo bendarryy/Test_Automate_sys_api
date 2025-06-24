@@ -23,7 +23,7 @@
     "create_product", "read_product", "update_product", "delete_product",
     "read_finance",
     "read_kds", "read_waiterdisplay", "read_deliverydisplay",
-    "read_profile", "read_settings", "read_about", "read_home", "read_sales",
+    "read_profile", "read_about", "read_home", "read_sales",
     "create_goods_receiving", "read_goods_receiving", "update_goods_receiving", "delete_goods_receiving",
     "create_sale", "read_sale", "update_sale", "delete_sale"
   ],
@@ -75,6 +75,5 @@
   ]
 
 }
-
 
 
