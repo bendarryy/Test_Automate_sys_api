@@ -146,7 +146,8 @@ def register_user(request):
         profile.email_confirmed = False
         profile.save()
         # Send confirmation email
-        confirm_url = f"{settings.FRONTEND_URL}/confirm-email/{token}/" if hasattr(settings, 'FRONTEND_URL') else f"http://localhost:8000/api/core/confirm-email/{token}/"
+        frontend= "https://www.tarkeeb.online"
+        confirm_url = f"{frontend}/confirm-email/{token}/" 
         send_mail(
             'Confirm your email',
             f'Please confirm your email by clicking the following link: {confirm_url}',
