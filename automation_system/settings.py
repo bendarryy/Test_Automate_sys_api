@@ -70,7 +70,9 @@ EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "unsafe-default-pass
 EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
-
+# Add these for better email delivery
+EMAIL_USE_SSL = False  # You're using TLS, so keep this False
+EMAIL_TIMEOUT = 10  # Add timeout
 
 INSTALLED_APPS = [
     "django.contrib.admin",
