@@ -16,13 +16,14 @@ from core.permissions import IsSystemOwner, IsEmployeeRolePermission
 from rest_framework.exceptions import APIException
 
 from decimal import Decimal
-from rest_framework.decorators import action, api_view
+from rest_framework.decorators import action, api_view, permission_classes
 from django.http import HttpResponseNotFound
 import logging
 from core.serializers import PublicSystemSerializer 
 from .serializers import RestaurantDataSerializer
 import csv
 from django.http import HttpResponse
+from rest_framework.permissions import AllowAny
 
 # Define a custom exception for table conflicts
 class TableConflict(APIException):
@@ -283,7 +284,7 @@ class KitchenOrderViewSet(viewsets.ModelViewSet):
         if self.action in ["partial_update", "get"]:
             return [
                 IsAuthenticated(),
-                OR(IsSystemOwner(), IsEmployeeRolePermission("chef", "manager", "head_chef")),
+                OR(IsSystemOwner(), IsEmployeeRolePermission("chef", "manager", "head_chef", "waiter")),
             ]
         return [
             IsAuthenticated(),
@@ -623,6 +624,7 @@ class WaiterStatsView(APIView):
 
 from .serializers import PublicMenuItemSerializer
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def restaurant_public_view(request, system):
     """
     Restaurant public view. Returns menu grouped by category.

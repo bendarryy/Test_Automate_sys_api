@@ -2,7 +2,7 @@ from django.shortcuts import get_object_or_404, render
 from rest_framework import viewsets, status
 from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from django.utils import timezone
@@ -720,6 +720,7 @@ class GoodsReceivingViewSet(viewsets.ModelViewSet):
 
 
 @api_view(["GET"])
+@permission_classes([AllowAny])
 def supermarket_public_view(request, system):
     """
     Supermarket public view. Returns available products.

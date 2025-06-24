@@ -16,6 +16,9 @@ from rest_framework.permissions import AllowAny
 
 logger = logging.getLogger(__name__)
 
+# NOTE: All endpoints in this public app are accessible without authentication or tokens.
+# Only a valid 'x-subdomain' header for a public and active system is required for access.
+
 # Debug: Print when the view is defined
 print("Defining public_barcode_view")
 

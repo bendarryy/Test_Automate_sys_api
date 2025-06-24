@@ -79,6 +79,7 @@ import mimetypes
 from django.http import FileResponse, Http404
 from pathlib import Path
 import logging
+import uuid
 
 logger = logging.getLogger(__name__)
 from pathlib import Path
@@ -112,8 +113,8 @@ class SystemRetrieveView(ListAPIView):
         return System.objects.filter(owner=self.request.user)
 
 
-# @csrf_exempt
 @api_view(["POST"])
+@permission_classes([AllowAny])
 def register_user(request):
     """Exmaple of  Required data :
 
@@ -137,8 +138,30 @@ def register_user(request):
     )  # Pass the request data to the serializer
     if serializer.is_valid():  # Validate the data
         user = serializer.save()  # This will call the create method of the serializer
+        # Generate email confirmation token
+        token = str(uuid.uuid4())
+        # Ensure user has a profile
+        profile, created = Profile.objects.get_or_create(user=user)
+        profile.email_confirm_token = token
+        profile.email_confirmed = False
+        profile.save()
+        # Send confirmation email
+        confirm_url = f"{settings.FRONTEND_URL}/confirm-email/{token}/" if hasattr(settings, 'FRONTEND_URL') else f"http://localhost:8000/api/core/confirm-email/{token}/"
+        send_mail(
+            'Confirm your email',
+            f'Please confirm your email by clicking the following link: {confirm_url}',
+            settings.DEFAULT_FROM_EMAIL,
+            [user.email],
+            fail_silently=True,
+        )
+        # Generate temp session id (for pre-login or tracking)
+        temp_session = TwoFATempSession.objects.create(user=user)
         return Response(
-            {"message": "User created successfully", "user_id": user.id},
+            {
+                "message": "User created successfully. Please check your email to confirm your account.",
+                "user_id": user.id,
+                "temp_session_id": str(temp_session.id),
+            },
             status=status.HTTP_201_CREATED,
         )
 
@@ -1350,6 +1373,22 @@ class MyTokenObtainPairView(TokenObtainPairView):
                 raise AuthenticationFailed(
                     "No active account found with the given credentials"
                 )
+            # Only check email confirmation for non-employees
+            from .models import Employee
+            is_employee = Employee.objects.filter(user=user).exists()
+            if not is_employee:
+                try:
+                    profile = user.profile
+                    if not getattr(profile, 'email_confirmed', False):
+                        return Response(
+                            {"error": "Please confirm your email before logging in."},
+                            status=status.HTTP_403_FORBIDDEN,
+                        )
+                except Exception:
+                    return Response(
+                        {"error": "Email confirmation status could not be verified. Contact support."},
+                        status=status.HTTP_403_FORBIDDEN,
+                    )
 
             twofa_info, _ = UserTwoFactorInfo.objects.get_or_create(user=user)
             if twofa_info.enabled:
