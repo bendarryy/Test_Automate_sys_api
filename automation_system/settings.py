@@ -51,10 +51,6 @@ CORS_EXPOSE_HEADERS = [
 
 # Parse regexes from environment variable (strip whitespace)
 CORS_ALLOWED_ORIGIN_REGEXES = [
-    r"^file://.*$",  # Allow Electron apps
-    r"^http://localhost(:[0-9]+)?$",  # Allow localhost with any port
-    r"^http://127\\.0\\.0\\.1(:[0-9]+)?$",  # Allow 127.0.0.1 with any port
-] + [
     r.strip() for r in os.environ.get("CORS_ALLOWED_ORIGIN_REGEXES", "").split(",") if r.strip()
 ]
 
@@ -68,11 +64,14 @@ EMAIL_PORT = 587
 EMAIL_HOST_USER = 'noreply@tarkeeb.online'
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "unsafe-default-password")
 EMAIL_USE_TLS = True
-DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+EMAIL_USE_SSL = False
+EMAIL_TIMEOUT = 10
+DEFAULT_FROM_EMAIL = 'Tarkeeb online <noreply@tarkeeb.online>'
+SERVER_EMAIL = 'Tarkeeb online <noreply@tarkeeb.online>'
 
 # Add these for better email delivery
-EMAIL_USE_SSL = False  # You're using TLS, so keep this False
-EMAIL_TIMEOUT = 10  # Add timeout
+# EMAIL_USE_SSL = False  # You're using TLS, so keep this False
+# EMAIL_TIMEOUT = 10  # Add timeout
 
 INSTALLED_APPS = [
     "django.contrib.admin",

@@ -65,7 +65,7 @@ import random
 import string
 from django.utils import timezone
 from datetime import timedelta
-from django.core.mail import send_mail
+from django.core.mail import send_mail, BadHeaderError
 from django.http import HttpResponse
 from django.utils.crypto import get_random_string
 import base64
@@ -146,15 +146,22 @@ def register_user(request):
         profile.email_confirmed = False
         profile.save()
         # Send confirmation email
-        frontend= "https://www.tarkeeb.online"
-        confirm_url = f"{frontend}/confirm-email/{token}/" 
-        send_mail(
-            'Confirm your email',
-            f'Please confirm your email by clicking the following link: {confirm_url}',
-            settings.DEFAULT_FROM_EMAIL,
-            [user.email],
-            fail_silently=True,
-        )
+        frontend = "https://www.tarkeeb.online"
+        confirm_url = f"{frontend}/confirm-email/{token}/"
+        try:
+            send_mail(
+                'Confirm your email',
+                f'Please confirm your email by clicking the following link: {confirm_url}',
+                settings.DEFAULT_FROM_EMAIL,
+                [user.email],
+                fail_silently=False,
+            )
+        except Exception as e:
+            logger.error(f"Error sending registration confirmation email: {e}")
+            return Response(
+                {"error": "Failed to send confirmation email. Please try again later."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
         # Generate temp session id (for pre-login or tracking)
         temp_session = TwoFATempSession.objects.create(user=user)
         return Response(
@@ -1272,12 +1279,20 @@ class TwoFactorView(APIView):
             TwoFactorEmailCode.objects.create(
                 user=user, code=code, expires_at=expires_at
             )
-            send_mail(
-                "Your 2FA Code",
-                f"Your 2FA code is: {code}",
-                settings.DEFAULT_FROM_EMAIL,
-                [user.email],
-            )
+            try:
+                send_mail(
+                    "Your 2FA Code",
+                    f"Your 2FA code is: {code}",
+                    settings.DEFAULT_FROM_EMAIL,
+                    [user.email],
+                    fail_silently=False,
+                )
+            except Exception as e:
+                logger.error(f"Error sending 2FA enable email: {e}")
+                return Response(
+                    {"error": "Failed to send 2FA code. Please try again later."},
+                    status=500,
+                )
             return Response(
                 {"message": "2FA code sent to your email. Please verify to enable 2FA."}
             )
@@ -1304,18 +1319,20 @@ class TwoFactorView(APIView):
             TwoFactorEmailCode.objects.create(
                 user=user, code=code, expires_at=expires_at
             )
-
-            print(
-                f"DEBUG: About to send disable email to {user.email} with code {code}"
-            )
-            # Use EXACTLY the same pattern as enable action
-            send_mail(
-                "Your 2FA Code",  # Same subject as enable
-                f"Your 2FA code is: {code}",  # Same message format as enable
-                settings.DEFAULT_FROM_EMAIL,
-                [user.email],
-            )
-            print(f"DEBUG: Disable email sent successfully to {user.email}")
+            try:
+                send_mail(
+                    "Your 2FA Code",  # Same subject as enable
+                    f"Your 2FA code is: {code}",  # Same message format as enable
+                    settings.DEFAULT_FROM_EMAIL,
+                    [user.email],
+                    fail_silently=False,
+                )
+            except Exception as e:
+                logger.error(f"Error sending 2FA disable email: {e}")
+                return Response(
+                    {"error": "Failed to send 2FA code. Please try again later."},
+                    status=500,
+                )
             return Response(
                 {"message": "Confirmation code sent. Please verify to disable 2FA."}
             )
@@ -1376,11 +1393,12 @@ class MyTokenObtainPairView(TokenObtainPairView):
                 )
             # Only check email confirmation for non-employees
             from .models import Employee
+
             is_employee = Employee.objects.filter(user=user).exists()
             if not is_employee:
                 try:
                     profile = user.profile
-                    if not getattr(profile, 'email_confirmed', False):
+                    if not getattr(profile, "email_confirmed", False):
                         return Response(
                             {"error": "Please confirm your email before logging in."},
                             status=status.HTTP_403_FORBIDDEN,
@@ -1618,7 +1636,7 @@ class SystemDownloadView(APIView):
         try:
             # Get the system but DO NOT verify ownership for public access
             system = get_object_or_404(System, id=system_id)
-            
+
             # The ownership check is removed to allow public access
             # if not self._is_system_owner(request.user, system): ...
 
