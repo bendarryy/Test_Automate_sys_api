@@ -134,4 +134,3 @@ urlpatterns = [
         name="confirm-email",
     ),
 ]
-

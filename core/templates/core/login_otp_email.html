@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>رمز الدخول لمرة واحدة (OTP)</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            background-color: #fff;
+            max-width: 500px;
+            margin: 40px auto;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.08);
+            padding: 30px 25px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo {
+            font-size: 22px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        .otp-box {
+            background: #eaf6fb;
+            color: #0077b6;
+            font-size: 2.2em;
+            letter-spacing: 8px;
+            text-align: center;
+            padding: 18px 0;
+            border-radius: 8px;
+            font-weight: bold;
+            margin: 25px 0 20px 0;
+            border: 1.5px dashed #0077b6;
+        }
+        .content {
+            font-size: 1.1em;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .footer {
+            text-align: center;
+            color: #888;
+            font-size: 0.95em;
+            margin-top: 30px;
+        }
+        .warning {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 12px;
+            border-radius: 5px;
+            margin: 18px 0;
+            font-size: 1em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">🚀 Automated System</div>
+            <h2>رمز الدخول لمرة واحدة (OTP)</h2>
+        </div>
+        <div class="content">
+            <p>مرحباً {{ user.first_name|default:user.username }}،</p>
+            <p>لقد طلبت تسجيل الدخول إلى حسابك. يرجى استخدام رمز التحقق التالي لإكمال عملية الدخول:</p>
+        </div>
+        <div class="otp-box">
+            {{ otp_code }}
+        </div>
+        <div class="warning">
+            <ul style="margin: 0; padding-right: 18px;">
+                <li>هذا الرمز صالح لمدة 10 دقائق فقط.</li>
+                <li>لا تشارك هذا الرمز مع أي شخص.</li>
+                <li>إذا لم تطلب هذا الرمز، تجاهل هذه الرسالة.</li>
+            </ul>
+        </div>
+        <div class="footer">
+            <p>شكراً لاستخدامك نظامنا.</p>
+            <p>© 2024 Automated System. جميع الحقوق محفوظة.</p>
+        </div>
+    </div>
+</body>
+</html> 

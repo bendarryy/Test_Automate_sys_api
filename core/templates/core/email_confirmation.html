@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تأكيد حسابك - Automated System</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        .title {
+            color: #2c3e50;
+            font-size: 20px;
+            margin-bottom: 20px;
+        }
+        .content {
+            margin-bottom: 30px;
+        }
+        .button {
+            display: inline-block;
+            background-color: #3498db;
+            color: white;
+            padding: 12px 30px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        .button:hover {
+            background-color: #2980b9;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            color: #666;
+            font-size: 14px;
+        }
+        .warning {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">🚀 Automated System</div>
+            <h1 class="title">مرحباً {{ user.first_name|default:user.username }}!</h1>
+        </div>
+        
+        <div class="content">
+            <p>شكراً لك على التسجيل في نظامنا الآلي. لتأكيد حسابك والبدء في استخدام النظام، يرجى النقر على الزر أدناه:</p>
+            
+            <div style="text-align: center;">
+                <a href="{{ confirmation_url }}" class="button">تأكيد حسابي</a>
+            </div>
+            
+            <p>أو يمكنك نسخ الرابط التالي ولصقه في متصفحك:</p>
+            <p style="word-break: break-all; background-color: #f8f9fa; padding: 10px; border-radius: 5px; font-family: monospace;">
+                {{ confirmation_url }}
+            </p>
+            
+            <div class="warning">
+                <strong>ملاحظة مهمة:</strong>
+                <ul style="margin: 10px 0; padding-right: 20px;">
+                    <li>هذا الرابط صالح لمدة 24 ساعة فقط</li>
+                    <li>إذا لم تقم بتأكيد حسابك خلال هذه المدة، ستحتاج إلى طلب رابط تأكيد جديد</li>
+                    <li>لا تشارك هذا الرابط مع أي شخص آخر</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>إذا لم تقم بإنشاء هذا الحساب، يمكنك تجاهل هذا البريد الإلكتروني.</p>
+            <p>إذا واجهت أي مشاكل، يرجى التواصل مع فريق الدعم الفني.</p>
+            <p>© 2024 Automated System. جميع الحقوق محفوظة.</p>
+        </div>
+    </div>
+</body>
+</html> 
