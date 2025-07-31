@@ -23,7 +23,6 @@ This portfolio project demonstrates expertise in:
 - **Multi-Tenancy Architecture**: Subdomain-based tenant isolation (`*.public.platform.com`)
 - **Business Type Support**: Restaurants, Supermarkets, Workshops, and more
 - **Role-Based Access Control**: Owner, Manager, Chef, Waiter, Delivery, Cashier roles
-- **Offline-First Support**: Local data caching and synchronization for mobile/desktop
 - **RESTful API**: Complete API for both web and mobile applications
 - **Public Profiles**: Customizable public-facing business profiles
 - **Real-time Updates**: Live order tracking and status updates
@@ -196,34 +195,11 @@ POST /api/token/
 }
 ```
 
-#### Restaurant Operations
 ```bash
-# Menu Management
-GET /api/restaurant/menu/
-Headers: {"X-Subdomain": "yourbusiness"}
-
-# Order Processing
-POST /api/restaurant/orders/
-Headers: {"X-Subdomain": "yourbusiness"}
+# JWT Token Authentication
+POST /api/refresh/
 {
-    "customer_name": "John Doe",
-    "order_type": "in_house",
-    "order_items": [...]
-}
-```
-
-#### Supermarket Operations
-```bash
-# Product Management
-GET /api/supermarket/products/
-Headers: {"X-Subdomain": "yourbusiness"}
-
-# Sales Processing
-POST /api/supermarket/sales/
-Headers: {"X-Subdomain": "yourbusiness"}
-{
-    "payment_type": "cash",
-    "items": [...]
+   
 }
 ```
 
@@ -303,17 +279,6 @@ Headers: {"X-Subdomain": "yourbusiness"}
 - **Image optimization**: Cloudinary integration for efficient media handling
 - **API optimization**: Rate limiting and response caching
 
-## 📞 Contact & Portfolio
-
-This project demonstrates advanced Django development skills, including:
-- Multi-tenancy architecture implementation
-- Complex business logic development
-- RESTful API design and implementation
-- Security best practices
-- Database design and optimization
-- Production-ready deployment configuration
-
-**For more information about this project or to discuss collaboration opportunities, please reach out through the contact information in my portfolio.**
 
 ---
 
